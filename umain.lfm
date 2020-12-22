@@ -1,0 +1,129 @@
+object fPlayer: TfPlayer
+  Left = 771
+  Height = 436
+  Top = 313
+  Width = 618
+  Caption = 'OvoM3U'
+  ClientHeight = 436
+  ClientWidth = 618
+  KeyPreview = True
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
+  OnKeyPress = FormKeyPress
+  LCLVersion = '2.1.0.0'
+  object pnlContainer: TPanel
+    Left = 170
+    Height = 436
+    Top = 0
+    Width = 448
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 436
+    ClientWidth = 448
+    Color = clBlack
+    ParentColor = False
+    ParentFont = False
+    TabOrder = 0
+    OnMouseMove = pnlContainerMouseMove
+    OnPaint = pnlContainerPaint
+    object GLRenderer: TOpenGLControl
+      Left = 0
+      Height = 436
+      Top = 0
+      Width = 448
+      Align = alClient
+      AutoResizeViewport = True
+      OnDblClick = GLRendererDblClick
+      OnMouseMove = GLRendererMouseMove
+      PopupMenu = pmPlayer
+      Visible = False
+    end
+  end
+  object pnlChannel: TPanel
+    Left = 0
+    Height = 436
+    Top = 0
+    Width = 170
+    Align = alLeft
+    Caption = 'pnlChannel'
+    ClientHeight = 436
+    ClientWidth = 170
+    TabOrder = 1
+    object ToolBar1: TToolBar
+      Left = 1
+      Height = 26
+      Top = 1
+      Width = 168
+      Caption = 'ToolBar1'
+      Font.Height = 20
+      ParentFont = False
+      ShowCaptions = True
+      TabOrder = 0
+      object ToolButton1: TToolButton
+        Left = 1
+        Top = 2
+        Caption = '⚙'
+        OnClick = ToolButton1Click
+      end
+    end
+    object ChannelList: TDrawGrid
+      Left = 1
+      Height = 408
+      Top = 27
+      Width = 200
+      Align = alLeft
+      AutoFillColumns = True
+      ColCount = 1
+      DefaultRowHeight = 32
+      ExtendedSelect = False
+      FixedCols = 0
+      FixedRows = 0
+      Font.Height = 9
+      MouseWheelOption = mwGrid
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellEllipsis]
+      ParentFont = False
+      TabAdvance = aaDown
+      TabOrder = 1
+      UseXORFeatures = True
+      OnDblClick = ChannelListDblClick
+      OnDrawCell = ChannelListDrawCell
+      OnKeyDown = ChannelListKeyDown
+      ColWidths = (
+        198
+      )
+    end
+  end
+  object HideMouse: TTimer
+    Enabled = False
+    Interval = 8000
+    OnTimer = HideMouseTimer
+    Left = 48
+    Top = 192
+  end
+  object pmPlayer: TPopupMenu
+    Left = 132
+    Top = 212
+    object mnuAudio: TMenuItem
+      Caption = 'Audio Tracks'
+    end
+    object mnuVideo: TMenuItem
+      Caption = 'Video tracks'
+    end
+  end
+  object LoadingTimer: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = LoadingTimerTimer
+    OnStartTimer = LoadingTimerStartTimer
+    Left = 54
+    Top = 275
+  end
+  object OSDTimer: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = OSDTimerTimer
+    Left = 54
+    Top = 344
+  end
+end

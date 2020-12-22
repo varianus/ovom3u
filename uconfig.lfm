@@ -1,0 +1,139 @@
+object fConfig: TfConfig
+  Left = 517
+  Height = 550
+  Top = 248
+  Width = 614
+  Caption = 'Config'
+  ClientHeight = 550
+  ClientWidth = 614
+  OnClose = FormClose
+  OnShow = FormShow
+  LCLVersion = '2.1.0.0'
+  object cbKind: TComboBox
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Side = asrCenter
+    Left = 90
+    Height = 26
+    Top = 35
+    Width = 240
+    BorderSpacing.Around = 12
+    ItemHeight = 0
+    Items.Strings = (
+      'Local File'
+      'URL'
+    )
+    OnChange = cbKindChange
+    TabOrder = 0
+    Text = 'cbKind'
+  end
+  object pcM3u: TPageControl
+    Left = 0
+    Height = 80
+    Top = 80
+    Width = 608
+    ActivePage = tsLocal
+    Style = tsButtons
+    TabIndex = 0
+    TabOrder = 1
+    TabPosition = tpRight
+    object tsLocal: TTabSheet
+      Caption = 'tsLocal'
+      ClientHeight = 74
+      ClientWidth = 551
+      object edtFileName: TFileNameEdit
+        Left = 90
+        Height = 26
+        Top = 9
+        Width = 452
+        DialogTitle = 'Choose M3U file'
+        Filter = 'M3U Files (*.m3u)|*.m3u|M3U8 Files (*.m3u8)|*.m3u8'
+        FilterIndex = 0
+        DefaultExt = '.m3u'
+        HideDirectories = False
+        ButtonWidth = 23
+        NumGlyphs = 1
+        BorderSpacing.Around = 12
+        MaxLength = 0
+        TabOrder = 0
+      end
+      object Label2: TLabel
+        AnchorSideTop.Control = edtFileName
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = edtFileName
+        Left = 22
+        Height = 17
+        Top = 14
+        Width = 56
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'File Name'
+        ParentColor = False
+      end
+    end
+    object tsURL: TTabSheet
+      Caption = 'tsURL'
+      ClientHeight = 74
+      ClientWidth = 551
+      object Label3: TLabel
+        AnchorSideTop.Control = edtUrl
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = edtUrl
+        Left = 56
+        Height = 17
+        Top = 14
+        Width = 22
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'URL'
+        ParentColor = False
+      end
+      object edtUrl: TEdit
+        Left = 90
+        Height = 26
+        Top = 9
+        Width = 452
+        BorderSpacing.Around = 12
+        TabOrder = 0
+      end
+    end
+  end
+  object Label1: TLabel
+    AnchorSideTop.Control = cbKind
+    AnchorSideTop.Side = asrCenter
+    AnchorSideRight.Control = cbKind
+    Left = 52
+    Height = 17
+    Top = 40
+    Width = 26
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 12
+    Caption = 'Type'
+    ParentColor = False
+  end
+  object bpConfig: TButtonPanel
+    Left = 6
+    Height = 35
+    Top = 509
+    Width = 602
+    OKButton.Name = 'OKButton'
+    OKButton.DefaultCaption = True
+    OKButton.OnClick = OKButtonClick
+    HelpButton.Name = 'HelpButton'
+    HelpButton.DefaultCaption = True
+    CloseButton.Name = 'CloseButton'
+    CloseButton.DefaultCaption = True
+    CancelButton.Name = 'CancelButton'
+    CancelButton.DefaultCaption = True
+    CancelButton.OnClick = CancelButtonClick
+    TabOrder = 2
+    ShowButtons = [pbOK, pbCancel]
+  end
+  object cbUseChno: TCheckBox
+    Left = 39
+    Height = 21
+    Top = 192
+    Width = 197
+    Caption = 'Use channel number from m3u'
+    TabOrder = 3
+  end
+end
