@@ -150,7 +150,7 @@ end;
 begin
   Result:=GetEnvironmentVariable('LOCALAPPDATA');
   if result <> '' then
-    result:=IncludeTrailingPathDelimiter(result)+ 'Caches\'
+    result:=IncludeTrailingPathDelimiter(result)+ 'Caches\';
 
   Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
   ForceDirectories(Result);

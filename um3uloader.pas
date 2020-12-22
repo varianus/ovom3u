@@ -139,7 +139,6 @@ begin
           item.Icon := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
           item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s),0);
-          writeln(item.tvg_chno);
           Item.Title := copy(s, RPos(',', S) + 1, Length(s));
           Inc(index);
           Add(Item);

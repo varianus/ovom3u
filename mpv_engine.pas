@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, libmpv, decoupler, BaseTypes, render, render_gl,
-  OpenGLContext, forms;
+  OpenGLContext, forms, LCLType;
 
 type
   TTrackType = (tkAudio, tkVideo, tkSub, tkUnkown);
@@ -156,6 +156,11 @@ begin
 end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
+{$ifdef WINDOWS}
+var
+  wid: HWND;
+{$endif}
+
 begin
   Result:= true;
   try
@@ -249,7 +254,7 @@ end;
 procedure TMPVEngine.ReceivedCommand(Sender: TObject; Command: TEngineCommand; Param: integer);
 var
   Event: Pmpv_event;
-  p: cint;
+  p: integer;
 begin
   if (Command = ecEvent) and (param = 1) then
   begin
