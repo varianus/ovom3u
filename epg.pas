@@ -180,7 +180,7 @@ begin
    tmpQuery.Transaction := fTR;
    tmpQuery.SQL.Text := 'SELECT ' + ScanType +' FROM Scans';
    tmpQuery.Open;
-   if not eof then
+   if not tmpQuery.eof then
      Result := tmpQuery.Fields[0].AsDateTime
    else
      Result := 0;
