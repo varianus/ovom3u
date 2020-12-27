@@ -136,4 +136,25 @@ object fConfig: TfConfig
     Caption = 'Use channel number from m3u'
     TabOrder = 3
   end
+  object Label4: TLabel
+    AnchorSideTop.Control = edtUrl1
+    AnchorSideTop.Side = asrCenter
+    AnchorSideRight.Control = edtUrl1
+    Left = 55
+    Height = 17
+    Top = 253
+    Width = 23
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 12
+    Caption = 'EPG'
+    ParentColor = False
+  end
+  object edtUrl1: TEdit
+    Left = 90
+    Height = 26
+    Top = 248
+    Width = 452
+    BorderSpacing.Around = 12
+    TabOrder = 4
+  end
 end

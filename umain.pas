@@ -23,10 +23,10 @@ unit umain;
 interface
 
 uses
-  Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
+  Classes, Forms, Controls, Graphics, LCLTaskDialog,Dialogs, ExtCtrls,
   Grids, LCLIntf, lcltype, ComCtrls, Menus, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
-  MPV_Engine, Config, GeneralFunc, Generics.collections;
+  MPV_Engine, Config, GeneralFunc, Generics.collections, UITypes, epg;
 
   { TfPlayer }
 type
@@ -46,6 +46,7 @@ type
     pmPlayer: TPopupMenu;
     HideMouse: TTimer;
     LoadingTimer: TTimer;
+    TaskDialog1: TTaskDialog;
     ToolBar1: TToolBar;
     ToolButton1: TToolButton;
     procedure ChannelListDblClick(Sender: TObject);
@@ -66,18 +67,24 @@ type
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure pnlContainerPaint(Sender: TObject);
+    procedure TaskDialog1ButtonClicked(Sender: PTaskDialog; AButtonID: integer; var ACanClose: Boolean);
     procedure ToolButton1Click(Sender: TObject);
   private
     FLoading: boolean;
     ChannelSelecting: boolean;
     ChannelSelected: integer;
     fLastMessage: string;
+    IPTVList: string;
+    Kind: TProviderKind;
+    function CheckConfigAndSystem: boolean;
     procedure OnLoadingState(Sender: TObject);
     procedure OsdMessage(Message: string; TimeOut: boolean=true);
     procedure Play(Row: integer);
     procedure SetLoading(AValue: boolean);
+    procedure ShowEpg;
   private
     MpvEngine: TMPVEngine;
+    epgData: TEpg;
     isRenderActive: boolean;
     flgFullScreen: boolean;
     CurrentChannel: integer;
@@ -99,72 +106,114 @@ var
 
 implementation
 
-uses uconfig;
+uses uconfig, BaseTypes;
 
 {$R *.lfm}
 
 { TfPlayer }
 
+Function TfPlayer.CheckConfigAndSystem:boolean;
+var
+  Dialog : LCLTaskDialog.TTaskDialog;
+  Retry: boolean;
+begin
+  //if TMPVEngine.CheckMPV then
+  //  begin
+  //    Dialog.Inst := 'Can''t initialize libMPV';
+  //    Dialog.Content := 'LibMPV shared library is missing or could not be initialized\n'+
+  //                      'OvoM3U uses this library to decode and play videos\n'+
+  //                      'Click the following to open a wiki page with information on\n' +
+  //                      'how to install libMPV on your platform'
+  //                      ;
+  //    Dialog.Buttons := 'https://github.com/varianus/ovom3u/wiki/LibMPV'+#10;
+  //
+  //    repeat
+  //    case  Dialog.Execute([cbRetry,cbClose],1,[tdfUseCommandLinks],LCLTaskDialog.TTaskDialogIcon.tiWarning,tfiBlank,0,0,0,true,true,TaskDialog1ButtonClicked) of
+  //      mrClose: begin
+  //                Result := false;
+  //                Retry := false;
+  //                exit;
+  //              end;
+  //      mrRetry: Retry := true;
+  //     end;
+  //
+  //    until Retry = false;
+  //  end;
+  //
+  Result:= true;
+  Kind:= ConfigObj.M3UProperties.Kind;
+  Case Kind of
+    Local: IPTVList:= ConfigObj.M3UProperties.FileName;
+    URL : IPTVList:=  ConfigObj.M3UProperties.Url;
+  end;
+
+  if IPTVList.IsEmpty then
+    begin
+      Dialog.Inst := 'Welcome to OvoM3U';
+      Dialog.Content := 'Configure';
+      Dialog.Buttons := '' ;
+      Dialog.Execute([cbOK],1,[tdfUseCommandLinks],LCLTaskDialog.TTaskDialogIcon.tiWarning,tfiBlank,0,0,0,true,true) ;
+    end;
+
+end;
+
 procedure TfPlayer.LoadList;
 var
-  IPTVList: string;
-  Kind: TProviderKind;
   CacheDir: string;
 begin
 
   ConfigObj.ReadConfig;
 
   Kind:= ConfigObj.M3UProperties.Kind;
-  if Kind = Local then
-    begin
-      IPTVList:= ConfigObj.M3UProperties.FileName;
-      if IPTVList.IsEmpty then
-        // Show config;
-      if not FileExists(IPTVList) then
-        begin
-          // Message
-          // ShowConfig
-        end;
-    end;
+
   if Kind = URL then
     begin
-      IPTVList:=  ConfigObj.M3UProperties.Url;
-      if IPTVList.IsEmpty then
-        // Show config;
-      if not FileExists(IPTVList) then
-        begin
-          // Message
-          // ShowConfig
-        end;
       CacheDir:=GetCacheDir;
-      DownloadFromUrl(IPTVList,CacheDir +'iptv.m3u');
-      IPTVList:=CacheDir+'iptv.m3u';
+      Try
+        if epgData.LastScan('channels') +12 > now then
+           DownloadFromUrl(IPTVList,CacheDir +'current-iptv.m3u');
+        IPTVList:=CacheDir+'current-iptv.m3u';
+      finally
+      end;
     end;
 
   list.Load(IPTVList);
   if ConfigObj.M3UProperties.UseChno then
     List.FixChannelNumbering;
 
+  epgData := TEpg.Create;
+
+  if not Configobj.M3UProperties.EPGUrl.IsEmpty then
+    begin
+      epgData.LoadChannelList(List);
+      epgData.Scan;
+    end;
+
+
   ChannelList.RowCount := List.Count;
 
 end;
 
 procedure TfPlayer.FormCreate(Sender: TObject);
-var
-  wid: int64;
 begin
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
-  List := TM3ULoader.Create;
-  Loadlist;
 
-  MpvEngine := TMPVEngine.Create;
-  MpvEngine.Initialize(GLRenderer);
-  CurrentChannel := -1;
-  ChannelSelecting:=false;
-  fLoading := false;
-  ChannelSelected:=0;
+  if CheckConfigAndSystem then
+    begin
+      ChannelList.RowCount:=0;;
+      List := TM3ULoader.Create;
+      Loadlist;
+
+      MpvEngine := TMPVEngine.Create;
+      MpvEngine.Initialize(GLRenderer);
+      CurrentChannel := -1;
+      ChannelSelecting:=false;
+      fLoading := false;
+      ChannelSelected:=0;
+
+    end;
 end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
@@ -203,6 +252,7 @@ begin
                      ChannelSelected:=List.ItemByChno(ChannelSelected);
                    play(ChannelSelected) ;
                    ChannelSelecting := false;
+                   key:=0;
                 end;
   end;
   Case key of
@@ -210,6 +260,7 @@ begin
     VK_S : begin MpvEngine.Stop;  OsdMessage('Stop', true); end;
     VK_SPACE : begin MpvEngine.Pause; end;
     VK_F : SetFullScreen;
+    VK_E : ShowEpg;
 
     VK_0..VK_9,VK_NUMPAD0..VK_NUMPAD9: begin
                if not ChannelSelecting then
@@ -231,6 +282,15 @@ begin
   end;
 end;
 
+Procedure TfPlayer.ShowEpg;
+var
+  Info :REpgInfo;
+begin
+  Info := epgData.GetEpgInfo(CurrentChannel+1, now);
+  MpvEngine.OsdEpg(info, true);
+  OSDTimer.Enabled:=true;
+end;
+
 procedure TfPlayer.FormKeyPress(Sender: TObject; var Key: char);
 begin
 //
@@ -249,7 +309,10 @@ begin
     begin
       Loading := MpvEngine.isIdle;
       if not loading then
-        LoadingTimer.Enabled := false;
+        begin
+          LoadingTimer.Enabled := false;
+          MpvEngine.LoadTracks;
+        end;
     end;
 
   if progress > 720 then
@@ -401,6 +464,17 @@ begin
     p.y := cv.Height div 2;
     cv.Arc(p.x - 50, p.y - 50, p.x + 50, p.y + 50, b, a);
   end;
+end;
+
+procedure TfPlayer.TaskDialog1ButtonClicked(Sender: PTaskDialog; AButtonID: integer; var ACanClose: Boolean);
+begin
+
+    if AButtonID = 100 then
+   OpenUrl('http://github.com/varianus/ovom3u/wiki/LibMPV/');
+
+  ACanClose := AButtonID = mrClose;
+
+
 end;
 
 procedure TfPlayer.ToolButton1Click(Sender: TObject);

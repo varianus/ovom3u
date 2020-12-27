@@ -40,6 +40,7 @@ type
     FileName: string;
     Url: string;
     UseChno: boolean;
+    EPGUrl: string;
   end;
 
   TConfig = class
@@ -91,6 +92,8 @@ type
     Property Max: Integer read FMax write SetMax;
     Property Count: integer read GetCount;
   end;
+
+  function GetConfigDir: string;
 
 function ConfigObj: TConfig;
 
@@ -271,6 +274,7 @@ begin
   WriteString('m3u/FileName',fM3UProperties.FileName);
   WriteString('m3u/Url',fM3UProperties.Url);
   WriteBoolean('m3u/UseChno', fM3UProperties.UseChno);
+  WriteString('EPG/Url', fM3UProperties.EPGUrl);
   fConfigHolder.SaveToFile(FConfigFile, true);
 end;
 
@@ -292,6 +296,7 @@ begin
   fM3UProperties.FileName:= ReadString('m3u/FileName','');
   fM3UProperties.Url:= ReadString('m3u/Url','');
   fM3UProperties.UseChno :=ReadBoolean('m3u/UseChno', false);
+  fM3UProperties.EPGUrl:= ReadString('EPG/Url','');
 
 end;
 

@@ -10,6 +10,7 @@ Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string
 function CompareBoolean (a, b: Boolean): Integer;
 Function GetCacheDir:string;
 procedure DownloadFromUrl(AFrom: String; ATo: String);
+function EpgDateToDate(const iDateStr: string): TDateTime;
 
 
  type
@@ -18,7 +19,7 @@ procedure DownloadFromUrl(AFrom: String; ATo: String);
 
 implementation
 uses
- opensslsockets, fphttpclient;
+ opensslsockets, fphttpclient, DateUtils;
 
 const
   OneKB = 1024;
@@ -110,6 +111,23 @@ begin
   finally
     DS.Free
   end;
+end;
+
+function EpgDateToDate(const iDateStr: string): TDateTime;
+var
+  AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond, AOffset: Word;
+begin
+   AMilliSecond:=0;
+   AYear:=StrToIntDef(copy(iDateStr,1,4),0);
+   AMonth:=StrToIntDef(copy(iDateStr,5,2),1);
+   ADay:=StrToIntDef(copy(iDateStr,7,2),1);
+   AHour:=StrToIntDef(copy(iDateStr,9,2),0);
+   AMinute:=StrToIntDef(copy(iDateStr,11,2),0);
+   ASecond:=StrToIntDef(copy(iDateStr,13,2),0);
+
+  Result := EncodeDateTime(AYear, AMonth, ADay, AHour, AMinute, ASecond,
+    AMilliSecond);
+//  W
 end;
 
 function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;

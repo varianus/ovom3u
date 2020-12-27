@@ -10,6 +10,13 @@ type
 
   TEngineCommand = (ecEvent,ecPaint);
 
+  REpgInfo = record
+    Title: string;
+    Plot: string;
+    StartTime: TDateTime;
+    EndTime: TDateTime;
+  end;
+
 implementation
 
 end.

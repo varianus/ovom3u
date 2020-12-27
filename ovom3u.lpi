@@ -69,6 +69,15 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
+      <Unit>
+        <Filename Value="epg.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="generalfunc.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GeneralFunc"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

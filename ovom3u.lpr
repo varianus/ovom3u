@@ -27,7 +27,7 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, lazopenglcontext, umain, um3uloader, Mpv_Engine, uconfig;
+  Forms, lazopenglcontext, umain, um3uloader, Mpv_Engine, uconfig, epg;
 
 {$R *.res}
 

@@ -61,7 +61,6 @@ type
     function GetMainVolume: integer;
     procedure GLRenderControlPaint(Sender: TObject);
     procedure InitRenderer(Data: PtrInt);
-    procedure LoadTracks;
     procedure PostCommand(Command: TEngineCommand; Param: integer);
     procedure ReceivedCommand(Sender: TObject; Command: TEngineCommand;
       Param: integer);
@@ -78,9 +77,11 @@ type
     Property Volume: integer read GetMainVolume write SetMainVolume;
     function Initialize(Renderer: TOpenGLControl): boolean;
     function IsIdle: boolean;
+    procedure LoadTracks;
     Procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
     procedure OsdMessage(msg: string='');
+    procedure OsdEpg(msg:REpgInfo; Show:boolean);
     procedure Play(mrl: string);
     procedure Stop;
     procedure Pause;
@@ -166,8 +167,10 @@ begin
   try
     fhandle := mpv_create();
     mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+    mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
+    mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_initialize(fHandle^);
-    //  mpv_request_log_messages(fhandle^, 'v');
+    mpv_request_log_messages(fhandle^, 'v');
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
     mpv_set_wakeup_callback(fhandle^, @LibMPVEvent, self);
@@ -331,11 +334,13 @@ begin
     SetLength(fTrackList, Node.u.list_^.num);
     for i := 0 to Node.u.list_^.num - 1 do
     begin
-      map := pmpv_node(PtrUInt(Node.u.list_^.values) + i * 16)^;
+      WriteLn('Node ', sizeof(mpv_node));
+      WriteLn('List ', sizeof(map.u.list_));
+      map := Node.u.list_^.values[i]; // pmpv_node(PtrUInt(Node.u.list_^.values) + i * 16)^;
       pc  := map.u.list_^.keys;
       for j := 0 to map.u.list_^.num - 1 do
       begin
-        Detail := Pmpv_node(PtrUInt(map.u.list_^.values) + j * 16)^;
+        Detail := map.u.list_^.values[j]; // Pmpv_node(PtrUInt(map.u.list_^.values) + j * 16)^;
         Value  := strpas(pc^);
         if Value = 'id' then
           fTrackList[i].Id := Detail.u.int64_;
@@ -514,8 +519,58 @@ begin
 end;
 
 procedure TMPVEngine.OsdMessage(msg:string='');
+var
+  num: int64;
 begin
-  mpv_set_property_string(fHandle^,'osd-msg1',pchar(msg));
+ mpv_set_property_string(fHandle^,'osd-align-y','top');
+ num:= 1;  mpv_set_property(fHandle^,'osd-level',MPV_FORMAT_INT64,@num);
+ num:= 0;  mpv_set_property(fHandle^,'osd-border-size',MPV_FORMAT_INT64,@num);
+ mpv_set_property_string(fHandle^,'osd-msg1',pchar(msg));
+end;
+
+procedure TMPVEngine.OsdEpg(msg: REpgInfo; Show: boolean);
+//var
+//  num: int64;
+//begin
+//  mpv_set_property_string(fHandle^,'osd-align-y','bottom');
+//  num:= 3;  mpv_set_property(fHandle^,'osd-level',MPV_FORMAT_INT64,@num);
+//  num:= 2;  mpv_set_property(fHandle^,'osd-border-size',MPV_FORMAT_INT64,@num);
+//  mpv_set_property_string(fHandle^,'osd-msg3',pchar(msg));
+var
+ Node: mpv_node;
+ List: mpv_node_list;
+ Keys: array of pchar;
+ values:mpv_node_array;
+ res: mpv_node;
+ fres:longint;
+begin
+ SetLength(Keys, 4);
+ Keys[0] := 'name';
+ values[0].format:=MPV_FORMAT_STRING;
+ values[0].u.string_:='osd-overlay';
+ Keys[1] := 'id';
+ values[1].format:=MPV_FORMAT_INT64;
+ values[1].u.int64_:=1;
+ Keys[2] := 'format';
+ values[2].format:=MPV_FORMAT_STRING;
+ values[2].u.string_:='ass-events';
+ Keys[3] := 'data';
+ values[3].format:=MPV_FORMAT_STRING;
+
+ // \3c&HFFFFFF&\3a&H80&
+ values[3].u.string_:=pchar(format('{\bord1\an1}{\fscx50\fscy50}%s - %s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
+                              [TimeToStr(msg.StartTime),TimeToStr(msg.StartTime),msg.Title,msg.Plot]));
+
+ List.num:=4;
+ List.keys:=@Keys[0];
+ List.values:=@values[0];
+ Node.format:=MPV_FORMAT_NODE_MAP;
+ Node.u.list_:=@list;
+ mpv_set_property_string(fHandle^,'osd-back-color','#80000000');
+
+ fres:=mpv_command_node(fHandle^, node, res);
+
+
 end;
 
 procedure TMPVEngine.Pause;

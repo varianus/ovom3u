@@ -35,9 +35,11 @@ type
     cbUseChno: TCheckBox;
     edtFileName: TFileNameEdit;
     edtUrl: TEdit;
+    edtUrl1: TEdit;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    Label4: TLabel;
     pcM3u: TPageControl;
     tsLocal: TTabSheet;
     tsURL: TTabSheet;
@@ -65,7 +67,7 @@ var
 procedure ShowConfig;
 begin
   if not Assigned(fConfig) then
-    fConfig := TfConfig.Create(Application);
+    fConfig := TfConfig.Create(nil);
   fConfig.Show;
 end;
 
@@ -88,6 +90,7 @@ begin
   edtFileName.Text:= ConfigObj.M3UProperties.FileName;
   edtUrl.Text:= ConfigObj.M3UProperties.Url;
   cbUseChno.Checked:=ConfigObj.M3UProperties.UseChno;
+  edtUrl1.Text:=ConfigObj.M3UProperties.EPGUrl;
 
 end;
 
@@ -100,6 +103,7 @@ begin
   M3UProperties.FileName := edtFileName.Text;
   M3UProperties.Url := edtUrl.Text;
   M3UProperties.UseChno := cbUseChno.Checked;
+  M3UProperties.EPGUrl:= edtUrl1.Text;
 
   ConfigObj.M3UProperties := M3UProperties;
   ConfigObj.SaveConfig;

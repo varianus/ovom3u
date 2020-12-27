@@ -123,7 +123,13 @@ object fPlayer: TfPlayer
     Enabled = False
     Interval = 5000
     OnTimer = OSDTimerTimer
-    Left = 54
+    Left = 56
     Top = 344
+  end
+  object TaskDialog1: TTaskDialog
+    Buttons = <>
+    RadioButtons = <>
+    Left = 160
+    Top = 273
   end
 end

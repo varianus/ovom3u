@@ -602,6 +602,11 @@ const
        * If you encounter a value you don't know, you must not make any
        * assumptions about the contents of union u.
         }
+ type
+        mpv_byte_array = packed record
+            data: pointer;
+            size: csize_t;
+          end;
 
   type
     Pmpv_node_list = ^mpv_node_list;
@@ -622,19 +627,13 @@ const
 
     Pmpv_node = ^mpv_node;
 
+    mpv_node_array = packed array [0..100] of mpv_node;
+    pmpv_node_array = ^mpv_node_array;
     mpv_node_list = packed record
         num : cLong;
-        values : ^mpv_node;
+        values : pmpv_node_array;
         keys : PPChar;
       end;
-
-    mpv_byte_array = packed record
-        data: pointer;
-        size: csize_t;
-      end;
-
-
-
 
 
   {*
@@ -733,6 +732,7 @@ const
     }
 
     mpv_command_async : function(var ctx:mpv_handle; reply_userdata:cuint64; args:PPchar):longint;cdecl;
+    mpv_command_node : function(var ctx:mpv_handle; var args:mpv_node; var result:mpv_node):cint;cdecl;
   {*
    * Set a property to a given value. Properties are essentially variables which
    * can be queried or set at runtime. For example, writing to the pause property
@@ -1406,6 +1406,7 @@ implementation
       pointer(mpv_command):=GetProcAddress(hlib,'mpv_command');
       pointer(mpv_command_string):=GetProcAddress(hlib,'mpv_command_string');
       pointer(mpv_command_async):=GetProcAddress(hlib,'mpv_command_async');
+      pointer(mpv_command_node):=GetProcAddress(hlib,'mpv_command_node');
       pointer(mpv_set_property):=GetProcAddress(hlib,'mpv_set_property');
       pointer(mpv_set_property_string):=GetProcAddress(hlib,'mpv_set_property_string');
       pointer(mpv_set_property_async):=GetProcAddress(hlib,'mpv_set_property_async');
