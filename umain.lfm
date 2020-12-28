@@ -77,10 +77,17 @@ object fPlayer: TfPlayer
         OnClick = ToolButton1Click
       end
       object ToolButton2: TToolButton
-        Left = 24
+        Left = 96
         Top = 2
-        Caption = 'ToolButton2'
+        Caption = 'Epg'
         OnClick = ToolButton2Click
+      end
+      object ToolButton3: TToolButton
+        Left = 24
+        Height = 22
+        Top = 2
+        Caption = 'ToolButton3'
+        Style = tbsSeparator
       end
     end
     object ChannelList: TDrawGrid
