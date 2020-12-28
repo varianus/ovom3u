@@ -78,6 +78,22 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="GeneralFunc"/>
       </Unit>
+      <Unit>
+        <Filename Value="umydialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MyDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uMyDialog"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uepgform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="EPGForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uEPGFOrm"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -94,11 +110,6 @@
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
-      <Options>
-        <Win32>
-          <GraphicApplication Value="True"/>
-        </Win32>
-      </Options>
     </Linking>
   </CompilerOptions>
   <Debugging>

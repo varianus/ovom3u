@@ -1,9 +1,29 @@
+{
+This file is part of OvoM3U
+Copyright (C) 2020 Marco Caselli
+
+OvoPlayer is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+}
+{$I codegen.inc}
 unit GeneralFunc;
 
 interface
 
 uses
-  Classes, SysUtils,  CustApp, LazLoggerBase;
+  Classes, SysUtils,  LazLoggerBase;
 
 function TimeToMSec(Time: double): int64;
 Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;
@@ -92,9 +112,7 @@ end;
 procedure DownloadFromUrl(AFrom: String; ATo: String);
 var
   DS: TDownloadStream;
-  Redirected : boolean;
   FHTTPClient : TFPHTTPClient;
-  i: Integer;
 begin
   DS := TDownloadStream.Create(TFileStream.Create(ATo, fmCreate));
   try
@@ -115,7 +133,7 @@ end;
 
 function EpgDateToDate(const iDateStr: string): TDateTime;
 var
-  AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond, AOffset: Word;
+  AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word;
 begin
    AMilliSecond:=0;
    AYear:=StrToIntDef(copy(iDateStr,1,4),0);

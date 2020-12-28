@@ -19,6 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 }
 {$I codegen.inc}
 unit uconfig;
+
 interface
 
 uses
@@ -55,11 +56,11 @@ type
   end;
 
 
-Procedure ShowConfig;
+procedure ShowConfig;
 
 implementation
 
-uses BaseTypes, um3uloader;
+uses um3uloader;
 
 var
   fConfig: TfConfig;
@@ -78,32 +79,31 @@ end;
 
 procedure TfConfig.FormShow(Sender: TObject);
 var
-  IPTVList: string;
   Kind: TProviderKind;
 begin
-  pcM3u.ShowTabs:=false;
+  pcM3u.ShowTabs := False;
   ConfigObj.ReadConfig;
 
-  Kind:= ConfigObj.M3UProperties.Kind;
-  cbKind.ItemIndex:=ord(kind);
+  Kind := ConfigObj.M3UProperties.Kind;
+  cbKind.ItemIndex := Ord(kind);
   cbKind.OnChange(cbKind);
-  edtFileName.Text:= ConfigObj.M3UProperties.FileName;
-  edtUrl.Text:= ConfigObj.M3UProperties.Url;
-  cbUseChno.Checked:=ConfigObj.M3UProperties.UseChno;
-  edtUrl1.Text:=ConfigObj.M3UProperties.EPGUrl;
+  edtFileName.Text := ConfigObj.M3UProperties.FileName;
+  edtUrl.Text := ConfigObj.M3UProperties.Url;
+  cbUseChno.Checked := ConfigObj.M3UProperties.UseChno;
+  edtUrl1.Text := ConfigObj.M3UProperties.EPGUrl;
 
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
-  M3UProperties : TM3UProperties;
+  M3UProperties: TM3UProperties;
 begin
 
   M3UProperties.Kind := TProviderKind(cbKind.ItemIndex);
   M3UProperties.FileName := edtFileName.Text;
   M3UProperties.Url := edtUrl.Text;
   M3UProperties.UseChno := cbUseChno.Checked;
-  M3UProperties.EPGUrl:= edtUrl1.Text;
+  M3UProperties.EPGUrl := edtUrl1.Text;
 
   ConfigObj.M3UProperties := M3UProperties;
   ConfigObj.SaveConfig;
@@ -120,7 +120,7 @@ end;
 
 procedure TfConfig.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
-  CloseAction:= caHide;
+  CloseAction := caHide;
 end;
 
 procedure TfConfig.CancelButtonClick(Sender: TObject);
@@ -132,7 +132,6 @@ initialization
   fConfig := nil;
 
 finalization
-  If Assigned(fConfig)  then
-   fConfig.Free;
+  if Assigned(fConfig) then
+    fConfig.Free;
 end.
-

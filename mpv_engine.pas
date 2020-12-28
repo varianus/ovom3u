@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, libmpv, decoupler, BaseTypes, render, render_gl,
-  OpenGLContext, forms, LCLType;
+  OpenGLContext, Forms, LCLType;
 
 type
   TTrackType = (tkAudio, tkVideo, tkSub, tkUnkown);
@@ -62,43 +62,42 @@ type
     procedure GLRenderControlPaint(Sender: TObject);
     procedure InitRenderer(Data: PtrInt);
     procedure PostCommand(Command: TEngineCommand; Param: integer);
-    procedure ReceivedCommand(Sender: TObject; Command: TEngineCommand;
-      Param: integer);
+    procedure ReceivedCommand(Sender: TObject; Command: TEngineCommand; Param: integer);
     procedure SetBoolProperty(const PropertyName: string; AValue: boolean);
     procedure SetGLRenderControl(AValue: TOpenGlControl);
     procedure SetMainVolume(const AValue: integer);
     procedure SetOnLoadingState(AValue: TNotifyEvent);
   public
-    Property GLRenderControl: TOpenGlControl read FGLRenderControl write SetGLRenderControl;
-    property isRenderActive: boolean read fIsRenderActive write  fIsRenderActive;
-    property isGlEnabled: boolean read fisGlEnabled write  fisGlEnabled;
+    property GLRenderControl: TOpenGlControl read FGLRenderControl write SetGLRenderControl;
+    property isRenderActive: boolean read fIsRenderActive write fIsRenderActive;
+    property isGlEnabled: boolean read fisGlEnabled write fisGlEnabled;
     property OnLoadingState: TNotifyEvent read FOnLoadingState write SetOnLoadingState;
-    Property TrackList: TTrackList read fTrackList;
-    Property Volume: integer read GetMainVolume write SetMainVolume;
+    property TrackList: TTrackList read fTrackList;
+    property Volume: integer read GetMainVolume write SetMainVolume;
     function Initialize(Renderer: TOpenGLControl): boolean;
     function IsIdle: boolean;
     procedure LoadTracks;
-    Procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
+    procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
-    procedure OsdMessage(msg: string='');
-    procedure OsdEpg(msg:REpgInfo; Show:boolean);
+    procedure OsdMessage(msg: string = '');
+    procedure OsdEpg(msg: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
     procedure Stop;
     procedure Pause;
-    Constructor Create;
-    Destructor Destroy; override;
+    constructor Create;
+    destructor Destroy; override;
     procedure Test;
-
+    class function CheckMPV: boolean;
 
   end;
 
 implementation
+
 uses
   gl, GLext
 {$ifdef LINUX}
- ,ctypes
-{$endif}
-;
+  , ctypes
+{$endif};
 
 {$ifdef LINUX}
 function setlocale(category: cint; locale: PChar): PChar; cdecl; external 'c' Name 'setlocale';
@@ -147,8 +146,9 @@ end;
 
 procedure TMPVEngine.SetGLRenderControl(AValue: TOpenGlControl);
 begin
-  if FGLRenderControl=AValue then Exit;
-  FGLRenderControl:=AValue;
+  if FGLRenderControl = AValue then
+    Exit;
+  FGLRenderControl := AValue;
 end;
 
 procedure TMPVEngine.SetOnLoadingState(AValue: TNotifyEvent);
@@ -163,7 +163,7 @@ var
 {$endif}
 
 begin
-  Result:= true;
+  Result := True;
   try
     fhandle := mpv_create();
     mpv_set_option_string(fHandle^, 'hwdec', 'auto');
@@ -187,8 +187,8 @@ begin
     mpv_set_option(fHandle^, 'wid', MPV_FORMAT_INT64, @wid);
     {$endif}
 
-  Except
-    Result := false;
+  except
+    Result := False;
   end;
 end;
 
@@ -199,18 +199,18 @@ begin
   {$endif}
   Load_libmpv(libmpv.External_library);
   Loadrender(libmpv.External_library);
-  EngineState:= ENGINE_IDLE;
-  fHandle:= nil;
+  EngineState := ENGINE_IDLE;
+  fHandle := nil;
 end;
 
 destructor TMPVEngine.Destroy;
 begin
   if Assigned(fHandle) then
-    begin
-      mpv_render_context_free(Context^);
-      mpv_set_wakeup_callback(fhandle^, nil, self);
-      mpv_terminate_destroy(fhandle^);
-    end;
+  begin
+    mpv_render_context_free(Context^);
+    mpv_set_wakeup_callback(fhandle^, nil, self);
+    mpv_terminate_destroy(fhandle^);
+  end;
 
   Free_libmpv;
   inherited Destroy;
@@ -268,29 +268,25 @@ begin
         MPV_EVENT_LOG_MESSAGE:
           WriteLn(Pmpv_event_log_message(Event^.Data)^.Text);
         MPV_EVENT_PLAYBACK_RESTART:
-          begin
-            Loading:= false;
-            LoadTracks;
-            if Assigned(FOnLoadingState) then
-              FOnLoadingState(self);
-          end;
+        begin
+          Loading := False;
+          LoadTracks;
+          if Assigned(FOnLoadingState) then
+            FOnLoadingState(self);
+        end;
         MPV_EVENT_PROPERTY_CHANGE:
-          begin
-            if Pmpv_event_property(Event^.Data)^.Name = 'core-idle' then
+          if Pmpv_event_property(Event^.Data)^.Name = 'core-idle' then
+            if Loading then
             begin
-              if Loading then
+              mpv_get_property(fhandle^, 'core-idle', MPV_FORMAT_FLAG, @p);
+              Loading := P = 1;
+              if not loading then
               begin
-                mpv_get_property(fhandle^,'core-idle',MPV_FORMAT_FLAG, @p);
-                Loading := P = 1;
-                if not loading then
-                  begin
-                   if Assigned(FOnLoadingState) then
-                     FOnLoadingState(self);
-                    LoadTracks;
-                  end;
+                if Assigned(FOnLoadingState) then
+                  FOnLoadingState(self);
+                LoadTracks;
               end;
             end;
-          end;
       end;
       Event := mpv_wait_event(fhandle^, 0);
     end;
@@ -301,6 +297,7 @@ begin
     GLRenderControl.Repaint;
   end;
 end;
+
 procedure TMPVEngine.Play(mrl: string);
 var
   Args: array of PChar;
@@ -313,8 +310,8 @@ begin
   args[1] := PChar(mrl);
   args[2] := 'replace';
   args[3] := nil;
-  res     := mpv_command(fhandle^, ppchar(@args[0]));
-  Loading := true;
+  res := mpv_command(fhandle^, ppchar(@args[0]));
+  Loading := True;
 
 end;
 
@@ -337,11 +334,11 @@ begin
       WriteLn('Node ', sizeof(mpv_node));
       WriteLn('List ', sizeof(map.u.list_));
       map := Node.u.list_^.values[i]; // pmpv_node(PtrUInt(Node.u.list_^.values) + i * 16)^;
-      pc  := map.u.list_^.keys;
+      pc := map.u.list_^.keys;
       for j := 0 to map.u.list_^.num - 1 do
       begin
         Detail := map.u.list_^.values[j]; // Pmpv_node(PtrUInt(map.u.list_^.values) + j * 16)^;
-        Value  := strpas(pc^);
+        Value := strpas(pc^);
         if Value = 'id' then
           fTrackList[i].Id := Detail.u.int64_;
         if Value = 'title' then
@@ -426,106 +423,110 @@ begin
     //glMatrixMode(GL_MODELVIEW);
     //glLoadIdentity();
     mpfbo.fbo := 0;
-    mpfbo.h   := GLRenderControl.Height;
-    mpfbo.w   := GLRenderControl.Width;
+    mpfbo.h := GLRenderControl.Height;
+    mpfbo.w := GLRenderControl.Width;
     mpfbo.internal_format := 0;
     mpv_render_context_render(Context^, Pmpv_render_param(@Params[0]));
     GLRenderControl.SwapBuffers();
   end;
 
 end;
-function TMPVEngine.GetBoolProperty(const PropertyName:string):boolean;
+
+function TMPVEngine.GetBoolProperty(const PropertyName: string): boolean;
 var
   res: integer;
-  p:integer;
+  p: integer;
 begin
- res:=mpv_get_property(fhandle^,pchar(PropertyName),MPV_FORMAT_FLAG,@p);
- result := Boolean(p);
+  res := mpv_get_property(fhandle^, PChar(PropertyName), MPV_FORMAT_FLAG, @p);
+  Result := boolean(p);
 end;
 
-procedure TMPVEngine.SetBoolProperty(const PropertyName:string; AValue: boolean);
+procedure TMPVEngine.SetBoolProperty(const PropertyName: string; AValue: boolean);
 var
   res: integer;
-  p: Integer;
+  p: integer;
 begin
-   if AValue then
-     p:= 1
-   else
-     p:=0;
- res:=mpv_set_property(fhandle^,pchar(PropertyName),MPV_FORMAT_FLAG,@p);
+  if AValue then
+    p := 1
+  else
+    p := 0;
+  res := mpv_set_property(fhandle^, PChar(PropertyName), MPV_FORMAT_FLAG, @p);
 end;
 
 
 function TMPVEngine.IsIdle: boolean;
 begin
- Result := GetBoolProperty('core-idle');
- if Result then
-   EngineState:= ENGINE_IDLE
- else
-   EngineState:= ENGINE_PLAY;
+  Result := GetBoolProperty('core-idle');
+  if Result then
+    EngineState := ENGINE_IDLE
+  else
+    EngineState := ENGINE_PLAY;
 end;
 
 procedure TMPVEngine.SetTrack(TrackType: TTrackType; Id: integer);
 var
   TrackTypeString: string;
 begin
- Case TrackType of
-   tkAudio : TrackTypeString := 'aid';
-   tkVideo : TrackTypeString := 'vid';
-   tkSub : TrackTypeString := 'sid';
- else
-   exit;
- end;
- mpv_set_property(fHandle^, pchar(TrackTypeString), MPV_FORMAT_INT64, @id);
+  case TrackType of
+    tkAudio: TrackTypeString := 'aid';
+    tkVideo: TrackTypeString := 'vid';
+    tkSub: TrackTypeString := 'sid';
+    else
+      exit;
+  end;
+  mpv_set_property(fHandle^, PChar(TrackTypeString), MPV_FORMAT_INT64, @id);
 end;
 
 procedure TMPVEngine.SetTrack(Index: integer);
 var
   TrackTypeString: string;
 begin
- SetTrack(TrackList[index].Kind, TrackList[index].Id);
+  SetTrack(TrackList[index].Kind, TrackList[index].Id);
 end;
 
 function TMPVEngine.GetMainVolume: integer;
 var
-  vol : Double;
-  res:integer;
+  vol: double;
+  res: integer;
 begin
-  res :=mpv_get_property(fhandle^,'volume',MPV_FORMAT_DOUBLE,@vol);
+  res := mpv_get_property(fhandle^, 'volume', MPV_FORMAT_DOUBLE, @vol);
   Result := trunc(vol);
 end;
 
 procedure TMPVEngine.SetMainVolume(const AValue: integer);
-var                                         vol : Double;
-  res:integer;
+var
+  vol: double;
+  res: integer;
 begin
-  vol := AValue ;
-  res := mpv_set_property(fhandle^,'volume',MPV_FORMAT_DOUBLE,@vol);
+  vol := AValue;
+  res := mpv_set_property(fhandle^, 'volume', MPV_FORMAT_DOUBLE, @vol);
 
 end;
 
 
 procedure TMPVEngine.Stop;
 var
-  Args: array of pchar;
+  Args: array of PChar;
   res: longint;
 begin
- setlength(args,2);
- args[0] := 'stop';
- args[1] := nil ;
- res:= mpv_command(fhandle^, ppchar(@args[0])) ;
- EngineState:= ENGINE_STOP;
+  setlength(args, 2);
+  args[0] := 'stop';
+  args[1] := nil;
+  res := mpv_command(fhandle^, ppchar(@args[0]));
+  EngineState := ENGINE_STOP;
 
 end;
 
-procedure TMPVEngine.OsdMessage(msg:string='');
+procedure TMPVEngine.OsdMessage(msg: string = '');
 var
   num: int64;
 begin
- mpv_set_property_string(fHandle^,'osd-align-y','top');
- num:= 1;  mpv_set_property(fHandle^,'osd-level',MPV_FORMAT_INT64,@num);
- num:= 0;  mpv_set_property(fHandle^,'osd-border-size',MPV_FORMAT_INT64,@num);
- mpv_set_property_string(fHandle^,'osd-msg1',pchar(msg));
+  mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
+  num := 1;
+  mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
+  num := 0;
+  mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
+  mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
 end;
 
 procedure TMPVEngine.OsdEpg(msg: REpgInfo; Show: boolean);
@@ -535,66 +536,73 @@ procedure TMPVEngine.OsdEpg(msg: REpgInfo; Show: boolean);
 //  mpv_set_property_string(fHandle^,'osd-align-y','bottom');
 //  num:= 3;  mpv_set_property(fHandle^,'osd-level',MPV_FORMAT_INT64,@num);
 //  num:= 2;  mpv_set_property(fHandle^,'osd-border-size',MPV_FORMAT_INT64,@num);
-//  mpv_set_property_string(fHandle^,'osd-msg3',pchar(msg));
+//  mpv_set_property_string(fHandle^,'osd-msg3',pchar(format('%s - %s - %s '+#10+' %s',
+//                              [TimeToStr(msg.StartTime),TimeToStr(msg.StartTime),msg.Title,msg.Plot])));
+//end;
 var
- Node: mpv_node;
- List: mpv_node_list;
- Keys: array of pchar;
- values:mpv_node_array;
- res: mpv_node;
- fres:longint;
+  Node: mpv_node;
+  List: mpv_node_list;
+  Keys: array of PChar;
+  values: mpv_node_array;
+  res: mpv_node;
+  fres: longint;
 begin
- SetLength(Keys, 4);
- Keys[0] := 'name';
- values[0].format:=MPV_FORMAT_STRING;
- values[0].u.string_:='osd-overlay';
- Keys[1] := 'id';
- values[1].format:=MPV_FORMAT_INT64;
- values[1].u.int64_:=1;
- Keys[2] := 'format';
- values[2].format:=MPV_FORMAT_STRING;
- values[2].u.string_:='ass-events';
- Keys[3] := 'data';
- values[3].format:=MPV_FORMAT_STRING;
+  SetLength(Keys, 4);
+  Keys[0] := 'name';
+  values[0].format := MPV_FORMAT_STRING;
+  values[0].u.string_ := 'osd-overlay';
+  Keys[1] := 'id';
+  values[1].format := MPV_FORMAT_INT64;
+  values[1].u.int64_ := 1;
+  Keys[2] := 'format';
+  values[2].format := MPV_FORMAT_STRING;
+  values[2].u.string_ := 'ass-events';
+  Keys[3] := 'data';
+  values[3].format := MPV_FORMAT_STRING;
 
- // \3c&HFFFFFF&\3a&H80&
- values[3].u.string_:=pchar(format('{\bord1\an1}{\fscx50\fscy50}%s - %s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
-                              [TimeToStr(msg.StartTime),TimeToStr(msg.StartTime),msg.Title,msg.Plot]));
+  // \3c&HFFFFFF&\3a&H80&
+  values[3].u.string_ := PChar(format('{\bord1\an1}{\fscx50\fscy50}%s - %s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
+    [TimeToStr(msg.StartTime), TimeToStr(msg.StartTime), msg.Title, msg.Plot]));
 
- List.num:=4;
- List.keys:=@Keys[0];
- List.values:=@values[0];
- Node.format:=MPV_FORMAT_NODE_MAP;
- Node.u.list_:=@list;
- mpv_set_property_string(fHandle^,'osd-back-color','#80000000');
+  List.num := 4;
+  List.keys := @Keys[0];
+  List.values := @values[0];
+  Node.format := MPV_FORMAT_NODE_MAP;
+  Node.u.list_ := @list;
+  mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
- fres:=mpv_command_node(fHandle^, node, res);
-
+  fres := mpv_command_node(fHandle^, node, res);
 
 end;
 
 procedure TMPVEngine.Pause;
 begin
- if (EngineState = ENGINE_PAUSE) then
-   begin
-       SetBoolProperty('pause', false);
-       OsdMessage();
-       EngineState:=ENGINE_PLAY;
-   end
- else if  EngineState = ENGINE_PLAY then
-   begin
-     SetBoolProperty('pause', true);
-     OsdMessage('Paused');
-     EngineState:=ENGINE_Pause;
-   end;
+  if (EngineState = ENGINE_PAUSE) then
+  begin
+    SetBoolProperty('pause', False);
+    OsdMessage();
+    EngineState := ENGINE_PLAY;
+  end
+  else if EngineState = ENGINE_PLAY then
+  begin
+    SetBoolProperty('pause', True);
+    OsdMessage('Paused');
+    EngineState := ENGINE_Pause;
+  end;
 
 end;
 
 procedure TMPVEngine.Test;
-var s: int64;
+var
+  s: int64;
 begin
- mpv_get_property(fHandle^,'osd-font-size',MPV_FORMAT_INT64,@s);
- OsdMessage(inttostr(s));
+  mpv_get_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @s);
+  OsdMessage(IntToStr(s));
+end;
+
+class function TMPVEngine.CheckMPV: boolean;
+begin
+  Result := Check_libmpv and Check_Renderer;
 end;
 
 end.

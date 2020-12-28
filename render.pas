@@ -106,6 +106,7 @@ mpv_render_context_free : procedure(var ctx:mpv_render_context);cdecl;
 
 procedure Freerender;
 procedure Loadrender(lib : pchar);
+Function Check_Renderer:boolean;
 
 implementation
 
@@ -146,6 +147,26 @@ implementation
       pointer(mpv_render_context_report_swap):=GetProcAddress(hlib,'mpv_render_context_report_swap');
       pointer(mpv_render_context_free):=GetProcAddress(hlib,'mpv_render_context_free');
     end;
+
+Function Check_Renderer:boolean;
+begin
+  Result:=false;
+  if Hlib <> 0 then
+    Begin
+      Result := true;
+      exit;
+    end;
+  try
+    Loadrender(External_library);
+    if (hlib = 0) then
+      Exit;
+  Except
+    hlib := 0;
+    exit;
+  end;
+
+  Result:=true;
+end;
 
 
 end.

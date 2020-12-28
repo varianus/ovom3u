@@ -17,6 +17,8 @@ type
     EndTime: TDateTime;
   end;
 
+  AREpgInfo = array of REpgInfo;
+
 implementation
 
 end.

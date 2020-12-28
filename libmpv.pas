@@ -623,6 +623,9 @@ const
     mpv_node = packed record
         u: _u;
         format : mpv_format;
+        {$IFDEF CPU32}
+    dummy: integer;
+        {$ENDIF}
       end;
 
     Pmpv_node = ^mpv_node;
@@ -1425,29 +1428,24 @@ implementation
       pointer(mpv_get_wakeup_pipe):=GetProcAddress(hlib,'mpv_get_wakeup_pipe');
     end;
 
-  Function Check_libmpv:boolean;
-  var
-    cdir: string;
-    MustFree :boolean ;
+function Check_libmpv: boolean;
+begin
+  Result := False;
+  if Hlib <> 0 then
   begin
-    // no error
-    MustFree := hlib = 0;
-
+    Result := True;
+    exit;
+  end;
+  try
     Load_libmpv(External_library);
-    Result:=false;
-    // exit, report error
     if (hlib = 0) then
-      begin
-      end
-    else
-      begin
-        Result:=true;
-        if MustFree then
-           begin
-             UnloadLibrary(hlib);
+      Exit;
+  except
              hlib := 0;
+    exit;
            end;
-      end;
+
+  Result := True;
   end;
 
 initialization

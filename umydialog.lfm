@@ -1,0 +1,86 @@
+object MyDialog: TMyDialog
+  Left = 1170
+  Height = 380
+  Top = 194
+  Width = 580
+  Anchors = [akLeft]
+  AutoSize = True
+  Caption = 'Message'
+  ClientHeight = 380
+  ClientWidth = 580
+  LCLVersion = '2.1.0.0'
+  object lbText: TLabel
+    Left = 12
+    Height = 214
+    Top = 86
+    Width = 556
+    Align = alClient
+    Anchors = []
+    AutoSize = False
+    BorderSpacing.Around = 12
+    Caption = 'lbtext'
+    ParentColor = False
+    WordWrap = True
+  end
+  object pnlActions: TPanel
+    AnchorSideTop.Control = lbText
+    AnchorSideTop.Side = asrBottom
+    Left = 9
+    Height = 50
+    Top = 312
+    Width = 562
+    Align = alBottom
+    BorderSpacing.Around = 9
+    BevelOuter = bvNone
+    TabOrder = 0
+  end
+  object ToolBar1: TPanel
+    AnchorSideTop.Control = pnlActions
+    AnchorSideTop.Side = asrBottom
+    Left = 9
+    Height = 0
+    Top = 371
+    Width = 562
+    Align = alBottom
+    Anchors = [akLeft, akRight]
+    AutoSize = True
+    BorderSpacing.Around = 9
+    TabOrder = 1
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 74
+    Top = 0
+    Width = 580
+    Align = alTop
+    ClientHeight = 74
+    ClientWidth = 580
+    TabOrder = 2
+    object imgIcon: TImage
+      Left = 10
+      Height = 54
+      Top = 10
+      Width = 58
+      Align = alLeft
+      Anchors = []
+      BorderSpacing.Around = 9
+    end
+    object lbTitle: TLabel
+      Left = 77
+      Height = 54
+      Top = 10
+      Width = 493
+      Align = alClient
+      Alignment = taCenter
+      Anchors = [akRight]
+      AutoSize = False
+      BorderSpacing.Around = 9
+      Caption = 'lbTitle'
+      Font.Color = clHighlight
+      Font.Height = -16
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+    end
+  end
+end

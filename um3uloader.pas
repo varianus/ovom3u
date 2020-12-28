@@ -26,7 +26,7 @@ uses
   Classes, SysUtils, Generics.Collections, StrUtils;
 
 type
-  TProviderKind = (Local,URL);
+  TProviderKind = (Local, URL);
 
   TM3UItem = class
   public
@@ -46,21 +46,21 @@ type
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
     fLastMessage: string;
-    function SortbyNumber(constref Left, Right: TM3UItem): Integer;
+    function SortbyNumber(constref Left, Right: TM3UItem): integer;
   public
     property LastMessage: string read fLastMessage;
     constructor Create;
     destructor Destroy; override;
     function Load(const ListName: string): boolean;
-    Function ItemByChno(chno:integer):integer;
-    Procedure FixChannelNumbering;
+    function ItemByChno(chno: integer): integer;
+    procedure FixChannelNumbering;
 
   end;
 
 
 implementation
 
-uses Math,Generics.Defaults;
+uses Math, Generics.Defaults;
 
 resourcestring
   RSEmpty = 'M3U file is empty';
@@ -87,7 +87,7 @@ var
   fData: boolean;
   index: integer;
 
-  function FindTag(const tag: string; Const st: string): string;
+  function FindTag(const tag: string; const st: string): string;
   var
     tagpos: integer;
     TagStart: integer;
@@ -95,7 +95,7 @@ var
     TagPos := Pos(tag, st);
     if TagPos > 0 then
     begin
-      TagStart := PosEx('"',st, tagpos)+1;
+      TagStart := PosEx('"', st, tagpos) + 1;
       Result := ExtractSubstr(St, TagStart, ['"']);
     end;
   end;
@@ -138,7 +138,7 @@ begin
           item.Id := FindTag('tvg-id', s);
           item.Icon := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
-          item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s),0);
+          item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
           Item.Title := copy(s, RPos(',', S) + 1, Length(s));
           Inc(index);
           Add(Item);
@@ -161,39 +161,37 @@ var
   i: integer;
 begin
   Result := -1;
-  for i := 0 to count -1 do
-   if items[i].tvg_chno = chno then
+  for i := 0 to Count - 1 do
+    if items[i].tvg_chno = chno then
     begin
       Result := i;
       break;
     end;
 end;
 
-function TM3ULoader.SortbyNumber(constref Left, Right: TM3UItem): Integer;
+function TM3ULoader.SortbyNumber(constref Left, Right: TM3UItem): integer;
 begin
-  Result:= CompareValue(left.Number, Right.Number);
+  Result := CompareValue(left.Number, Right.Number);
 end;
 
 procedure TM3ULoader.FixChannelNumbering;
 var
-  i: Integer;
+  i: integer;
   MaxChno: integer;
 begin
-  Maxchno:=0;
-  For i := 0 to Count -1 do
+  Maxchno := 0;
+  for i := 0 to Count - 1 do
+  begin
+    items[i].Number := items[i].tvg_chno;
+    if items[i].tvg_chno > MaxChno then
+      MaxChno := items[i].tvg_chno;
+  end;
+  for i := 0 to Count - 1 do
+    if items[i].Number = 0 then
     begin
-      items[i].Number := items[i].tvg_chno;
-      if items[i].tvg_chno > MaxChno then
-       MaxChno:=items[i].tvg_chno;
-    end;
-  For i := 0 to Count -1 do
-    begin
-      if items[i].Number = 0 then
-       begin
-         inc(MaxChno);
-         items[i].tvg_chno := MaxChno;
-         items[i].Number := MaxChno;
-       end;
+      Inc(MaxChno);
+      items[i].tvg_chno := MaxChno;
+      items[i].Number := MaxChno;
     end;
   Sort(TComparer<TM3UItem>.Construct(SortByNumber));
 end;

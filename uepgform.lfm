@@ -1,0 +1,70 @@
+object EPGForm: TEPGForm
+  Left = 361
+  Height = 727
+  Top = 181
+  Width = 1366
+  Caption = 'EPGForm'
+  ClientHeight = 727
+  ClientWidth = 1366
+  OnCreate = FormCreate
+  LCLVersion = '2.1.0.0'
+  object DrawGrid1: TDrawGrid
+    Left = 0
+    Height = 705
+    Top = 22
+    Width = 1366
+    Align = alClient
+    AutoFillColumns = True
+    ColCount = 2
+    Columns = <    
+      item
+        SizePriority = 0
+        Title.Caption = 'Channel'
+        Width = 100
+      end    
+      item
+        MaxSize = 500
+        Title.Caption = ''
+        Width = 1262
+      end>
+    DefaultRowHeight = 30
+    ExtendedSelect = False
+    FixedCols = 0
+    TabOrder = 0
+    OnDrawCell = DrawGrid1DrawCell
+    ColWidths = (
+      100
+      1262
+    )
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 22
+    Top = 0
+    Width = 1366
+    Align = alTop
+    AutoSize = True
+    ClientHeight = 22
+    ClientWidth = 1366
+    TabOrder = 1
+    object Arrow1: TArrow
+      Left = 1
+      Height = 20
+      Top = 1
+      Width = 20
+      Constraints.MinHeight = 8
+      Constraints.MinWidth = 8
+      OnClick = Arrow1Click
+    end
+    object Arrow2: TArrow
+      Left = 29
+      Height = 20
+      Top = 1
+      Width = 20
+      ArrowType = atRight
+      Constraints.MinHeight = 8
+      Constraints.MinWidth = 8
+      OnClick = Arrow2Click
+    end
+  end
+end

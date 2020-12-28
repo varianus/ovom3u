@@ -19,23 +19,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 }
 {$I codegen.inc}
 program ovom3u;
-uses
-  {$IFDEF UNIX}
-  cthreads,
-  {$ENDIF}
-  {$IFDEF HASAMIGA}
-  athreads,
-  {$ENDIF}
+
+uses {$IFDEF UNIX}
+  cthreads, {$ENDIF} {$IFDEF HASAMIGA}
+  athreads, {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, lazopenglcontext, umain, um3uloader, Mpv_Engine, uconfig, epg;
+  Forms,
+  lazopenglcontext,
+  umain,
+  um3uloader,
+  Mpv_Engine,
+  uconfig,
+  epg,
+  uMyDialog, uEPGFOrm;
 
 {$R *.res}
 
 begin
   RequireDerivedFormResource := True;
-  Application.Scaled:=True;
+  Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
+  Application.CreateForm(TEPGForm, EPGForm);
   Application.Run;
 end.
-
