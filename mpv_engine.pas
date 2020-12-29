@@ -56,6 +56,7 @@ type
     fTrackList: TTrackList;
     EngineState: TEngineState;
     Loading: boolean;
+    ClientVersion: DWORD;
 
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetMainVolume: integer;
@@ -80,7 +81,7 @@ type
     procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
     procedure OsdMessage(msg: string = '');
-    procedure OsdEpg(msg: REpgInfo; Show: boolean);
+    procedure OsdEpg(EpgInfo: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
     procedure Stop;
     procedure Pause;
@@ -94,7 +95,7 @@ type
 implementation
 
 uses
-  gl, GLext
+  gl, GLext, GeneralFunc
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -170,7 +171,9 @@ begin
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_initialize(fHandle^);
-    mpv_request_log_messages(fhandle^, 'v');
+
+    //    mpv_request_log_messages(fhandle^, 'v');
+    ClientVersion := mpv_client_api_version;
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
     mpv_set_wakeup_callback(fhandle^, @LibMPVEvent, self);
@@ -331,8 +334,6 @@ begin
     SetLength(fTrackList, Node.u.list_^.num);
     for i := 0 to Node.u.list_^.num - 1 do
     begin
-      WriteLn('Node ', sizeof(mpv_node));
-      WriteLn('List ', sizeof(map.u.list_));
       map := Node.u.list_^.values[i]; // pmpv_node(PtrUInt(Node.u.list_^.values) + i * 16)^;
       pc := map.u.list_^.keys;
       for j := 0 to map.u.list_^.num - 1 do
@@ -529,17 +530,9 @@ begin
   mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
 end;
 
-procedure TMPVEngine.OsdEpg(msg: REpgInfo; Show: boolean);
-//var
-//  num: int64;
-//begin
-//  mpv_set_property_string(fHandle^,'osd-align-y','bottom');
-//  num:= 3;  mpv_set_property(fHandle^,'osd-level',MPV_FORMAT_INT64,@num);
-//  num:= 2;  mpv_set_property(fHandle^,'osd-border-size',MPV_FORMAT_INT64,@num);
-//  mpv_set_property_string(fHandle^,'osd-msg3',pchar(format('%s - %s - %s '+#10+' %s',
-//                              [TimeToStr(msg.StartTime),TimeToStr(msg.StartTime),msg.Title,msg.Plot])));
-//end;
+procedure TMPVEngine.OsdEpg(EpgInfo: REpgInfo; Show: boolean);
 var
+  num: int64;
   Node: mpv_node;
   List: mpv_node_list;
   Keys: array of PChar;
@@ -547,31 +540,48 @@ var
   res: mpv_node;
   fres: longint;
 begin
-  SetLength(Keys, 4);
-  Keys[0] := 'name';
-  values[0].format := MPV_FORMAT_STRING;
-  values[0].u.string_ := 'osd-overlay';
-  Keys[1] := 'id';
-  values[1].format := MPV_FORMAT_INT64;
-  values[1].u.int64_ := 1;
-  Keys[2] := 'format';
-  values[2].format := MPV_FORMAT_STRING;
-  values[2].u.string_ := 'ass-events';
-  Keys[3] := 'data';
-  values[3].format := MPV_FORMAT_STRING;
+  if ClientVersion <= _MPV_CLIENT_API_VERSION then
+  begin
+    mpv_set_property_string(fHandle^, 'osd-align-y', 'bottom');
+    num := 3;
+    mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
+    num := 2;
+    mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
+    mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s    %s ' + #10 + ' %s',
+      [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot])));
+  end
+  else
+  begin
+    SetLength(Keys, 4);
+    Keys[0] := 'name';
+    values[0].format := MPV_FORMAT_STRING;
+    values[0].u.string_ := 'osd-overlay';
+    Keys[1] := 'id';
+    values[1].format := MPV_FORMAT_INT64;
+    values[1].u.int64_ := 1;
+    Keys[2] := 'format';
+    values[2].format := MPV_FORMAT_STRING;
+    if Show then
+      values[2].u.string_ := 'ass-events'
+    else
+      values[2].u.string_ := 'none';
+    Keys[3] := 'data';
+    values[3].format := MPV_FORMAT_STRING;
 
-  // \3c&HFFFFFF&\3a&H80&
-  values[3].u.string_ := PChar(format('{\bord1\an1}{\fscx50\fscy50}%s - %s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
-    [TimeToStr(msg.StartTime), TimeToStr(msg.StartTime), msg.Title, msg.Plot]));
+    // \3c&HFFFFFF&\3a&H80&
+    values[3].u.string_ := PChar(format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
+      [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
 
-  List.num := 4;
-  List.keys := @Keys[0];
-  List.values := @values[0];
-  Node.format := MPV_FORMAT_NODE_MAP;
-  Node.u.list_ := @list;
-  mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
+    List.num := 4;
+    List.keys := @Keys[0];
+    List.values := @values[0];
+    Node.format := MPV_FORMAT_NODE_MAP;
+    Node.u.list_ := @list;
+    mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
-  fres := mpv_command_node(fHandle^, node, res);
+    fres := mpv_command_node(fHandle^, node, res);
+
+  end;
 
 end;
 
