@@ -56,7 +56,6 @@ type
     procedure CheckDBStructure;
     procedure EndScan(AObject: TObject);
     function GetDbVersion: integer;
-    procedure GetLogEvent(Sender: TSQLConnection; EventType: TDBEventType; const Msg: String);
     procedure SetLastScan(ScanType: string);
     procedure SetupDBConnection;
     procedure UpgradeDBStructure(LoadedDBVersion: integer);
@@ -69,7 +68,7 @@ type
     function LastScan(const ScanType: string): TDateTime;
     procedure LoadChannelList(List: TM3ULoader);
     procedure Scan;
-    function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo;  overload;
+    function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
   end;
 
@@ -107,34 +106,12 @@ const
 
   INSERTPROGRAMME = 'INSERT INTO "programme"("idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")' + ' values  (NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
 
-procedure TEpg.GetLogEvent(Sender: TSQLConnection;
-  EventType: TDBEventType; const Msg: String);
-// The procedure is called by TSQLConnection and saves the received log messages
-// in the FConnectionLog stringlist
-var
-  Source: string;
-begin
-  // Nicely right aligned...
-  case EventType of
-    detCustom:   Source:='Custom:  ';
-    detPrepare:  Source:='Prepare: ';
-    detExecute:  Source:='Execute: ';
-    detFetch:    Source:='Fetch:   ';
-    detCommit:   Source:='Commit:  ';
-    detRollBack: Source:='Rollback:';
-    else Source:='Unknown event. Please fix program code.';
-  end;
-  Writeln(Source + ' ' + Msg);
-end;
-
 procedure TEpg.SetupDBConnection;
 var
   i: integer;
 begin
   fDB := TSQLite3Connection.Create(nil);
   fDB.DatabaseName := GetConfigDir + 'epg.db';
-//  fDB.LogEvents:=LogAllEvents;
-//  fDB.OnLog:=GetLogEvent;
 
   ftr := TSQLTransaction.Create(nil);
 
@@ -291,6 +268,7 @@ end;
 procedure TEpg.AfterScan;
 begin
   fTR.CommitRetaining;
+  fEpgAvailable := True;
 end;
 
 
@@ -299,8 +277,11 @@ var
   Scanner: TEpgScanner;
 begin
   if LastScan('epg') + 12 > now then
+  begin
+    AfterScan;
     exit;
-
+  end;
+  fEpgAvailable := False;
   if Assigned(FOnScanStart) then
     FOnScanStart(self);
   BeforeScan;
@@ -338,30 +319,32 @@ end;
 function TEpg.GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo;
 var
   qSearch: TSQLQuery;
-  i: Integer;
+  i: integer;
 begin
   qSearch := TSQLQuery.Create(fDB);
   try
     qSearch.Transaction := fTR;
     qSearch.SQL.Text := 'select distinct * from programme p where p.idChannel = :id  ' +
-                        ' and ((dStartTime >= :stime and dEndTime <= :etime) ' +
-                        '  or  (dStartTime <= :stime and dEndTime >= :stime) '+
-                        '  or  (dStartTime <= :etime and dEndTime >= :etime)) ' +
-                        ' order by dStartTime';
+      ' and ((dStartTime >= :stime and dEndTime <= :etime) ' +
+      '  or  (dStartTime <= :stime and dEndTime >= :stime) ' +
+      '  or  (dStartTime <= :etime and dEndTime >= :etime)) ' +
+      ' order by dStartTime';
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('stime').AsDateTime := StartTime;
     qSearch.ParamByName('etime').AsDateTime := EndTime;
+    qSearch.PacketRecords := -1;
     qSearch.Open;
+    i := qSearch.RecordCount;
     SetLength(Result, qSearch.RecordCount);
-    i:=0;
-    While not qSearch.EOF do
+    i := 0;
+    while not qSearch.EOF do
     begin
       Result[i].Title := qSearch.FieldByName('sTitle').AsString;
       Result[i].Plot := qSearch.FieldByName('sPlot').AsString;
       Result[i].StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result[i].EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
-      inc(i);
-      qsearch.next;
+      Inc(i);
+      qsearch.Next;
     end;
   finally
     qSearch.Free;
@@ -372,6 +355,7 @@ end;
 
 constructor TEpg.Create;
 begin
+  fEpgAvailable := False;
   SetupDBConnection;
   CheckDBStructure;
 end;
