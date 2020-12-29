@@ -23,8 +23,8 @@ unit umain;
 interface
 
 uses
-  Classes, Forms, Controls, Graphics, LCLTaskDialog, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, StdCtrls, um3uloader,
+  Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -33,7 +33,6 @@ type
 
   TfPlayer = class(TForm)
     ChannelList: TDrawGrid;
-    Label1: TLabel;
     OSDTimer: TTimer;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -47,7 +46,6 @@ type
     pmPlayer: TPopupMenu;
     HideMouse: TTimer;
     LoadingTimer: TTimer;
-    TaskDialog1: TTaskDialog;
     ToolBar1: TToolBar;
     ToolButton1: TToolButton;
     ToolButton2: TToolButton;
@@ -67,7 +65,6 @@ type
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure pnlContainerPaint(Sender: TObject);
-    procedure TaskDialog1ButtonClicked(Sender: PTaskDialog; AButtonID: integer; var ACanClose: boolean);
     procedure ToolButton1Click(Sender: TObject);
     procedure ToolButton2Click(Sender: TObject);
   private
@@ -111,22 +108,24 @@ uses uconfig, BaseTypes;
 
 {$R *.lfm}
 
+const
+  WIKI_MPV_LINK = 'https://github.com/varianus/ovom3u/wiki/LibMPV';
+
 { TfPlayer }
 
 function TfPlayer.CheckConfigAndSystem: boolean;
 var
-  Dialog: LCLTaskDialog.TTaskDialog;
   Retry: boolean;
 begin
   repeat
     Retry := False;
     if not TMPVEngine.CheckMPV then
       case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
-          'LibMPV shared library is missing or could not be initialized' + #10 +
-          'OvoM3U uses this library to decode and play videos' + #10 +
-          'Click the following to open a wiki page with information on' + #10 +
+          'LibMPV shared library is missing or could not be initialized.' + #10 +
+          'OvoM3U uses this library to decode and play video.' + #10 +
+          'Click the following link to open a wiki page with information on' + #10 +
           'how to install libMPV on your platform', [mbRetry, mbClose],
-          ['https://github.com/varianus/ovom3u/wiki/LibMPV']) of
+          [WIKI_MPV_LINK]) of
 
         mrClose:
         begin
@@ -135,6 +134,7 @@ begin
           exit;
         end;
         mrRetry: Retry := True;
+        100: OpenURL(WIKI_MPV_LINK);
       end;
   until Retry = False;
 
@@ -147,12 +147,17 @@ begin
   end;
 
   if IPTVList.IsEmpty then
-  begin
-    Dialog.Inst := 'Welcome to OvoM3U';
-    Dialog.Content := 'Configure';
-    Dialog.Buttons := '';
-    Dialog.Execute([cbOK], 1, [tdfUseCommandLinks], LCLTaskDialog.TTaskDialogIcon.tiWarning, tfiBlank, 0, 0, 0, True, True);
-  end;
+    case ShowMyDialog(mtWarning, 'Welcome to OvoM3U',
+        'No list configured' + #10 +
+        'Message for configuration', [mbClose],
+        ['Open Config']) of
+      mrClose:
+      begin
+        Result := False;
+        exit;
+      end;
+      100: ShowConfig;
+    end;
 
 end;
 
@@ -305,7 +310,7 @@ end;
 
 procedure TfPlayer.LoadingTimerStartTimer(Sender: TObject);
 begin
-  Progress := 0;
+  Progress := 10;
 end;
 
 procedure TfPlayer.LoadingTimerTimer(Sender: TObject);
@@ -323,7 +328,7 @@ begin
   end;
 
   if progress > 720 then
-    Progress := 0;
+    Progress := 10;
   pnlContainer.Invalidate;
 end;
 
@@ -400,7 +405,10 @@ procedure TfPlayer.OSDTimerTimer(Sender: TObject);
 begin
   fLastMessage := '';
   if GLRenderer.Visible then
-    MpvEngine.OsdMessage()
+    begin
+      MpvEngine.OsdMessage();
+      MpvEngine.OsdEpg(Default(REpgInfo), false);
+    end
   else
     pnlContainer.invalidate;
   OSDTimer.Enabled := False;
@@ -459,23 +467,13 @@ begin
     end
     else
     begin
-      A := (progress - 721) * 16;
+      A := (progress - 720) * 16;
       b := -360 * 16;
     end;
     p.X := cv.Width div 2;
     p.y := cv.Height div 2;
     cv.Arc(p.x - 50, p.y - 50, p.x + 50, p.y + 50, b, a);
   end;
-end;
-
-procedure TfPlayer.TaskDialog1ButtonClicked(Sender: PTaskDialog; AButtonID: integer; var ACanClose: boolean);
-begin
-
-  if AButtonID = 100 then
-    OpenUrl('http://github.com/varianus/ovom3u/wiki/LibMPV/');
-
-  ACanClose := AButtonID = mrClose;
-
 end;
 
 procedure TfPlayer.ToolButton1Click(Sender: TObject);
@@ -485,7 +483,7 @@ end;
 
 procedure TfPlayer.ToolButton2Click(Sender: TObject);
 begin
-  EpgForm.EpgData:= epgData;
+  EpgForm.EpgData := epgData;
   EPGForm.Show;
 end;
 

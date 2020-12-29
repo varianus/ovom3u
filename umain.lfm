@@ -1,7 +1,7 @@
 object fPlayer: TfPlayer
-  Left = 771
+  Left = 645
   Height = 436
-  Top = 313
+  Top = 195
   Width = 618
   Caption = 'OvoM3U'
   ClientHeight = 436
@@ -38,16 +38,6 @@ object fPlayer: TfPlayer
       PopupMenu = pmPlayer
       Visible = False
     end
-    object Label1: TLabel
-      Left = 223
-      Height = 15
-      Top = 408
-      Width = 81
-      Caption = 'PROVA PROBA '
-      Font.Color = clHighlightText
-      ParentColor = False
-      ParentFont = False
-    end
   end
   object pnlChannel: TPanel
     Left = 0
@@ -77,7 +67,7 @@ object fPlayer: TfPlayer
         OnClick = ToolButton1Click
       end
       object ToolButton2: TToolButton
-        Left = 96
+        Left = 32
         Top = 2
         Caption = 'Epg'
         OnClick = ToolButton2Click
@@ -144,15 +134,9 @@ object fPlayer: TfPlayer
   end
   object OSDTimer: TTimer
     Enabled = False
-    Interval = 5000
+    Interval = 8000
     OnTimer = OSDTimerTimer
     Left = 56
     Top = 344
-  end
-  object TaskDialog1: TTaskDialog
-    Buttons = <>
-    RadioButtons = <>
-    Left = 160
-    Top = 273
   end
 end
