@@ -26,7 +26,8 @@ uses
   Classes, SysUtils,  LazLoggerBase;
 
 function TimeToMSec(Time: double): int64;
-Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;
+Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;   overload;
+Function FormatTimeRange(StartTime, EndTime:TDateTime; TimeOnly: boolean=false): string;  overload;
 function CompareBoolean (a, b: Boolean): Integer;
 Function GetCacheDir:string;
 procedure DownloadFromUrl(AFrom: String; ATo: String);
@@ -146,6 +147,14 @@ begin
   Result := EncodeDateTime(AYear, AMonth, ADay, AHour, AMinute, ASecond,
     AMilliSecond);
 //  W
+end;
+
+function FormatTimeRange(StartTime, EndTime: TDateTime; TimeOnly: boolean): string;
+begin
+  if TimeOnly then
+    Result := FormatDateTime('t', StartTime)+ ' - '+ FormatDateTime('t', EndTime)
+  else
+    Result := FormatDateTime('ddddd t', StartTime)+ ' - ' +FormatDateTime('ddddd t', EndTime);
 end;
 
 function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;
