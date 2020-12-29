@@ -1,70 +1,172 @@
 object EPGForm: TEPGForm
-  Left = 361
-  Height = 727
-  Top = 181
-  Width = 1366
-  Caption = 'EPGForm'
-  ClientHeight = 727
-  ClientWidth = 1366
+  Left = 576
+  Height = 741
+  Top = 1203
+  Width = 1052
+  Caption = 'EPG Guide'
+  ClientHeight = 741
+  ClientWidth = 1052
   OnCreate = FormCreate
   LCLVersion = '2.1.0.0'
-  object DrawGrid1: TDrawGrid
+  object TimeGrid: TDrawGrid
     Left = 0
-    Height = 705
-    Top = 22
-    Width = 1366
+    Height = 534
+    Hint = 'Click a broadcast for details'
+    Top = 50
+    Width = 1052
     Align = alClient
     AutoFillColumns = True
+    BorderStyle = bsNone
     ColCount = 2
     Columns = <    
       item
+        Font.Style = [fsBold]
         SizePriority = 0
         Title.Caption = 'Channel'
-        Width = 100
+        Width = 120
       end    
       item
         MaxSize = 500
         Title.Caption = ''
-        Width = 1262
+        Width = 932
       end>
     DefaultRowHeight = 30
     ExtendedSelect = False
     FixedCols = 0
+    MouseWheelOption = mwGrid
+    Options = [goFixedVertLine, goFixedHorzLine, goRangeSelect, goSmoothScroll]
     TabOrder = 0
-    OnDrawCell = DrawGrid1DrawCell
+    OnDrawCell = TimeGridDrawCell
+    OnMouseDown = TimeGridMouseDown
     ColWidths = (
-      100
-      1262
+      120
+      932
     )
+  end
+  object pnlControl: TPanel
+    Left = 0
+    Height = 50
+    Top = 0
+    Width = 1052
+    Align = alTop
+    AutoSize = True
+    ClientHeight = 50
+    ClientWidth = 1052
+    TabOrder = 1
+    object arBackward: TArrow
+      Left = 10
+      Height = 30
+      Top = 10
+      Width = 30
+      BorderSpacing.Around = 9
+      Constraints.MinHeight = 8
+      Constraints.MinWidth = 8
+      OnClick = arBackwardClick
+    end
+    object arForward: TArrow
+      AnchorSideLeft.Control = arBackward
+      AnchorSideLeft.Side = asrBottom
+      Left = 49
+      Height = 30
+      Top = 10
+      Width = 30
+      ArrowType = atRight
+      BorderSpacing.Around = 9
+      Constraints.MinHeight = 8
+      Constraints.MinWidth = 8
+      OnClick = arForwardClick
+    end
+    object lbMessage: TLabel
+      AnchorSideLeft.Control = arForward
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = arForward
+      AnchorSideTop.Side = asrCenter
+      Left = 88
+      Height = 21
+      Top = 15
+      Width = 74
+      BorderSpacing.Around = 9
+      Caption = 'lbMessage'
+      Font.Height = -16
+      ParentColor = False
+      ParentFont = False
+    end
   end
   object Panel1: TPanel
     Left = 0
-    Height = 22
-    Top = 0
-    Width = 1366
-    Align = alTop
-    AutoSize = True
-    ClientHeight = 22
-    ClientWidth = 1366
-    TabOrder = 1
-    object Arrow1: TArrow
-      Left = 1
-      Height = 20
-      Top = 1
-      Width = 20
-      Constraints.MinHeight = 8
-      Constraints.MinWidth = 8
-      OnClick = Arrow1Click
+    Height = 157
+    Top = 584
+    Width = 1052
+    Align = alBottom
+    BevelInner = bvLowered
+    BorderStyle = bsSingle
+    ClientHeight = 153
+    ClientWidth = 1048
+    TabOrder = 2
+    object stChannel: TStaticText
+      Left = 14
+      Height = 16
+      Top = 2
+      Width = 3
+      AutoSize = True
+      Caption = ' '
+      TabOrder = 0
     end
-    object Arrow2: TArrow
-      Left = 29
-      Height = 20
-      Top = 1
-      Width = 20
-      ArrowType = atRight
-      Constraints.MinHeight = 8
-      Constraints.MinWidth = 8
-      OnClick = Arrow2Click
+    object stTime: TStaticText
+      AnchorSideLeft.Control = stChannel
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = stChannel
+      AnchorSideTop.Side = asrCenter
+      Left = 26
+      Height = 16
+      Top = 2
+      Width = 3
+      AutoSize = True
+      BorderSpacing.Around = 9
+      Caption = ' '
+      TabOrder = 1
     end
+    object stTitle: TStaticText
+      AnchorSideLeft.Control = stTime
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = stTime
+      AnchorSideTop.Side = asrCenter
+      Left = 38
+      Height = 22
+      Top = -1
+      Width = 4
+      AutoSize = True
+      BorderSpacing.Around = 9
+      Caption = ' '
+      Font.Height = -16
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 2
+    end
+    object mmPlot: TMemo
+      AnchorSideLeft.Control = stChannel
+      AnchorSideTop.Control = stTitle
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = Panel1
+      AnchorSideBottom.Side = asrBottom
+      Left = 23
+      Height = 112
+      Top = 30
+      Width = 1014
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      BorderSpacing.Around = 9
+      ParentColor = True
+      ReadOnly = True
+      ScrollBars = ssAutoVertical
+      TabOrder = 3
+    end
+  end
+  object TimerCheck: TTimer
+    Enabled = False
+    OnTimer = TimerCheckTimer
+    Left = 281
+    Top = 181
   end
 end

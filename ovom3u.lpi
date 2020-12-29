@@ -92,7 +92,7 @@
         <ComponentName Value="EPGForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="uEPGFOrm"/>
+        <UnitName Value="uEPGForm"/>
       </Unit>
     </Units>
   </ProjectOptions>
