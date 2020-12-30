@@ -96,7 +96,7 @@ begin
     Style.Layout := tlCenter;
     Style.Clipping := True;
     ChannelInfo := EpgData.GetEpgInfo(Arow, StartTime, EndTime);
-    Divider := (aRect.Right) / (endTime - StartTime);
+    Divider := (TimeGrid.Columns[1].Width) / (endTime - StartTime);
     for i := 0 to Length(ChannelInfo) - 1 do
     begin
       if Odd(i) then
@@ -104,8 +104,8 @@ begin
       else
         fCanvas.Brush.Color := clBtnFace;
 
-      StartPos := Trunc(frac(max(ChannelInfo[i].StartTime, StartTime) - StartTime) * Divider);
-      EndPos := round(frac(Min(ChannelInfo[i].EndTime, EndTime) - StartTime) * Divider);
+      StartPos := round(frac(max(ChannelInfo[i].StartTime, StartTime) - StartTime) * Divider) + aRect.Left;
+      EndPos := round(frac(Min(ChannelInfo[i].EndTime, EndTime) - StartTime) * Divider)  + aRect.Left;
       R1 := Rect(StartPos - 1, aRect.Top - 1, EndPos - 1, aRect.Bottom - 1);
       fCanvas.FillRect(R1);
       fCanvas.pen.Color := clCaptionText;
@@ -163,8 +163,8 @@ begin
 
   ClickTime := StartTime + (x - TimeGrid.Columns[0].Width) / (TimeGrid.Columns[1].Width / (endTime - StartTime));
   EpgInfo := FEpgData.GetEpgInfo(Coord.Y, ClickTime);
-  stChannel.Caption := fPlayer.List[Coord.y].title;
-  stTime.Caption := TimeToStr(EpgInfo.StartTime) + '-' + TimeToStr(EpgInfo.StartTime);
+  stChannel.Caption := fPlayer.List[Coord.y-1].title;
+  stTime.Caption := FormatTimeRange(EpgInfo.StartTime,EpgInfo.EndTime, false);
   stTitle.Caption := EpgInfo.Title;
   mmPlot.Lines.Text := EpgInfo.Plot;
 end;
