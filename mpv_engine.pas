@@ -27,7 +27,9 @@ uses
   OpenGLContext, Forms, LCLType;
 
 type
-  TTrackType = (tkAudio, tkVideo, tkSub, tkUnkown);
+  TTrackType = (trkAudio, trkVideo, trkSub, trkUnknown);
+
+  { TTrack }
 
   TTrack = record
     Kind: TTrackType;
@@ -39,6 +41,7 @@ type
     Codec: string;
     w, h: integer;
     Bitrate: integer;
+    Procedure Init;
   end;
 
   TTrackList = array of TTrack;
@@ -81,10 +84,10 @@ type
     procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
     procedure OsdMessage(msg: string = '');
-    procedure OsdEpg(EpgInfo: REpgInfo; Show: boolean);
+    procedure OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
     procedure Stop;
-    procedure Pause;
+    function Pause: boolean;
     constructor Create;
     destructor Destroy; override;
     procedure Test;
@@ -141,6 +144,22 @@ begin
     exit;
 
   TMPVEngine(cb_ctx).PostCommand(ecPaint, 1);
+end;
+
+{ TTrack }
+
+procedure TTrack.Init;
+begin
+    Kind:= trkUnknown;
+    Selected:= false;
+    Id:= 0;
+    Title:='';
+    Lang:='';
+    Channels:=0;
+    Codec:='';
+    w:=0;
+    h:=0;
+    Bitrate:=0;
 end;
 
 { TMPVEngine }
@@ -326,7 +345,6 @@ var
   i, j: integer;
   pc: ppchar;
   Value, Value2: string;
-  Track: TTrack;
 begin
   SetLength(fTrackList, 0);
   try
@@ -336,6 +354,7 @@ begin
     begin
       map := Node.u.list_^.values[i]; // pmpv_node(PtrUInt(Node.u.list_^.values) + i * 16)^;
       pc := map.u.list_^.keys;
+      TrackList[i].Init;
       for j := 0 to map.u.list_^.num - 1 do
       begin
         Detail := map.u.list_^.values[j]; // Pmpv_node(PtrUInt(map.u.list_^.values) + j * 16)^;
@@ -343,21 +362,23 @@ begin
         if Value = 'id' then
           fTrackList[i].Id := Detail.u.int64_;
         if Value = 'title' then
-          fTrackList[i].Title := Detail.u.string_;
+          fTrackList[i].Title := strpas(Detail.u.string_);
         if Value = 'type' then
         begin
           Value2 := Detail.u.string_;
           if Value2 = 'audio' then
-            fTrackList[i].kind := tkAudio
+            fTrackList[i].kind := trkAudio
           else if Value2 = 'video' then
-            fTrackList[i].kind := tkVideo
+            fTrackList[i].kind := trkVideo
           else if Value2 = 'sub' then
-            fTrackList[i].kind := tkSub
+            fTrackList[i].kind := trkSub
           else
-            fTrackList[i].kind := tkUnkown;
+            fTrackList[i].kind := trkUnknown;
         end;
         if Value = 'lang' then
-          fTrackList[i].Lang := Detail.u.string_;
+          fTrackList[i].Lang := strpas(Detail.u.string_);
+        if Value = 'codec' then
+          fTrackList[i].Codec := strpas(Detail.u.string_);
         if Value = 'demux-w' then
           fTrackList[i].w := Detail.u.int64_;
         if Value = 'demux-h' then
@@ -383,9 +404,6 @@ var
   Flip, Skip: longint;
 var
   Params: array of mpv_render_param;
-  a, b: integer;
-  Angle: double;
-
 begin
   if not isGlEnabled then
     exit;
@@ -467,15 +485,17 @@ end;
 procedure TMPVEngine.SetTrack(TrackType: TTrackType; Id: integer);
 var
   TrackTypeString: string;
+  Num: int64;
 begin
   case TrackType of
-    tkAudio: TrackTypeString := 'aid';
-    tkVideo: TrackTypeString := 'vid';
-    tkSub: TrackTypeString := 'sid';
+    trkAudio: TrackTypeString := 'aid';
+    trkVideo: TrackTypeString := 'vid';
+    trkSub: TrackTypeString := 'sid';
     else
       exit;
   end;
-  mpv_set_property(fHandle^, PChar(TrackTypeString), MPV_FORMAT_INT64, @id);
+  Num := id;
+  mpv_set_property(fHandle^, PChar(TrackTypeString), MPV_FORMAT_INT64, @num);
 end;
 
 procedure TMPVEngine.SetTrack(Index: integer);
@@ -525,12 +545,14 @@ begin
   mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
   num := 1;
   mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
+  num := 55;
+  mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
   num := 0;
   mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
   mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
 end;
 
-procedure TMPVEngine.OsdEpg(EpgInfo: REpgInfo; Show: boolean);
+procedure TMPVEngine.OsdEpg(Const ChannelDesc:string; EpgInfo: REpgInfo; Show: boolean);
 var
   num: int64;
   Node: mpv_node;
@@ -540,15 +562,19 @@ var
   res: mpv_node;
   fres: longint;
 begin
+  mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
+
   if ClientVersion <= _MPV_CLIENT_API_VERSION then
   begin
     mpv_set_property_string(fHandle^, 'osd-align-y', 'bottom');
+    num := 36;
+    mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
     num := 3;
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     num := 2;
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
-    mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s    %s ' + #10 + ' %s',
-      [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot])));
+    mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s'+#10+'%s    %s ' + #10 + ' %s',
+      [ChannelDesc, FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot])));
   end
   else
   begin
@@ -569,15 +595,15 @@ begin
     values[3].format := MPV_FORMAT_STRING;
 
     // \3c&HFFFFFF&\3a&H80&
-    values[3].u.string_ := PChar(format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
-      [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
+    values[3].u.string_ := PChar(format('{\bord1\an7}%s',[ChannelDesc])+ #10+
+                                 format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
+                                    [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
 
     List.num := 4;
     List.keys := @Keys[0];
     List.values := @values[0];
     Node.format := MPV_FORMAT_NODE_MAP;
     Node.u.list_ := @list;
-    mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
     fres := mpv_command_node(fHandle^, node, res);
 
@@ -585,18 +611,18 @@ begin
 
 end;
 
-procedure TMPVEngine.Pause;
+function TMPVEngine.Pause:boolean;
 begin
   if (EngineState = ENGINE_PAUSE) then
   begin
     SetBoolProperty('pause', False);
-    OsdMessage();
+    Result := false;
     EngineState := ENGINE_PLAY;
   end
   else if EngineState = ENGINE_PLAY then
   begin
     SetBoolProperty('pause', True);
-    OsdMessage('Paused');
+    Result := true;
     EngineState := ENGINE_Pause;
   end;
 

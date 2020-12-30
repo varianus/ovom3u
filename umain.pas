@@ -268,15 +268,26 @@ begin
         end;
     end;
   case key of
-    VK_I: OsdMessage(Format('%3.3d: %s', [List[CurrentChannel].Number, List[CurrentChannel].title]), True);
+    VK_I: ShowEpg;
     VK_S:
     begin
       MpvEngine.Stop;
       OsdMessage('Stop', True);
     end;
-    VK_SPACE: MpvEngine.Pause;
+    VK_SPACE: begin
+               if MpvEngine.Pause then
+                 begin
+                   MpvEngine.OsdEpg('',Default(REpgInfo), False);
+                   OsdMessage('Pause', False)
+                 end
+               else
+                  MpvEngine.OsdMessage();
+    end;
     VK_F: SetFullScreen;
-    VK_E: ShowEpg;
+    VK_E: begin
+        EpgForm.EpgData := epgData;
+        EPGForm.Show;
+    end;
 
     VK_0..VK_9, VK_NUMPAD0..VK_NUMPAD9:
     begin
@@ -304,7 +315,7 @@ var
   Info: REpgInfo;
 begin
   Info := epgData.GetEpgInfo(CurrentChannel + 1, now);
-  MpvEngine.OsdEpg(info, True);
+  MpvEngine.OsdEpg(Format('%3.3d: %s', [List[CurrentChannel].Number, List[CurrentChannel].title]),info, True);
   OSDTimer.Enabled := True;
 end;
 
@@ -405,10 +416,10 @@ procedure TfPlayer.OSDTimerTimer(Sender: TObject);
 begin
   fLastMessage := '';
   if GLRenderer.Visible then
-    begin
-      MpvEngine.OsdMessage();
-      MpvEngine.OsdEpg(Default(REpgInfo), false);
-    end
+  begin
+    MpvEngine.OsdEpg('',Default(REpgInfo), False);
+    MpvEngine.OsdMessage();
+  end
   else
     pnlContainer.invalidate;
   OSDTimer.Enabled := False;
@@ -467,7 +478,7 @@ begin
     end
     else
     begin
-      A := (progress - 720) * 16;
+      A := (progress - 720) * 16 +10;
       b := -360 * 16;
     end;
     p.X := cv.Width div 2;
@@ -509,48 +520,49 @@ begin
   for i := 0 to Length(MpvEngine.TrackList) - 1 do
   begin
     Track := MpvEngine.TrackList[i];
-    case Track.Kind of
-      tkVideo:
-      begin
-        if Track.Title = EmptyStr then
-          Track.Title := format('%dx%d (%d bitrate %s)', [Track.W, track.h, track.Bitrate, track.codec]);
-        mnu := tmenuitem.Create(mnuVideo);
-        mnu.RadioItem := True;
-        mnu.Checked := Track.Selected;
-        mnu.Caption := track.Title;
-        mnu.Tag := i + 1;
-        mnu.GroupIndex := 2;
-        mnu.OnClick := mnuTrackClick;
-        mnuVideo.Add(mnu);
-      end;
-      tkAudio:
-      begin
-        if Track.Title = EmptyStr then
-          Track.Title := format('%s (%d ch %d  %s)', [Track.Lang, Track.Channels, track.Bitrate, track.codec]);
+    if track.Id <> 0 then
+      case Track.Kind of
+        trkVideo:
+        begin
+          if Track.Title = EmptyStr then
+            Track.Title := format('%dx%d (%s)', [Track.W, track.h, track.codec]);
+          mnu := tmenuitem.Create(mnuVideo);
+          mnu.RadioItem := True;
+          mnu.Checked := Track.Selected;
+          mnu.Caption := track.Title;
+          mnu.Tag := i;
+          mnu.GroupIndex := 2;
+          mnu.OnClick := mnuTrackClick;
+          mnuVideo.Add(mnu);
+        end;
+        trkAudio:
+        begin
+          if Track.Title = EmptyStr then
+            Track.Title := format('%s %d ch %d  (%s)', [Track.Lang, Track.Channels, track.Bitrate, track.codec]);
 
-        mnu := tmenuitem.Create(mnuAudio);
-        mnu.RadioItem := True;
-        mnu.Checked := Track.Selected;
-        mnu.Caption := track.Title;
-        mnu.Tag := i + 1;
-        mnu.GroupIndex := 1;
-        mnu.OnClick := mnuTrackClick;
-        mnuAudio.Add(mnu);
+          mnu := tmenuitem.Create(mnuAudio);
+          mnu.RadioItem := True;
+          mnu.Checked := Track.Selected;
+          mnu.Caption := track.Title;
+          mnu.Tag := i;
+          mnu.GroupIndex := 1;
+          mnu.OnClick := mnuTrackClick;
+          mnuAudio.Add(mnu);
+        end;
+        trkSub:
+        begin
+          if Track.Title = EmptyStr then
+            Track.Title := format('%s %s', [Track.Lang, track.codec]);
+          mnu := tmenuitem.Create(mnuSub);
+          mnu.RadioItem := True;
+          mnu.Checked := Track.Selected;
+          mnu.Caption := track.Title;
+          mnu.Tag := i;
+          mnu.GroupIndex := 3;
+          mnu.OnClick := mnuTrackClick;
+          mnuSub.Add(mnu);
+        end;
       end;
-      tksub:
-      begin
-        if Track.Title = EmptyStr then
-          Track.Title := format('%s %s', [Track.Lang, track.codec]);
-        mnu := tmenuitem.Create(mnuSub);
-        mnu.RadioItem := True;
-        mnu.Checked := Track.Selected;
-        mnu.Caption := track.Title;
-        mnu.Tag := i + 1;
-        mnu.GroupIndex := 3;
-        mnu.OnClick := mnuTrackClick;
-        mnuSub.Add(mnu);
-      end;
-    end;
   end;
 
 end;
