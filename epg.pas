@@ -251,6 +251,8 @@ procedure TEpg.EndScan(AObject: TObject);
 begin
 
   AfterScan;
+  SetLastScan('epg');
+
 
   if Assigned(FOnScanComplete) then
     FOnScanComplete(Self);
