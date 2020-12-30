@@ -31,7 +31,7 @@ uses {$IFDEF UNIX}
   Mpv_Engine,
   uconfig,
   epg,
-  uMyDialog, uEPGFOrm;
+  uMyDialog, uEPGFOrm, libmpv;
 
 {$R *.res}
 

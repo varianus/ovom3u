@@ -94,6 +94,10 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uEPGForm"/>
       </Unit>
+      <Unit>
+        <Filename Value="libmpv.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
