@@ -564,7 +564,7 @@ var
 begin
   mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
-  if ClientVersion <= _MPV_CLIENT_API_VERSION then
+  if ClientVersion <= $00010065 then
   begin
     mpv_set_property_string(fHandle^, 'osd-align-y', 'bottom');
     num := 36;
