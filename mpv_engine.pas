@@ -41,7 +41,7 @@ type
     Codec: string;
     w, h: integer;
     Bitrate: integer;
-    Procedure Init;
+    procedure Init;
   end;
 
   TTrackList = array of TTrack;
@@ -87,6 +87,7 @@ type
     procedure OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
     procedure Stop;
+    procedure Seek(Seconds: integer);
     function Pause: boolean;
     constructor Create;
     destructor Destroy; override;
@@ -150,16 +151,16 @@ end;
 
 procedure TTrack.Init;
 begin
-    Kind:= trkUnknown;
-    Selected:= false;
-    Id:= 0;
-    Title:='';
-    Lang:='';
-    Channels:=0;
-    Codec:='';
-    w:=0;
-    h:=0;
-    Bitrate:=0;
+  Kind := trkUnknown;
+  Selected := False;
+  Id := 0;
+  Title := '';
+  Lang := '';
+  Channels := 0;
+  Codec := '';
+  w := 0;
+  h := 0;
+  Bitrate := 0;
 end;
 
 { TMPVEngine }
@@ -538,6 +539,23 @@ begin
 
 end;
 
+procedure TMPVEngine.Seek(Seconds: integer);
+
+var
+  Args: array of PChar;
+  res: longint;
+begin
+
+  args := nil;
+  setlength(args, 3);
+  args[0] := 'seek';
+  args[1] := pchar(inttostr(seconds));
+  args[2] := nil;
+  res := mpv_command(fhandle^, ppchar(@args[0]));
+  Loading := True;
+
+end;
+
 procedure TMPVEngine.OsdMessage(msg: string = '');
 var
   num: int64;
@@ -552,7 +570,7 @@ begin
   mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
 end;
 
-procedure TMPVEngine.OsdEpg(Const ChannelDesc:string; EpgInfo: REpgInfo; Show: boolean);
+procedure TMPVEngine.OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
 var
   num: int64;
   Node: mpv_node;
@@ -573,7 +591,7 @@ begin
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     num := 2;
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
-    mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s'+#10+'%s    %s ' + #10 + ' %s',
+    mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s' + #10 + '%s    %s ' + #10 + ' %s',
       [ChannelDesc, FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot])));
   end
   else
@@ -595,9 +613,9 @@ begin
     values[3].format := MPV_FORMAT_STRING;
 
     // \3c&HFFFFFF&\3a&H80&
-    values[3].u.string_ := PChar(format('{\bord1\an7}%s',[ChannelDesc])+ #10+
-                                 format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
-                                    [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
+    values[3].u.string_ := PChar(format('{\bord1\an7}%s', [ChannelDesc]) + #10 +
+      format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
+      [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
 
     List.num := 4;
     List.keys := @Keys[0];
@@ -611,18 +629,18 @@ begin
 
 end;
 
-function TMPVEngine.Pause:boolean;
+function TMPVEngine.Pause: boolean;
 begin
   if (EngineState = ENGINE_PAUSE) then
   begin
     SetBoolProperty('pause', False);
-    Result := false;
+    Result := False;
     EngineState := ENGINE_PLAY;
   end
   else if EngineState = ENGINE_PLAY then
   begin
     SetBoolProperty('pause', True);
-    Result := true;
+    Result := True;
     EngineState := ENGINE_Pause;
   end;
 

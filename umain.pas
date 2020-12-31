@@ -244,7 +244,10 @@ begin
 end;
 
 procedure TfPlayer.FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+var
+  Pass: boolean;
 begin
+  Pass :=false;
   if flgFullScreen then
     case key of
       VK_ESCAPE: SetFullScreen;
@@ -266,6 +269,8 @@ begin
           ChannelSelecting := False;
           key := 0;
         end;
+      else
+        Pass:= true;
     end;
   case key of
     VK_I: ShowEpg;
@@ -289,6 +294,13 @@ begin
         EPGForm.Show;
     end;
 
+    VK_RIGHT: begin
+        MpvEngine.Seek(5);
+    end;
+    VK_LEFT: begin
+        MpvEngine.Seek(-5);
+    end;
+
     VK_0..VK_9, VK_NUMPAD0..VK_NUMPAD9:
     begin
       if not ChannelSelecting then
@@ -307,7 +319,11 @@ begin
       end;
       OsdMessage(IntToStr(ChannelSelected), True);
     end;
+    else
+     Pass:= true;
   end;
+  if not pass then
+    key:=0;
 end;
 
 procedure TfPlayer.ShowEpg;
