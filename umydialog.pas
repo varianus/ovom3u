@@ -23,7 +23,7 @@ unit uMyDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ButtonPanel, LazDialogs, ComCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, ButtonPanel, ComCtrls,
   LCLStrConsts, Buttons;
 
 type

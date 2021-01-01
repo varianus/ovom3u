@@ -4,7 +4,7 @@ unit render_gl;
 interface
 
 uses
-  ctypes, libmpv, render;
+  ctypes, libmpv;
 
 { Pointers to basic pascal types, inserted by h2pas conversion program.}
 Type

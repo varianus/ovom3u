@@ -5,7 +5,7 @@ unit uEPGForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, PopupNotifier, epg,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, epg,
   BaseTypes, Types, Math;
 
 type
