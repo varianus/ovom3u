@@ -278,7 +278,7 @@ procedure TEpg.Scan;
 var
   Scanner: TEpgScanner;
 begin
-  if LastScan('epg') + 12 > now then
+  if LastScan('epg') + 12/24 > now then
   begin
     AfterScan;
     exit;
