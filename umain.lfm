@@ -33,6 +33,9 @@ object fPlayer: TfPlayer
       Width = 448
       Align = alClient
       AutoResizeViewport = True
+      OpenGLMajorVersion = 2
+      OpenGLMinorVersion = 1
+      MultiSampling = 0
       OnDblClick = GLRendererDblClick
       OnMouseMove = GLRendererMouseMove
       PopupMenu = pmPlayer

@@ -99,7 +99,7 @@ type
 implementation
 
 uses
-  gl, GLext, GeneralFunc
+  gl, GLext, GeneralFunc, LMessages, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -108,17 +108,6 @@ uses
 function setlocale(category: cint; locale: PChar): PChar; cdecl; external 'c' Name 'setlocale';
 {$endif}
 
-{$IFDEF Windows}
-{ Declared in Windows unit as well in FPC; but declared here as well, to be
-fully compatible to upstream version  - sg }
-function wglGetProcAddress(proc: PChar): Pointer; cdecl; external 'OpenGL32.dll';
-{$ELSE}
-function wglGetProcAddress(proc: PChar): Pointer;
-begin
-  Result := GetProcAddress(LibGL, proc);
-end;
-
-{$ENDIF}
 
 // Used by libmpv to load OpenGL functions
 function get_proc_address(ctx: pointer; Name: PChar): pointer; cdecl;
@@ -188,11 +177,12 @@ begin
   try
     fhandle := mpv_create();
     mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+//    mpv_set_option_string(fHandle^, 'hwdec-codecs', 'all');
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
+    mpv_request_log_messages(fhandle^, 'error');
+    mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
-
-    //    mpv_request_log_messages(fhandle^, 'v');
     ClientVersion := mpv_client_api_version;
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
@@ -200,15 +190,8 @@ begin
 
     GLRenderControl := Renderer;
 
-
-    {$ifdef LINUX}
     GLRenderControl.OnPaint := GLRenderControlPaint;
     Application.QueueAsyncCall(InitRenderer, 0);
-    {$endif}
-    {$ifdef WINDOWS}
-    wid := GLRenderControl.Handle;
-    mpv_set_option(fHandle^, 'wid', MPV_FORMAT_INT64, @wid);
-    {$endif}
 
   except
     Result := False;
@@ -247,8 +230,6 @@ var
   i: integer;
 begin
 
-  glext_LoadExtension('GL_version_1_3');
-  glext_LoadExtension('GL_version_2_0');
   Load_GL_version_1_3();
   Load_GL_VERSION_2_1();
   GLRenderControl.MakeCurrent();
@@ -282,6 +263,13 @@ var
   Event: Pmpv_event;
   p: integer;
 begin
+  if (Command = ecPaint) and (param = 1) then
+  begin
+    isGlEnabled := True;
+    PostMessage(GLRenderControl.Handle, LM_PAINT,0,0);// GLRenderControl.Repaint;
+    exit;
+  end;
+
   if (Command = ecEvent) and (param = 1) then
   begin
     Event := mpv_wait_event(fhandle^, 0);
@@ -313,11 +301,6 @@ begin
       end;
       Event := mpv_wait_event(fhandle^, 0);
     end;
-  end;
-  if (Command = ecPaint) and (param = 1) then
-  begin
-    isGlEnabled := True;
-    GLRenderControl.Repaint;
   end;
 end;
 

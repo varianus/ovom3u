@@ -86,6 +86,7 @@ type
     isRenderActive: boolean;
     flgFullScreen: boolean;
     CurrentChannel: integer;
+    PreviousChannel: integer;
     RestoredBorderStyle: TBorderStyle;
     RestoredWindowState: TWindowState;
     Progress: integer;
@@ -213,6 +214,7 @@ begin
     MpvEngine := TMPVEngine.Create;
     MpvEngine.Initialize(GLRenderer);
     CurrentChannel := -1;
+    PreviousChannel := -1;
     ChannelSelecting := False;
     fLoading := False;
     ChannelSelected := 0;
@@ -292,6 +294,10 @@ begin
     VK_E: begin
         EpgForm.EpgData := epgData;
         EPGForm.Show;
+    end;
+    VK_B: begin
+        If PreviousChannel <> -1 then
+        Play(PreviousChannel);
     end;
 
     VK_RIGHT: begin
@@ -403,6 +409,7 @@ begin
   if (CurrentChannel = Row) and not MpvEngine.IsIdle then
     exit;
   ChannelList.Invalidate;
+  PreviousChannel := CurrentChannel;
   CurrentChannel := Row;
   Caption := list[CurrentChannel].title;
   MpvEngine.Play(list[CurrentChannel].Mrl);
