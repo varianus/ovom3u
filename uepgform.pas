@@ -5,7 +5,7 @@ unit uEPGForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, epg,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, Buttons, epg,
   BaseTypes, Types, Math;
 
 type
@@ -15,6 +15,7 @@ type
   TEPGForm = class(TForm)
     arBackward: TArrow;
     arForward: TArrow;
+    bNow: TBitBtn;
     mmPlot: TMemo;
     Panel1: TPanel;
     stChannel: TStaticText;
@@ -26,6 +27,7 @@ type
     TimerCheck: TTimer;
     procedure arBackwardClick(Sender: TObject);
     procedure arForwardClick(Sender: TObject);
+    procedure bNowClick(Sender: TObject);
     procedure TimeGridDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure FormCreate(Sender: TObject);
     procedure TimeGridMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
@@ -58,7 +60,7 @@ const
 
 procedure TEPGForm.TimeGridDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
 const
-  Segments = 8;
+  Segments = 6;
 var
   Divider: single;
   i: integer;
@@ -95,6 +97,7 @@ begin
     Style.Alignment := taCenter;
     Style.Layout := tlCenter;
     Style.Clipping := True;
+    Style.Wordbreak := False;
     ChannelInfo := EpgData.GetEpgInfo(Arow, StartTime, EndTime);
     Divider := (TimeGrid.Columns[1].Width) / (endTime - StartTime);
     for i := 0 to Length(ChannelInfo) - 1 do
@@ -142,10 +145,18 @@ begin
   TimeGrid.Invalidate;
 end;
 
+procedure TEPGForm.bNowClick(Sender: TObject);
+begin
+  StartTime := trunc(now) + Floor(frac(now - OneHour ) * 24) / 24;
+  EndTime := StartTime + OneHour *2;
+  UpdateTimeRange;
+  TimeGrid.Invalidate;
+end;
+
 procedure TEPGForm.FormCreate(Sender: TObject);
 begin
   StartTime := trunc(now) + Floor(frac(now - OneHour) * 24) / 24;
-  EndTime := StartTime + 4 * OneHour;
+  EndTime := StartTime + OneHour*2;
   UpdateTimeRange;
   TimeGrid.RowCount := fPlayer.List.Count + 1;
 

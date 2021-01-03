@@ -81,15 +81,32 @@ object EPGForm: TEPGForm
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = arForward
       AnchorSideTop.Side = asrCenter
-      Left = 88
+      AnchorSideRight.Control = pnlControl
+      AnchorSideRight.Side = asrBottom
+      Left = 968
       Height = 21
       Top = 15
       Width = 74
+      Anchors = [akTop, akRight]
       BorderSpacing.Around = 9
       Caption = 'lbMessage'
       Font.Height = -16
       ParentColor = False
       ParentFont = False
+    end
+    object bNow: TBitBtn
+      AnchorSideLeft.Control = arForward
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = arForward
+      AnchorSideTop.Side = asrCenter
+      Left = 88
+      Height = 30
+      Top = 10
+      Width = 75
+      BorderSpacing.Around = 9
+      Caption = 'Now'
+      OnClick = bNowClick
+      TabOrder = 0
     end
   end
   object Panel1: TPanel
