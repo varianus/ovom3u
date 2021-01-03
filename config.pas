@@ -265,6 +265,7 @@ destructor TConfig.Destroy;
 begin
   SaveConfig;
   fConfigHolder.Free;
+  Finalize(fM3UProperties);
   inherited Destroy;
 end;
 

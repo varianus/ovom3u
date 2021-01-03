@@ -142,4 +142,8 @@ object fPlayer: TfPlayer
     Left = 56
     Top = 344
   end
+  object ApplicationProperties1: TApplicationProperties
+    Left = 146
+    Top = 292
+  end
 end

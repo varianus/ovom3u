@@ -32,6 +32,7 @@ uses
 type
 
   TfPlayer = class(TForm)
+    ApplicationProperties1: TApplicationProperties;
     ChannelList: TDrawGrid;
     OSDTimer: TTimer;
     MenuItem1: TMenuItem;
@@ -75,6 +76,7 @@ type
     IPTVList: string;
     Kind: TProviderKind;
     function CheckConfigAndSystem: boolean;
+    procedure DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
     procedure OnLoadingState(Sender: TObject);
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure Play(Row: integer);
@@ -105,7 +107,9 @@ var
 
 implementation
 
-uses uconfig, BaseTypes;
+uses uconfig, BaseTypes, LazUTF8, LazLogger;
+var
+  f: text;
 
 {$R *.lfm}
 
@@ -168,7 +172,6 @@ var
 begin
 
   ConfigObj.ReadConfig;
-  epgData := TEpg.Create;
 
   Kind := ConfigObj.M3UProperties.Kind;
 
@@ -207,8 +210,8 @@ begin
   if CheckConfigAndSystem then
   begin
     ChannelList.RowCount := 0;
-    ;
     List := TM3ULoader.Create;
+    epgData := TEpg.Create;
     Loadlist;
 
     MpvEngine := TMPVEngine.Create;
@@ -227,6 +230,7 @@ begin
   MpvEngine.Free;
 
   List.Free;
+  epgData.Free;
 end;
 
 procedure TfPlayer.OnLoadingState(Sender: TObject);
@@ -397,6 +401,12 @@ end;
 procedure TfPlayer.ChannelListDblClick(Sender: TObject);
 begin
   Play(ChannelList.Row);
+end;
+
+procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
+begin
+ if (TextRec(f).mode <> fmClosed) and (IOResult = 0) then
+    WriteLn(f, S);
 end;
 
 procedure TfPlayer.Play(Row: integer);

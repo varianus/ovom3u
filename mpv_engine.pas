@@ -167,11 +167,6 @@ begin
 end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
-{$ifdef WINDOWS}
-var
-  wid: HWND;
-{$endif}
-
 begin
   Result := True;
   try
@@ -203,6 +198,7 @@ begin
   {$ifdef LINUX}
   setlocale(1, 'C');
   {$endif}
+  fdecoupler := nil;
   Load_libmpv(libmpv.External_library);
   Loadrender(libmpv.External_library);
   EngineState := ENGINE_IDLE;
@@ -217,6 +213,8 @@ begin
     mpv_set_wakeup_callback(fhandle^, nil, self);
     mpv_terminate_destroy(fhandle^);
   end;
+  if Assigned(fdecoupler) then
+    fdecoupler.Free;
 
   Free_libmpv;
   inherited Destroy;
