@@ -19,13 +19,16 @@ type
     ActionList1: TActionList;
     arBackward: TArrow;
     arForward: TArrow;
+    bBack1: TButton;
     bNow: TBitBtn;
+    bViewSearch: TButton;
     ResultGrid: TDrawGrid;
     Search: TButton;
-    LabeledEdit1: TLabeledEdit;
+    lbeSearch: TLabeledEdit;
     mmPlot: TMemo;
     pcView: TPageControl;
     Panel1: TPanel;
+    bBack: TButton;
     stChannel: TStaticText;
     stTime: TStaticText;
     stTitle: TStaticText;
@@ -42,7 +45,10 @@ type
     procedure actNowExecute(Sender: TObject);
     procedure arBackwardClick(Sender: TObject);
     procedure arForwardClick(Sender: TObject);
+    procedure bViewSearchClick(Sender: TObject);
     procedure PaintGridCell(Sender: TObject; aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
+    procedure ResultGridSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
+    procedure bBackClick(Sender: TObject);
     procedure SearchClick(Sender: TObject);
     procedure TimeGridDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure FormCreate(Sender: TObject);
@@ -53,6 +59,7 @@ type
     FEpgData: TEpg;
     Details: AREpgInfo;
     procedure SetEpgData(AValue: TEpg);
+    procedure UpdateDetail(const EpgInfo: REpgInfo);
     procedure UpdateTimeRange;
 
   public
@@ -90,24 +97,34 @@ var
   StartPos, EndPos: integer;
   r1: TRect;
   Style: TTextStyle;
+  CurrTime: TDateTime;
 begin
   fCanvas := TimeGrid.Canvas;
   if (aRow = 0) and (Acol = 1) then
   begin
 
-    Divider := (aRect.Right - aRect.Left) / Segments;
+    Divider := TimeGrid.Columns[1].Width / Segments;
     CellHeight := aRect.Bottom - arect.top;
     fCanvas.Pen.Color := clBlack;
 
     fCanvas.Font.Size := 12;
     for i := 1 to Segments - 1 do
     begin
-      st := FormatDateTime('hh:nn', StartTime + i / 48);
+      st := FormatDateTime('hh:nn', StartTime + i / (2*24));
       ws := fCanvas.TextWidth(st);
       fCanvas.TextOut(arect.Left + trunc(Divider * i - (ws div 2)), aRect.Top + 2, st);
       fCanvas.MoveTo(arect.Left + trunc(divider * i), CellHeight div 2);
       fCanvas.LineTo(arect.Left + trunc(divider * i), aRect.Bottom);
     end;
+    CurrTime := now;
+    if (CurrTime >= StartTime) and (CurrTime <= endtime) then
+      begin
+        StartPos := Round((CurrTime -StartTime) * (TimeGrid.Columns[1].Width / (endTime - StartTime))) + aRect.Left;
+
+        fCanvas.Pen.Color := clHighlight ;
+        fCanvas.MoveTo(StartPos, arect.top);
+        fCanvas.LineTo(StartPos, aRect.Bottom);
+      end;
   end;
   if (aRow > 0) and (Acol = 1) and fEpgData.EpgAvailable then
   begin
@@ -181,6 +198,14 @@ begin
   actForward.Execute;
 end;
 
+procedure TEPGForm.bViewSearchClick(Sender: TObject);
+begin
+  SetLength(Details, 0);
+  ResultGrid.RowCount := 1;
+  pcView.ActivePage := tsSearch;
+  lbeSearch.SetFocus;
+end;
+
 procedure TEPGForm.PaintGridCell(Sender: TObject; aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
 var
   Grid: TDrawGrid;
@@ -196,30 +221,43 @@ begin
   Grid := Sender as TDrawGrid;
   cv := Grid.Canvas;
   case Grid.Columns[aCol].Tag of
-    0: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Channel);
-    1: cv.TextRect(aRect,aRect.Left,aRect.Top, DateTimeToStr(trunc(Details[aRow-1].StartTime)));
-    2: cv.TextRect(aRect,aRect.Left,aRect.Top, FormatTimeRange(Details[aRow-1].StartTime,Details[aRow-1].EndTime, true));
-    3: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Title);
-    4: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Plot);
+    0: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Channel,style);
+    1: cv.TextRect(aRect,aRect.Left,aRect.Top, DateTimeToStr(trunc(Details[aRow-1].StartTime)),style);
+    2: cv.TextRect(aRect,aRect.Left,aRect.Top, FormatTimeRange(Details[aRow-1].StartTime,Details[aRow-1].EndTime, true),style);
+    3: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Title,style);
+    4: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Plot,style);
   end;
 
 end;
 
+procedure TEPGForm.ResultGridSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
+begin
+  if (aRow > 0) and (Length(Details)>0) then
+    UpdateDetail(Details[aRow-1]);
+end;
+
+procedure TEPGForm.bBackClick(Sender: TObject);
+begin
+  SetLength(Details,0);
+  pcView.ActivePage := tsFullGuide;
+end;
+
 procedure TEPGForm.SearchClick(Sender: TObject);
 begin
-  Details:= EpgData.GetEpgInfo(LabeledEdit1.Text);
+  Details:= EpgData.GetEpgInfo(lbeSearch.Text);
   ResultGrid.RowCount := Length(Details)+1;
   ResultGrid.Invalidate;
 end;
 
 procedure TEPGForm.FormCreate(Sender: TObject);
 begin
+  pcView.ActivePage := tsFullGuide;
   StartTime := trunc(now) + Floor(frac(now - OneHour) * 24) / 24;
-  EndTime := StartTime + OneHour*2;
+  EndTime := StartTime + OneHour*3;
   UpdateTimeRange;
   TimeGrid.RowCount := fPlayer.List.Count + 1;
   Details := nil;
-
+;
 end;
 
 procedure TEPGForm.TimeGridKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -245,7 +283,14 @@ begin
 
   ClickTime := StartTime + (x - TimeGrid.Columns[0].Width) / (TimeGrid.Columns[1].Width / (endTime - StartTime));
   EpgInfo := FEpgData.GetEpgInfo(Coord.Y, ClickTime);
-  stChannel.Caption := fPlayer.List[Coord.y-1].title;
+  EpgInfo.Channel := fPlayer.List[Coord.y-1].title;
+  UpdateDetail(EpgInfo);
+
+end;
+
+Procedure TEPGForm.UpdateDetail(Const EpgInfo: REpgInfo);
+begin
+  stChannel.Caption := EpgInfo.Channel;
   stTime.Caption := FormatTimeRange(EpgInfo.StartTime,EpgInfo.EndTime, false);
   stTitle.Caption := EpgInfo.Title;
   mmPlot.Lines.Text := EpgInfo.Plot;

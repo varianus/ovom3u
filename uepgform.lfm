@@ -1,78 +1,13 @@
 object EPGForm: TEPGForm
-  Left = 192
+  Left = 450
   Height = 690
-  Top = 1170
+  Top = 1283
   Width = 989
   Caption = 'EPG Guide'
   ClientHeight = 690
   ClientWidth = 989
   OnCreate = FormCreate
   LCLVersion = '2.1.0.0'
-  object pnlControl: TPanel
-    Left = 0
-    Height = 50
-    Top = 0
-    Width = 989
-    Align = alTop
-    AutoSize = True
-    ClientHeight = 50
-    ClientWidth = 989
-    TabOrder = 0
-    object arBackward: TArrow
-      Left = 10
-      Height = 30
-      Top = 10
-      Width = 30
-      BorderSpacing.Around = 9
-      Constraints.MinHeight = 8
-      Constraints.MinWidth = 8
-      OnClick = arBackwardClick
-    end
-    object arForward: TArrow
-      AnchorSideLeft.Control = arBackward
-      AnchorSideLeft.Side = asrBottom
-      Left = 49
-      Height = 30
-      Top = 10
-      Width = 30
-      ArrowType = atRight
-      BorderSpacing.Around = 9
-      Constraints.MinHeight = 8
-      Constraints.MinWidth = 8
-      OnClick = arForwardClick
-    end
-    object lbMessage: TLabel
-      AnchorSideLeft.Control = arForward
-      AnchorSideLeft.Side = asrBottom
-      AnchorSideTop.Control = arForward
-      AnchorSideTop.Side = asrCenter
-      AnchorSideRight.Control = pnlControl
-      AnchorSideRight.Side = asrBottom
-      Left = 905
-      Height = 21
-      Top = 15
-      Width = 74
-      Anchors = [akTop, akRight]
-      BorderSpacing.Around = 9
-      Caption = 'lbMessage'
-      Font.Height = -16
-      ParentColor = False
-      ParentFont = False
-    end
-    object bNow: TBitBtn
-      AnchorSideLeft.Control = arForward
-      AnchorSideLeft.Side = asrBottom
-      AnchorSideTop.Control = arForward
-      AnchorSideTop.Side = asrCenter
-      Left = 88
-      Height = 30
-      Top = 10
-      Width = 75
-      Action = actNow
-      BorderSpacing.Around = 9
-      TabOrder = 0
-    end
-  end
   object Panel1: TPanel
     Left = 0
     Height = 157
@@ -83,7 +18,7 @@ object EPGForm: TEPGForm
     BorderStyle = bsSingle
     ClientHeight = 153
     ClientWidth = 985
-    TabOrder = 1
+    TabOrder = 0
     object stChannel: TStaticText
       Left = 14
       Height = 16
@@ -146,24 +81,25 @@ object EPGForm: TEPGForm
   end
   object pcView: TPageControl
     Left = 0
-    Height = 483
-    Top = 50
+    Height = 533
+    Top = 0
     Width = 989
-    ActivePage = tsSearch
+    ActivePage = tsFullGuide
     Align = alClient
-    TabIndex = 2
-    TabOrder = 2
+    ShowTabs = False
+    TabIndex = 0
+    TabOrder = 1
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
       Caption = 'FullGuide'
-      ClientHeight = 526
-      ClientWidth = 1021
+      ClientHeight = 525
+      ClientWidth = 981
       object TimeGrid: TDrawGrid
         Left = 0
-        Height = 526
+        Height = 475
         Hint = 'Click a broadcast for details'
-        Top = 0
-        Width = 1021
+        Top = 50
+        Width = 981
         Align = alClient
         AutoFillColumns = True
         BorderStyle = bsNone
@@ -178,7 +114,7 @@ object EPGForm: TEPGForm
           item
             MaxSize = 500
             Title.Caption = ''
-            Width = 901
+            Width = 861
           end>
         DefaultRowHeight = 30
         ExtendedSelect = False
@@ -191,21 +127,101 @@ object EPGForm: TEPGForm
         OnMouseDown = TimeGridMouseDown
         ColWidths = (
           120
-          901
+          861
         )
+      end
+      object pnlControl: TPanel
+        Left = 0
+        Height = 50
+        Top = 0
+        Width = 981
+        Align = alTop
+        AutoSize = True
+        ClientHeight = 50
+        ClientWidth = 981
+        TabOrder = 1
+        object arBackward: TArrow
+          Left = 10
+          Height = 30
+          Top = 10
+          Width = 30
+          BorderSpacing.Around = 9
+          Constraints.MinHeight = 8
+          Constraints.MinWidth = 8
+          OnClick = arBackwardClick
+        end
+        object arForward: TArrow
+          AnchorSideLeft.Control = arBackward
+          AnchorSideLeft.Side = asrBottom
+          Left = 49
+          Height = 30
+          Top = 10
+          Width = 30
+          ArrowType = atRight
+          BorderSpacing.Around = 9
+          Constraints.MinHeight = 8
+          Constraints.MinWidth = 8
+          OnClick = arForwardClick
+        end
+        object lbMessage: TLabel
+          AnchorSideLeft.Control = arForward
+          AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = arForward
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = pnlControl
+          AnchorSideRight.Side = asrBottom
+          Left = 897
+          Height = 21
+          Top = 15
+          Width = 74
+          Anchors = [akTop, akRight]
+          BorderSpacing.Around = 9
+          Caption = 'lbMessage'
+          Font.Height = -16
+          ParentColor = False
+          ParentFont = False
+        end
+        object bNow: TBitBtn
+          AnchorSideLeft.Control = arForward
+          AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = arForward
+          AnchorSideTop.Side = asrCenter
+          Left = 88
+          Height = 30
+          Top = 10
+          Width = 75
+          Action = actNow
+          BorderSpacing.Around = 9
+          Caption = '&Now'
+          TabOrder = 0
+        end
+        object bViewSearch: TButton
+          Left = 192
+          Height = 30
+          Top = 10
+          Width = 75
+          Caption = '&Search...'
+          OnClick = bViewSearchClick
+          TabOrder = 1
+        end
       end
     end
     object tsDetail: TTabSheet
       Caption = 'Detail'
-      ClientHeight = 475
-      ClientWidth = 958
+      ClientHeight = 525
+      ClientWidth = 981
       object DetailGrid: TDrawGrid
-        Left = 0
-        Height = 475
-        Top = 0
-        Width = 958
-        Align = alClient
+        AnchorSideLeft.Control = tsDetail
+        AnchorSideTop.Control = bBack1
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsDetail
+        AnchorSideBottom.Control = tsDetail
+        Left = 9
+        Height = 499
+        Top = 43
+        Width = 940
         AutoFillColumns = True
+        BorderSpacing.Around = 9
         BorderStyle = bsNone
         ColCount = 4
         Columns = <        
@@ -226,13 +242,13 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 379
+            Width = 370
           end        
           item
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 379
+            Width = 370
           end>
         DefaultRowHeight = 30
         ExtendedSelect = False
@@ -246,16 +262,30 @@ object EPGForm: TEPGForm
         ColWidths = (
           100
           100
-          379
-          379
+          370
+          370
         )
+      end
+      object bBack1: TButton
+        AnchorSideTop.Control = tsDetail
+        AnchorSideRight.Control = tsDetail
+        AnchorSideRight.Side = asrBottom
+        Left = 874
+        Height = 25
+        Top = 9
+        Width = 75
+        Anchors = [akTop, akRight]
+        BorderSpacing.Around = 9
+        Caption = '<- Back'
+        OnClick = bBackClick
+        TabOrder = 1
       end
     end
     object tsSearch: TTabSheet
       Caption = 'Search'
-      ClientHeight = 475
-      ClientWidth = 958
-      object LabeledEdit1: TLabeledEdit
+      ClientHeight = 525
+      ClientWidth = 981
+      object lbeSearch: TLabeledEdit
         Left = 88
         Height = 23
         Top = 16
@@ -272,23 +302,23 @@ object EPGForm: TEPGForm
         Height = 25
         Top = 14
         Width = 75
-        Caption = 'Search'
+        Caption = '&Search'
         Default = True
         OnClick = SearchClick
         TabOrder = 1
       end
       object ResultGrid: TDrawGrid
         AnchorSideLeft.Control = tsSearch
-        AnchorSideTop.Control = LabeledEdit1
+        AnchorSideTop.Control = lbeSearch
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = tsSearch
         AnchorSideRight.Side = asrBottom
         AnchorSideBottom.Control = tsSearch
         AnchorSideBottom.Side = asrBottom
         Left = 0
-        Height = 427
+        Height = 477
         Top = 48
-        Width = 958
+        Width = 981
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoEdit = False
         AutoFillColumns = True
@@ -317,14 +347,14 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 319
+            Width = 330
           end        
           item
             MaxSize = 1000
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 319
+            Width = 331
           end>
         DefaultColWidth = 80
         DefaultRowHeight = 30
@@ -335,13 +365,29 @@ object EPGForm: TEPGForm
         RowCount = 1
         TabOrder = 2
         OnDrawCell = PaintGridCell
+        OnSelectCell = ResultGridSelectCell
         ColWidths = (
           120
           100
           100
-          319
-          319
+          330
+          331
         )
+      end
+      object bBack: TButton
+        AnchorSideTop.Control = Search
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = tsSearch
+        AnchorSideRight.Side = asrBottom
+        Left = 872
+        Height = 25
+        Top = 14
+        Width = 109
+        Anchors = [akTop, akLeft, akRight]
+        Cancel = True
+        Caption = '<- &Back'
+        OnClick = bBackClick
+        TabOrder = 3
       end
     end
   end
