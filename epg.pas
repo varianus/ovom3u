@@ -70,6 +70,7 @@ type
     procedure Scan;
     function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
+    function GetEpgInfo(const SearchTerm: string): AREpgInfo; overload;
   end;
 
 
@@ -317,6 +318,40 @@ begin
   end;
 
 end;
+function TEpg.GetEpgInfo(const SearchTerm: string): AREpgInfo;
+var
+  qSearch: TSQLQuery;
+  i: LongInt;
+begin
+  qSearch := TSQLQuery.Create(fDB);
+  try
+    qSearch.Transaction := fTR;
+    qSearch.SQL.Text := 'select c.name as sChannelName, p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p'
+                       +' JOIN channels c on c.ID = p.idChannel'
+                       +' where stitle like :search or sPlot like :search'
+                       +' order by p.dStartTime';
+    qSearch.ParamByName('search').AsString := '%'+SearchTerm+'%';
+    qSearch.PacketRecords := -1;
+    qSearch.Open;
+    i := qSearch.RecordCount;
+    SetLength(Result, qSearch.RecordCount);
+    i := 0;
+    while not qSearch.EOF do
+    begin
+      Result[i].Channel := qSearch.FieldByName('sChannelName').AsString;
+      Result[i].Title := qSearch.FieldByName('sTitle').AsString;
+      Result[i].Plot := qSearch.FieldByName('sPlot').AsString;
+      Result[i].StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
+      Result[i].EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
+      Inc(i);
+      qsearch.Next;
+    end;
+  finally
+    qSearch.Free;
+  end;
+
+end;
+
 
 function TEpg.GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo;
 var
@@ -326,7 +361,7 @@ begin
   qSearch := TSQLQuery.Create(fDB);
   try
     qSearch.Transaction := fTR;
-    qSearch.SQL.Text := 'select distinct * from programme p where p.idChannel = :id  ' +
+    qSearch.SQL.Text := 'select distinct p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p where p.idChannel = :id  ' +
       ' and ((dStartTime >= :stime and dEndTime <= :etime) ' +
       '  or  (dStartTime <= :stime and dEndTime >= :stime) ' +
       '  or  (dStartTime <= :etime and dEndTime >= :etime)) ' +

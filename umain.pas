@@ -87,6 +87,7 @@ type
     epgData: TEpg;
     isRenderActive: boolean;
     flgFullScreen: boolean;
+    ShowingInfo: boolean;
     CurrentChannel: integer;
     PreviousChannel: integer;
     RestoredBorderStyle: TBorderStyle;
@@ -206,7 +207,7 @@ begin
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
-
+  ShowingInfo := false;
   if CheckConfigAndSystem then
   begin
     ChannelList.RowCount := 0;
@@ -340,9 +341,18 @@ procedure TfPlayer.ShowEpg;
 var
   Info: REpgInfo;
 begin
-  Info := epgData.GetEpgInfo(CurrentChannel + 1, now);
-  MpvEngine.OsdEpg(Format('%3.3d: %s', [List[CurrentChannel].Number, List[CurrentChannel].title]),info, True);
-  OSDTimer.Enabled := True;
+  if not ShowingInfo then
+    begin
+      Info := epgData.GetEpgInfo(CurrentChannel + 1, now);
+      MpvEngine.OsdEpg(Format('%3.3d: %s', [List[CurrentChannel].Number, List[CurrentChannel].title]),info, True);
+      ShowingInfo := true;
+      OSDTimer.Enabled := True;
+    end
+  else
+    begin
+     OSDTimerTimer(self);
+    end;
+
 end;
 
 procedure TfPlayer.LoadingTimerStartTimer(Sender: TObject);
@@ -448,6 +458,7 @@ end;
 procedure TfPlayer.OSDTimerTimer(Sender: TObject);
 begin
   fLastMessage := '';
+  ShowingInfo := false;
   if GLRenderer.Visible then
   begin
     MpvEngine.OsdEpg('',Default(REpgInfo), False);

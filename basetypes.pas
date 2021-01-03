@@ -11,6 +11,7 @@ type
   TEngineCommand = (ecEvent,ecPaint);
 
   REpgInfo = record
+    Channel: string;
     Title: string;
     Plot: string;
     StartTime: TDateTime;

@@ -5,35 +5,53 @@ unit uEPGForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, Buttons, epg,
-  BaseTypes, Types, Math;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, Buttons, ActnList, ComCtrls,
+  epg, BaseTypes, Types, Math;
 
 type
 
   { TEPGForm }
 
   TEPGForm = class(TForm)
+    actBackward: TAction;
+    actForward: TAction;
+    actNow: TAction;
+    ActionList1: TActionList;
     arBackward: TArrow;
     arForward: TArrow;
     bNow: TBitBtn;
+    ResultGrid: TDrawGrid;
+    Search: TButton;
+    LabeledEdit1: TLabeledEdit;
     mmPlot: TMemo;
+    pcView: TPageControl;
     Panel1: TPanel;
     stChannel: TStaticText;
     stTime: TStaticText;
     stTitle: TStaticText;
+    DetailGrid: TDrawGrid;
+    tsFullGuide: TTabSheet;
+    tsDetail: TTabSheet;
+    tsSearch: TTabSheet;
     TimeGrid: TDrawGrid;
     lbMessage: TLabel;
     pnlControl: TPanel;
     TimerCheck: TTimer;
+    procedure actBackwardExecute(Sender: TObject);
+    procedure actForwardExecute(Sender: TObject);
+    procedure actNowExecute(Sender: TObject);
     procedure arBackwardClick(Sender: TObject);
     procedure arForwardClick(Sender: TObject);
-    procedure bNowClick(Sender: TObject);
+    procedure PaintGridCell(Sender: TObject; aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
+    procedure SearchClick(Sender: TObject);
     procedure TimeGridDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure FormCreate(Sender: TObject);
+    procedure TimeGridKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure TimeGridMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
     procedure TimerCheckTimer(Sender: TObject);
   private
     FEpgData: TEpg;
+    Details: AREpgInfo;
     procedure SetEpgData(AValue: TEpg);
     procedure UpdateTimeRange;
 
@@ -49,7 +67,7 @@ var
 
 implementation
 
-uses umain, GeneralFunc;
+uses umain, GeneralFunc, LCLType;
 
 const
   OneHour = 1 / 24;
@@ -131,13 +149,18 @@ end;
 
 procedure TEPGForm.arBackwardClick(Sender: TObject);
 begin
+  actBackward.Execute;
+end;
+
+procedure TEPGForm.actBackwardExecute(Sender: TObject);
+begin
   StartTime := StartTime - OneHour;
   EndTime := EndTime - OneHour;
   UpdateTimeRange;
   TimeGrid.Invalidate;
 end;
 
-procedure TEPGForm.arForwardClick(Sender: TObject);
+procedure TEPGForm.actForwardExecute(Sender: TObject);
 begin
   StartTime := StartTime + OneHour;
   EndTime := EndTime + OneHour;
@@ -145,12 +168,48 @@ begin
   TimeGrid.Invalidate;
 end;
 
-procedure TEPGForm.bNowClick(Sender: TObject);
+procedure TEPGForm.actNowExecute(Sender: TObject);
 begin
   StartTime := trunc(now) + Floor(frac(now - OneHour ) * 24) / 24;
   EndTime := StartTime + OneHour *2;
   UpdateTimeRange;
   TimeGrid.Invalidate;
+end;
+
+procedure TEPGForm.arForwardClick(Sender: TObject);
+begin
+  actForward.Execute;
+end;
+
+procedure TEPGForm.PaintGridCell(Sender: TObject; aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
+var
+  Grid: TDrawGrid;
+  cv: Tcanvas;
+  Style: TTextStyle;
+begin
+ //
+  if (aRow = 0)  then
+   exit;
+  Style.EndEllipsis := True;
+  Style.Wordbreak := true;
+
+  Grid := Sender as TDrawGrid;
+  cv := Grid.Canvas;
+  case Grid.Columns[aCol].Tag of
+    0: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Channel);
+    1: cv.TextRect(aRect,aRect.Left,aRect.Top, DateTimeToStr(trunc(Details[aRow-1].StartTime)));
+    2: cv.TextRect(aRect,aRect.Left,aRect.Top, FormatTimeRange(Details[aRow-1].StartTime,Details[aRow-1].EndTime, true));
+    3: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Title);
+    4: cv.TextRect(aRect,aRect.Left,aRect.Top, Details[aRow-1].Plot);
+  end;
+
+end;
+
+procedure TEPGForm.SearchClick(Sender: TObject);
+begin
+  Details:= EpgData.GetEpgInfo(LabeledEdit1.Text);
+  ResultGrid.RowCount := Length(Details)+1;
+  ResultGrid.Invalidate;
 end;
 
 procedure TEPGForm.FormCreate(Sender: TObject);
@@ -159,6 +218,18 @@ begin
   EndTime := StartTime + OneHour*2;
   UpdateTimeRange;
   TimeGrid.RowCount := fPlayer.List.Count + 1;
+  Details := nil;
+
+end;
+
+procedure TEPGForm.TimeGridKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case key of
+    VK_LEFT: actBackward.Execute ;
+    VK_RIGHT: actForward.Execute ;
+    VK_N: actNow.Execute;
+    VK_E: Self.Close;
+  end;
 
 end;
 

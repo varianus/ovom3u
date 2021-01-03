@@ -264,7 +264,7 @@ begin
   if (Command = ecPaint) and (param = 1) then
   begin
     isGlEnabled := True;
-    PostMessage(GLRenderControl.Handle, LM_PAINT,0,0);// GLRenderControl.Repaint;
+    gLRenderControl.invalidate; //  PostMessage(GLRenderControl.Handle, LM_PAINT,0,0);// GLRenderControl.Repaint;
     exit;
   end;
 
