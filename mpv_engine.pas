@@ -543,9 +543,9 @@ procedure TMPVEngine.OsdMessage(msg: string = '');
 var
   num: int64;
 begin
-  mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
   num := 1;
   mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
+  mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
   num := 55;
   mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
   num := 0;
@@ -567,11 +567,11 @@ begin
 
   if ClientVersion <= $00010065 then
   begin
+    num := 3;
+    mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-align-y', 'bottom');
     num := 36;
     mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
-    num := 3;
-    mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     num := 2;
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s' + #10 + '%s    %s ' + #10 + ' %s',
