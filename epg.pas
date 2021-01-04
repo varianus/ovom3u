@@ -51,13 +51,13 @@ type
     FOnScanComplete: TNotifyEvent;
     FOnScanStart: TNotifyEvent;
     fScanning: boolean;
+    Scanner: TEpgScanner;
     procedure AfterScan;
     procedure BeforeScan;
     procedure CheckDBStructure;
     procedure EndScan(AObject: TObject);
     function GetDbVersion: integer;
-    procedure SetLastScan(ScanType: string);
-    procedure SetupDBConnection;
+     procedure SetupDBConnection;
     procedure UpgradeDBStructure(LoadedDBVersion: integer);
   public
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
@@ -68,6 +68,7 @@ type
     function LastScan(const ScanType: string): TDateTime;
     procedure LoadChannelList(List: TM3ULoader);
     procedure Scan;
+    procedure SetLastScan(ScanType: string; Date:TdateTime);
     function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
     function GetEpgInfo(const SearchTerm: string): AREpgInfo; overload;
@@ -179,7 +180,7 @@ begin
 
 end;
 
-procedure TEpg.SetLastScan(ScanType: string);
+procedure TEpg.SetLastScan(ScanType: string; Date: TdateTime);
 var
   tmpQuery: TSQLQuery;
 begin
@@ -188,7 +189,7 @@ begin
     tmpQuery.DataBase := fDB;
     tmpQuery.Transaction := fTR;
     tmpQuery.SQL.Text := 'UPDATE scans set ' + ScanType + ' =:date';
-    tmpQuery.parambyname('date').AsDateTime := now;
+    tmpQuery.parambyname('date').AsDateTime := Date;
     tmpQuery.ExecSQL;
     fTR.CommitRetaining;
   finally
@@ -252,13 +253,14 @@ procedure TEpg.EndScan(AObject: TObject);
 begin
 
   AfterScan;
-  SetLastScan('epg');
+  SetLastScan('epg', now);
 
 
   if Assigned(FOnScanComplete) then
     FOnScanComplete(Self);
 
   fScanning := False;
+
 end;
 
 procedure TEpg.BeforeScan;
@@ -272,13 +274,14 @@ procedure TEpg.AfterScan;
 begin
   fTR.CommitRetaining;
   fEpgAvailable := True;
+  if Assigned(Scanner) then
+    Scanner.free;
 end;
 
 
 procedure TEpg.Scan;
-var
-  Scanner: TEpgScanner;
 begin
+  Scanner := nil;
   if LastScan('epg') + 12/24 > now then
   begin
     AfterScan;
@@ -438,21 +441,27 @@ var
   ListName: string;
   Decompress: TGZFileStream;
   FcacheFile: TFileStream;
-
+  GzHeader: Word;
 begin
 
   CacheDir := GetCacheDir;
   try
-    DownloadFromUrl(fmrl, CacheDir + 'current-epg.gz');
-    ListName := CacheDir + 'current-epg.gz';
-    Decompress := TGZFileStream.Create(ListName, gzopenread);
-    ListName := CacheDir + 'current-epg.xml';
-    FcacheFile := TFileStream.Create(ListName, fmOpenWrite or fmcreate);
-    Decompress.Position := 0;
-    FcacheFile.CopyFrom(Decompress, 0);
+    DownloadFromUrl(fmrl, CacheDir + 'current-epg');
+    ListName := CacheDir + 'current-epg';
+    FcacheFile := TFileStream.Create(ListName, fmOpenRead);
+    GzHeader :=FcacheFile.ReadWord;
     FcacheFile.Free;
+    if NtoBe(GzHeader) = $1f8b then
+    begin
+      Decompress := TGZFileStream.Create(ListName, gzopenread);
+      ListName := CacheDir + 'current-epg.xml';
+      FcacheFile := TFileStream.Create(ListName, fmOpenWrite or fmcreate);
+      Decompress.Position := 0;
+      FcacheFile.CopyFrom(Decompress, 0);
+      FcacheFile.Free;
+    end;
     Load(ListName);
-    fOwner.setlastscan('epg');
+    fOwner.setlastscan('epg', now);
   except
     on e: Exception do
       WriteLn(e.message);
