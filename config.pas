@@ -56,15 +56,15 @@ type
     constructor Create;
     procedure ReadConfig;
     procedure SaveConfig;
-    procedure WriteStrings(APath: string; Values: TStrings);
-    function ReadStrings(APath: string; Values: TStrings): integer;
-    procedure WriteString(APath: string; Value: String);
-    function ReadString(APath: string; ADefault: String): string;
+    procedure WriteStrings(const APath: string; Values: TStrings);
+    function ReadStrings(const APath: string; Values: TStrings): integer;
+    procedure WriteString(const APath: string; const  Value: String);
+    function ReadString(const APath: string; const  ADefault: String): string;
     function GetResourcesPath: string;
-    procedure WriteBoolean(APath: string; Value: Boolean);
-    function ReadBoolean(APath: string; ADefault: Boolean): Boolean;
-    procedure WriteInteger(APath: string; Value: Integer);
-    function ReadInteger(APath: string; ADefault: Integer): Integer;
+    procedure WriteBoolean(const APath: string; Value: Boolean);
+    function ReadBoolean(const APath: string; ADefault: Boolean): Boolean;
+    procedure WriteInteger(const APath: string; Value: Integer);
+    function ReadInteger(const APath: string; ADefault: Integer): Integer;
 
     procedure Flush;
     destructor Destroy; override;
@@ -301,7 +301,7 @@ begin
 
 end;
 
-procedure TConfig.WriteStrings(APath: string; Values: TStrings);
+procedure TConfig.WriteStrings(const APath: string; Values: TStrings);
 var
   Node: TJsonNode;
   i: Integer;
@@ -323,7 +323,7 @@ begin
     end;
 end;
 
-function TConfig.ReadStrings(APath: string; Values: TStrings): integer;
+function TConfig.ReadStrings(const APath: string; Values: TStrings): integer;
 var
   Node: TJsonNode;
   i: Integer;
@@ -339,7 +339,7 @@ begin
   Result := Values.Count;
 end;
 
-procedure TConfig.WriteString(APath: string; Value: String);
+procedure TConfig.WriteString(const APath: string; const Value: String);
 var
   Node: TJsonNode;
 begin
@@ -353,7 +353,7 @@ begin
 
 end;
 
-function TConfig.ReadString(APath: string; ADefault: String): string;
+function TConfig.ReadString(const APath: string; const ADefault: String): string;
 var
   Node: TJsonNode;
 begin
@@ -364,7 +364,7 @@ begin
      Result :=  ADefault;
 end;
 
-procedure TConfig.WriteBoolean(APath: string; Value: Boolean);
+procedure TConfig.WriteBoolean(const APath: string; Value: Boolean);
 var
   Node: TJsonNode;
 begin
@@ -376,7 +376,7 @@ begin
 
 end;
 
-function TConfig.ReadBoolean(APath: string; ADefault: Boolean): Boolean;
+function TConfig.ReadBoolean(const APath: string; ADefault: Boolean): Boolean;
 var
   Node: TJsonNode;
 begin
@@ -387,7 +387,7 @@ begin
     Result :=  ADefault;
 end;
 
-procedure TConfig.WriteInteger(APath: string; Value: Integer);
+procedure TConfig.WriteInteger(const APath: string; Value: Integer);
 var
   Node: TJsonNode;
 begin
@@ -401,7 +401,7 @@ begin
 
 end;
 
-function TConfig.ReadInteger(APath: string; ADefault: Integer): Integer;
+function TConfig.ReadInteger(const APath: string; ADefault: Integer): Integer;
 var
   Node: TJsonNode;
 begin
