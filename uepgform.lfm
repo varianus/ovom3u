@@ -204,6 +204,15 @@ object EPGForm: TEPGForm
           OnClick = bViewSearchClick
           TabOrder = 1
         end
+        object bForceReload: TButton
+          Left = 320
+          Height = 30
+          Top = 10
+          Width = 75
+          Caption = '&Force Reload'
+          OnClick = bForceReloadClick
+          TabOrder = 2
+        end
       end
     end
     object tsDetail: TTabSheet
@@ -242,13 +251,13 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 370
+            Width = 361
           end        
           item
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 370
+            Width = 362
           end>
         DefaultRowHeight = 30
         ExtendedSelect = False
@@ -262,8 +271,8 @@ object EPGForm: TEPGForm
         ColWidths = (
           100
           100
-          370
-          370
+          361
+          362
         )
       end
       object bBack1: TButton
@@ -347,14 +356,14 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 330
+            Width = 322
           end        
           item
             MaxSize = 1000
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 331
+            Width = 322
           end>
         DefaultColWidth = 80
         DefaultRowHeight = 30
@@ -370,8 +379,8 @@ object EPGForm: TEPGForm
           120
           100
           100
-          330
-          331
+          322
+          322
         )
       end
       object bBack: TButton

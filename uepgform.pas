@@ -22,6 +22,7 @@ type
     bBack1: TButton;
     bNow: TBitBtn;
     bViewSearch: TButton;
+    bForceReload: TButton;
     ResultGrid: TDrawGrid;
     Search: TButton;
     lbeSearch: TLabeledEdit;
@@ -45,6 +46,7 @@ type
     procedure actNowExecute(Sender: TObject);
     procedure arBackwardClick(Sender: TObject);
     procedure arForwardClick(Sender: TObject);
+    procedure bForceReloadClick(Sender: TObject);
     procedure bViewSearchClick(Sender: TObject);
     procedure PaintGridCell(Sender: TObject; aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
     procedure ResultGridSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
@@ -122,6 +124,7 @@ begin
         StartPos := Round((CurrTime -StartTime) * (TimeGrid.Columns[1].Width / (endTime - StartTime))) + aRect.Left;
 
         fCanvas.Pen.Color := clHighlight ;
+        fCanvas.Pen.Width := 3;
         fCanvas.MoveTo(StartPos, arect.top);
         fCanvas.LineTo(StartPos, aRect.Bottom);
       end;
@@ -187,8 +190,8 @@ end;
 
 procedure TEPGForm.actNowExecute(Sender: TObject);
 begin
-  StartTime := trunc(now) + Floor(frac(now - OneHour ) * 24) / 24;
-  EndTime := StartTime + OneHour *2;
+  StartTime := trunc(now) + Floor(frac(now - OneHour) * 24) / 24;
+  EndTime := StartTime + OneHour*3;
   UpdateTimeRange;
   TimeGrid.Invalidate;
 end;
@@ -196,6 +199,13 @@ end;
 procedure TEPGForm.arForwardClick(Sender: TObject);
 begin
   actForward.Execute;
+end;
+
+procedure TEPGForm.bForceReloadClick(Sender: TObject);
+begin
+  EpgData.SetLastScan('epg', 0);
+  TimerCheck.Enabled := true;
+  EpgData.Scan;
 end;
 
 procedure TEPGForm.bViewSearchClick(Sender: TObject);
