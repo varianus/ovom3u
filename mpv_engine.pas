@@ -60,6 +60,7 @@ type
     EngineState: TEngineState;
     Loading: boolean;
     ClientVersion: DWORD;
+    RenderParams: array of mpv_render_param;
 
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetMainVolume: integer;
@@ -226,6 +227,7 @@ var
   Params: array of mpv_render_param;
   glParams: mpv_opengl_init_params;
   i: integer;
+  Flip, Skip: longint;
 begin
 
   Load_GL_version_1_3();
@@ -246,6 +248,19 @@ begin
   i := mpv_render_context_create(Context, fHandle^, Pmpv_render_param(@Params[0]));
   if (i < 0) then
     raise Exception.Create('failed to initialize mpv GL context');
+
+  SetLength(RenderParams, 4);
+  RenderParams[0]._type := MPV_RENDER_PARAM_OPENGL_FBO;
+  RenderParams[0].Data := nil;
+  RenderParams[1]._type := MPV_RENDER_PARAM_SKIP_RENDERING;
+  Skip := 0;
+  RenderParams[1].Data := @Skip;
+  RenderParams[2]._type := MPV_RENDER_PARAM_FLIP_Y;
+  Flip := 1;
+  RenderParams[2].Data := @Flip;
+  RenderParams[3]._type := MPV_RENDER_PARAM_INVALID;
+  RenderParams[3].Data := nil;
+
   mpv_render_context_set_update_callback(Context^, @update_gl, self);
   isRenderActive := True;
 end;
@@ -383,16 +398,15 @@ end;
 procedure TMPVEngine.GLRenderControlPaint(Sender: TObject);
 var
   mpfbo: mpv_opengl_fbo;
+  Params : array of mpv_render_param;
   Flip, Skip: longint;
-var
-  Params: array of mpv_render_param;
 begin
   if not isGlEnabled then
     exit;
 
-  Params := nil;
   if not isRenderActive then
   begin
+    Params := nil;
     SetLength(Params, 2);
     Params[0]._type := MPV_RENDER_PARAM_SKIP_RENDERING;
     Skip := 1;
@@ -405,29 +419,13 @@ begin
   end
   else
   begin
-    SetLength(Params, 4);
-    Params[0]._type := MPV_RENDER_PARAM_OPENGL_FBO;
-    Params[0].Data := @mpfbo;
-    Params[1]._type := MPV_RENDER_PARAM_SKIP_RENDERING;
-    Skip := 0;
-    Params[1].Data := @Skip;
-    Params[2]._type := MPV_RENDER_PARAM_FLIP_Y;
-    Flip := 1;
-    Params[2].Data := @Flip;
-    Params[3]._type := MPV_RENDER_PARAM_INVALID;
-    Params[3].Data := nil;
     GLRenderControl.MakeCurrent();
-    //glClearColor(0, 0, 0, 0);
-    //glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-    //glMatrixMode(GL_PROJECTION);
-    //glLoadIdentity();
-    //glMatrixMode(GL_MODELVIEW);
-    //glLoadIdentity();
     mpfbo.fbo := 0;
     mpfbo.h := GLRenderControl.Height;
     mpfbo.w := GLRenderControl.Width;
     mpfbo.internal_format := 0;
-    mpv_render_context_render(Context^, Pmpv_render_param(@Params[0]));
+    RenderParams[0].Data := @mpfbo;
+    flip := mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
     GLRenderControl.SwapBuffers();
   end;
 
@@ -435,10 +433,9 @@ end;
 
 function TMPVEngine.GetBoolProperty(const PropertyName: string): boolean;
 var
-  res: integer;
   p: integer;
 begin
-  res := mpv_get_property(fhandle^, PChar(PropertyName), MPV_FORMAT_FLAG, @p);
+  mpv_get_property(fhandle^, PChar(PropertyName), MPV_FORMAT_FLAG, @p);
   Result := boolean(p);
 end;
 
