@@ -97,7 +97,7 @@ const
   UPDATECONFIG = 'UPDATE config SET Version = %d;';
 
   CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' + ');';
-  CREATESCANTABLE2 = 'insert into  scans values  (0,v0);';
+  CREATESCANTABLE2 = 'insert into  scans values  (0,0);';
 
   CREATECHANNELTABLE = 'CREATE TABLE channels (' + ' "ID" INTEGER primary key' + ',"Name" VARCHAR COLLATE NOCASE' + ',"ChannelNo" VARCHAR COLLATE NOCASE' + ')';
   CREATECHANNELINDEX1 = 'CREATE INDEX "idx_Channels_Name" on channels (Name ASC);';
