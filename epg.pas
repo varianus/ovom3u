@@ -66,9 +66,12 @@ type
     constructor Create;
     destructor Destroy; override;
     function LastScan(const ScanType: string): TDateTime;
+    function LastChannelMd5: string;
     procedure LoadChannelList(List: TM3ULoader);
     procedure Scan;
     procedure SetLastScan(ScanType: string; Date:TdateTime);
+    Procedure SetLastChannelMd5(const ComputedMD5: string);
+
     function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
     function GetEpgInfo(const SearchTerm: string): AREpgInfo; overload;
@@ -96,8 +99,8 @@ const
   CREATECONFIGTABLE2 = ' INSERT INTO config (Version) VALUES(1);';
   UPDATECONFIG = 'UPDATE config SET Version = %d;';
 
-  CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' + ');';
-  CREATESCANTABLE2 = 'insert into  scans values  (0,0);';
+  CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' +',ChannelsMd5 VARCHAR );';
+  CREATESCANTABLE2 = 'insert into  scans values  (0,0,null);';
 
   CREATECHANNELTABLE = 'CREATE TABLE channels (' + ' "ID" INTEGER primary key' + ',"Name" VARCHAR COLLATE NOCASE' + ',"ChannelNo" VARCHAR COLLATE NOCASE' + ')';
   CREATECHANNELINDEX1 = 'CREATE INDEX "idx_Channels_Name" on channels (Name ASC);';
@@ -157,6 +160,31 @@ begin
     TableList.Free;
   end;
 
+end;
+
+function TEpg.LastChannelMd5:string;
+var
+  tmpQuery: TSQLQuery;
+begin
+  try
+    tmpQuery := TSQLQuery.Create(fDB);
+    tmpQuery.DataBase := fDB;
+    tmpQuery.Transaction := fTR;
+    tmpQuery.SQL.Text := 'SELECT ChannelsMd5  FROM Scans';
+    tmpQuery.Open;
+    if not tmpQuery.EOF then
+      Result := tmpQuery.Fields[0].AsString
+    else
+      Result := '';
+
+  finally
+    tmpQuery.Free;
+  end;
+end;
+
+procedure TEpg.SetLastChannelMd5(const ComputedMD5: string);
+begin
+  fDB.ExecuteDirect('update scans set ChannelsMd5 = ' +QuotedStr(ComputedMD5));
 end;
 
 function TEpg.LastScan(const ScanType: string): TDateTime;
