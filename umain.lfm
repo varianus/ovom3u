@@ -1,12 +1,13 @@
 object fPlayer: TfPlayer
-  Left = 645
+  Left = 349
   Height = 436
-  Top = 195
+  Top = 252
   Width = 618
   Caption = 'OvoM3U'
   ClientHeight = 436
   ClientWidth = 618
   KeyPreview = True
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
@@ -99,6 +100,7 @@ object fPlayer: TfPlayer
       MouseWheelOption = mwGrid
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellEllipsis]
       ParentFont = False
+      ScrollBars = ssVertical
       TabAdvance = aaDown
       TabOrder = 1
       UseXORFeatures = True
@@ -106,7 +108,7 @@ object fPlayer: TfPlayer
       OnDrawCell = ChannelListDrawCell
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        196
+        179
       )
     end
   end
@@ -143,7 +145,15 @@ object fPlayer: TfPlayer
     Top = 344
   end
   object ApplicationProperties1: TApplicationProperties
+    OnIdle = ApplicationProperties1Idle
     Left = 146
     Top = 292
+  end
+  object ChannelTimer: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = ChannelTimerTimer
+    Left = 112
+    Top = 344
   end
 end

@@ -42,6 +42,7 @@ type
     mnuAudio: TMenuItem;
     mnuVideo: TMenuItem;
     GLRenderer: TOpenGLControl;
+    ChannelTimer: TTimer;
     pnlChannel: TPanel;
     pnlContainer: TPanel;
     pmPlayer: TPopupMenu;
@@ -51,9 +52,12 @@ type
     ToolButton1: TToolButton;
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
+    procedure ApplicationProperties1Idle(Sender: TObject; var Done: Boolean);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure ChannelTimerTimer(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -180,8 +184,12 @@ begin
   begin
     CacheDir := GetCacheDir;
     try
-      if epgData.LastScan('channels') + 12 > now then
-        DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
+      if epgData.LastScan('channels') + 12/24 < now then
+        begin
+          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
+          epgData.SetLastScan('channels',now);
+        end;
+
       IPTVList := CacheDir + 'current-iptv.m3u';
     finally
     end;
@@ -193,8 +201,13 @@ begin
 
   if not Configobj.M3UProperties.EPGUrl.IsEmpty then
   begin
-    epgData.LoadChannelList(List);
-    epgData.Scan;
+    if List.ListMd5 <> epgData.LastChannelMd5 then
+      begin
+        epgData.LoadChannelList(List);
+        epgData.SetLastChannelMd5('LastChannelMd5');
+        epgData.SetLastScan('epg',0);
+        epgData.Scan;
+      end;
   end;
 
 
@@ -228,8 +241,8 @@ end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
 begin
+  Application.ProcessMessages;
   MpvEngine.Free;
-
   List.Free;
   epgData.Free;
 end;
@@ -238,16 +251,24 @@ procedure TfPlayer.OnLoadingState(Sender: TObject);
 begin
   if Loading then
     Loading := MpvEngine.IsIdle;
+  if not Loading then
+    OsdMessage('',false);
 end;
 
 procedure TfPlayer.OsdMessage(Message: string; TimeOut: boolean = True);
 begin
-  fLastMessage := Message;
+
   if GLRenderer.Visible then
-    MpvEngine.OsdMessage(message)
+    begin
+      MpvEngine.OsdMessage(message);
+      OSDTimer.Enabled := TimeOut;
+    end
   else
-    pnlContainer.Invalidate;
-  OSDTimer.Enabled := TimeOut;
+    begin
+       fLastMessage := Message;
+       pnlContainer.Invalidate;
+    end;
+
 end;
 
 procedure TfPlayer.FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -328,7 +349,14 @@ begin
           ChannelSelected := ChannelSelected - $30;
 
       end;
-      OsdMessage(IntToStr(ChannelSelected), True);
+      if  GLRenderer.Visible then
+         OsdMessage(IntToStr(ChannelSelected), false)
+      else
+        begin
+         fLastMessage := IntToStr(ChannelSelected);
+         pnlContainer.Invalidate;
+        end;
+      ChannelTimer.Enabled := true;
     end;
     else
      Pass:= true;
@@ -368,9 +396,8 @@ begin
     Loading := MpvEngine.isIdle;
     if not loading then
     begin
+      OsdMessage('');
       LoadingTimer.Enabled := False;
-      MpvEngine.LoadTracks;
-      LoadTracks;
     end;
   end;
 
@@ -408,9 +435,37 @@ begin
     Play(ChannelList.Row);
 end;
 
+procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
+begin
+  if ChannelSelecting then
+  begin
+    if ConfigObj.M3UProperties.UseChno then
+      ChannelSelected := List.ItemByChno(ChannelSelected)
+    else
+      ChannelSelected := ChannelSelected - 1;
+
+    ChannelSelecting := False;
+    OsdMessage('',false);
+    Play(ChannelSelected);
+
+  end;
+  ChannelTimer.Enabled := false;
+end;
+
+procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  CloseAction := caFree;
+end;
+
 procedure TfPlayer.ChannelListDblClick(Sender: TObject);
 begin
   Play(ChannelList.Row);
+end;
+
+procedure TfPlayer.ApplicationProperties1Idle(Sender: TObject; var Done: Boolean);
+begin
+
+  Done := false;
 end;
 
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
@@ -426,8 +481,16 @@ begin
     OsdMessage('No Channel', True);
     exit;
   end;
+
   if (CurrentChannel = Row) and not MpvEngine.IsIdle then
     exit;
+
+  if list[Row].Mrl.IsEmpty then
+  begin
+    OsdMessage('Missing Channel Address', True);
+    exit;
+  end;
+
   ChannelList.Invalidate;
   PreviousChannel := CurrentChannel;
   CurrentChannel := Row;
@@ -457,25 +520,14 @@ end;
 
 procedure TfPlayer.OSDTimerTimer(Sender: TObject);
 begin
-  fLastMessage := '';
+
   ShowingInfo := false;
   if GLRenderer.Visible then
   begin
     MpvEngine.OsdEpg('',Default(REpgInfo), False);
     MpvEngine.OsdMessage();
-  end
-  else
-    pnlContainer.invalidate;
+  end ;
   OSDTimer.Enabled := False;
-  if ChannelSelecting then
-  begin
-    if ConfigObj.M3UProperties.UseChno then
-      ChannelSelected := List.ItemByChno(ChannelSelected)
-    else
-      ChannelSelected := ChannelSelected - 1;
-    Play(ChannelSelected);
-    ChannelSelecting := False;
-  end;
 end;
 
 procedure TfPlayer.pmPlayerPopup(Sender: TObject);
@@ -500,14 +552,9 @@ var
   p: tpoint;
   Scaling: double;
 begin
+  if GLRenderer.Visible then
+    exit;
   cv := pnlContainer.Canvas;
-  cv.font.Color := clwhite;
-  // MPV use a default font of 55 pixel for a 720 pixel high window
-  // try to replicate same scaling
-  Scaling := (cv.Height / 720) / 1.25;
-  cv.font.Height := trunc(Scaling * 55);
-  cv.TextOut(trunc(scaling * 25), trunc(scaling * 22), fLastMessage);
-
   if floading then
   begin
 
@@ -525,10 +572,17 @@ begin
       A := (progress - 720) * 16 +10;
       b := -360 * 16;
     end;
-    p.X := cv.Width div 2;
-    p.y := cv.Height div 2;
+    p.X := pnlcontainer.Width div 2;
+    p.y := pnlcontainer.Height div 2;
     cv.Arc(p.x - 50, p.y - 50, p.x + 50, p.y + 50, b, a);
   end;
+  cv.font.Color := clwhite;
+  // MPV use a default font of 55 pixel for a 720 pixel high window
+  // try to replicate same scaling
+  Scaling := (pnlcontainer.Height / 720);
+  cv.font.Height := trunc(55 * scaling);
+  cv.TextOut(trunc(scaling * 25), trunc(scaling * 22), fLastMessage);
+
 end;
 
 procedure TfPlayer.ToolButton1Click(Sender: TObject);
@@ -549,7 +603,11 @@ begin
   LoadingTimer.Enabled := FLoading;
   GLRenderer.Visible := not FLoading;
   if not loading then
-    LoadTracks;
+    begin
+      fLastMessage := '';
+      MpvEngine.LoadTracks;
+      LoadTracks;
+    end;
 end;
 
 procedure TfPlayer.LoadTracks;
