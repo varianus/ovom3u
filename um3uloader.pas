@@ -48,6 +48,7 @@ type
     fLastMessage: string;
     function SortbyNumber(constref Left, Right: TM3UItem): integer;
   public
+    ListMd5: string;
     property LastMessage: string read fLastMessage;
     constructor Create;
     destructor Destroy; override;
@@ -60,7 +61,7 @@ type
 
 implementation
 
-uses Math, Generics.Defaults;
+uses Math, Generics.Defaults, md5;
 
 resourcestring
   RSEmpty = 'M3U file is empty';
@@ -86,6 +87,8 @@ var
   Item: TM3UItem;
   fData: boolean;
   index: integer;
+  Context: TMD5Context;
+  Digest: TMD5Digest;
 
   function FindTag(const tag: string; const st: string): string;
   var
@@ -103,6 +106,7 @@ var
 begin
   Clear;
   Index := 1;
+  MD5Init(Context);
   p := ExtractFilePath(ListName);
   assignfile(f, ListName);
   reset(f);
@@ -115,6 +119,7 @@ begin
   end;
 
   readln(f, s);
+  MD5Update(Context, s[1], Length(s));
   s := trim(s);
   if uppercase(copy(s, 1, 7)) <> '#EXTM3U' then
   begin
@@ -130,22 +135,19 @@ begin
     if (s <> EmptyStr) then
       if (uppercase(copy(s, 1, 7)) = '#EXTINF') then
       begin
-        if not fData then
-        begin
-          item := TM3UItem.Create;
-          Item.Number := index;
-          Item.Group := FindTag('tvg-group', s);
-          item.Id := FindTag('tvg-id', s);
-          item.Icon := FindTag('tvg-logo', s);
-          item.tvg_name := FindTag('tvg-name', s);
-          item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
-          Item.Title := copy(s, RPos(',', S) + 1, Length(s));
-          Inc(index);
-          Add(Item);
-          fData := True;
-        end;
-      end
-      else
+        item := TM3UItem.Create;
+        Item.Number := index;
+        Item.Group := FindTag('tvg-group', s);
+        item.Id := FindTag('tvg-id', s);
+        item.Icon := FindTag('tvg-logo', s);
+        item.tvg_name := FindTag('tvg-name', s);
+        item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
+        Item.Title := copy(s, RPos(',', S) + 1, Length(s));
+        Inc(index);
+        Add(Item);
+        fData := True;
+     end
+     else
       if s[1] <> '#' then
         if fData then
         begin
@@ -153,6 +155,8 @@ begin
           fData := False;
         end;
   end;
+  MD5Final(Context, Digest);
+  ListMd5 := MD5Print(Digest);
   closefile(f);
 end;
 
