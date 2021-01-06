@@ -96,7 +96,7 @@ var
   CellHeight: integer;
   fCanvas: tcanvas;
   ChannelInfo: AREpgInfo;
-  StartPos, EndPos: integer;
+  StartPos, EndPos, LinePos: integer;
   r1: TRect;
   Style: TTextStyle;
   CurrTime: TDateTime;
@@ -108,7 +108,7 @@ begin
     Divider := TimeGrid.Columns[1].Width / Segments;
     CellHeight := aRect.Bottom - arect.top;
     fCanvas.Pen.Color := clBlack;
-
+    fCanvas.Pen.Width := 1;
     fCanvas.Font.Size := 12;
     for i := 1 to Segments - 1 do
     begin
@@ -118,16 +118,6 @@ begin
       fCanvas.MoveTo(arect.Left + trunc(divider * i), CellHeight div 2);
       fCanvas.LineTo(arect.Left + trunc(divider * i), aRect.Bottom);
     end;
-    CurrTime := now;
-    if (CurrTime >= StartTime) and (CurrTime <= endtime) then
-      begin
-        StartPos := Round((CurrTime -StartTime) * (TimeGrid.Columns[1].Width / (endTime - StartTime))) + aRect.Left;
-
-        fCanvas.Pen.Color := clHighlight ;
-        fCanvas.Pen.Width := 3;
-        fCanvas.MoveTo(StartPos, arect.top);
-        fCanvas.LineTo(StartPos, aRect.Bottom);
-      end;
   end;
   if (aRow > 0) and (Acol = 1) and fEpgData.EpgAvailable then
   begin
@@ -136,6 +126,7 @@ begin
     Style.Layout := tlCenter;
     Style.Clipping := True;
     Style.Wordbreak := False;
+    fCanvas.Pen.Width := 1;
     ChannelInfo := EpgData.GetEpgInfo(Arow, StartTime, EndTime);
     Divider := (TimeGrid.Columns[1].Width) / (endTime - StartTime);
     for i := 0 to Length(ChannelInfo) - 1 do
@@ -160,6 +151,15 @@ begin
   end;
   if (aRow > 0) and (Acol = 0) then
     fCanvas.TextRect(aRect, 0, aRect.top + 5, Format('%3.3d: %s', [fPlayer.LIST[aRow - 1].Number, fPlayer.List[aRow - 1].title]));
+  CurrTime := now;
+  if (CurrTime >= StartTime) and (CurrTime <= endtime) then
+    begin
+      LinePos := Round((CurrTime -StartTime) * (TimeGrid.Columns[1].Width / (endTime - StartTime))) + aRect.Left;
+      fCanvas.Pen.Color := clHighlight ;
+      fCanvas.Pen.Width := 3;
+      fCanvas.MoveTo(LinePos, arect.top);
+      fCanvas.LineTo(LinePos, aRect.Bottom);
+    end;
 end;
 
 procedure TEPGForm.UpdateTimeRange;
