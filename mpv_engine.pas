@@ -210,6 +210,9 @@ destructor TMPVEngine.Destroy;
 begin
   if Assigned(fHandle) then
   begin
+    mpv_render_context_set_update_callback(Context^,nil,nil);
+    // Clear all paint events before destroying context
+    Application.ProcessMessages;
     mpv_render_context_free(Context^);
     mpv_set_wakeup_callback(fhandle^, nil, self);
     mpv_terminate_destroy(fhandle^);
