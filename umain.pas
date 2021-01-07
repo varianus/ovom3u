@@ -204,7 +204,7 @@ begin
     if List.ListMd5 <> epgData.LastChannelMd5 then
       begin
         epgData.LoadChannelList(List);
-        epgData.SetLastChannelMd5('LastChannelMd5');
+        epgData.SetLastChannelMd5(List.ListMd5);
         epgData.SetLastScan('epg',0);
         epgData.Scan;
       end;
