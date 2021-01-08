@@ -52,7 +52,6 @@ type
     ToolButton1: TToolButton;
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
-    procedure ApplicationProperties1Idle(Sender: TObject; var Done: Boolean);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -80,6 +79,7 @@ type
     IPTVList: string;
     Kind: TProviderKind;
     function CheckConfigAndSystem: boolean;
+    function ComputeTrackTitle(Track: TTrack): string;
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
     procedure OnLoadingState(Sender: TObject);
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
@@ -454,18 +454,13 @@ end;
 
 procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  MpvEngine.isRenderActive := False;
   CloseAction := caFree;
 end;
 
 procedure TfPlayer.ChannelListDblClick(Sender: TObject);
 begin
   Play(ChannelList.Row);
-end;
-
-procedure TfPlayer.ApplicationProperties1Idle(Sender: TObject; var Done: Boolean);
-begin
-
-  Done := false;
 end;
 
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
@@ -610,11 +605,58 @@ begin
     end;
 end;
 
+Function TfPlayer.ComputeTrackTitle(Track: TTrack): string;
+begin
+  Result := '';
+  if not trim(Track.Title).IsEmpty then
+    Result := QuotedStr(Track.Title) +' ';
+  Case track.Kind of
+    trkVideo: begin
+      Result := Result+'('+Track.Codec +' ';
+      if (Track.w <> 0) or (Track.h <> 0) then
+        Result := result + format('%dx%d ', [Track.W, track.h]);
+      if track.Fps <> 0 then
+         Result := result + format('%2.3ffps ', [Track.Fps]);
+      Result := trim(result) +') ';
+      if track.BitRate <> 0 then
+         Result := result + format('(%d kbps) ', [trunc(Track.BitRate/ 1024)]);
+     end;
+    trkAudio: begin
+      if not trim(Track.Title).IsEmpty then
+        Result := QuotedStr(Track.Title) +' ';
+      if not trim(Track.Lang).IsEmpty then
+        Result := Track.Lang +' ';
+
+      Result := Result+'('+Track.Codec +' ';
+
+      if (Track.Channels <> 0)  then
+        Result := result + format('%dch ', [Track.Channels]);
+      if track.SampleRate <> 0 then
+        Result := result + format('%dHz ', [Track.SampleRate]);
+      Result := trim(result) +') ';
+      if track.BitRate <> 0 then
+        Result := result + format('(%d kbps) ', [trunc(Track.BitRate/ 1024)]);
+    end;
+    trkSub: begin
+       if not trim(Track.Title).IsEmpty then
+         Result := QuotedStr(Track.Title) +' ';
+       if not trim(Track.Lang).IsEmpty then
+         Result := Track.Lang +' ';
+
+       Result := Result+'('+Track.Codec+')';
+
+      end;
+
+  end;
+  Result := trim(result);
+end;
+
 procedure TfPlayer.LoadTracks;
 var
   Track: TTrack;
   mnu: TMenuItem;
   i: integer;
+  Title: string;
 begin
   mnuAudio.Clear;
   mnuVideo.Clear;
@@ -626,12 +668,10 @@ begin
       case Track.Kind of
         trkVideo:
         begin
-          if Track.Title = EmptyStr then
-            Track.Title := format('%dx%d (%s)', [Track.W, track.h, track.codec]);
           mnu := tmenuitem.Create(mnuVideo);
           mnu.RadioItem := True;
           mnu.Checked := Track.Selected;
-          mnu.Caption := track.Title;
+          mnu.Caption := ComputeTrackTitle(track);
           mnu.Tag := i;
           mnu.GroupIndex := 2;
           mnu.OnClick := mnuTrackClick;
@@ -639,13 +679,10 @@ begin
         end;
         trkAudio:
         begin
-          if Track.Title = EmptyStr then
-            Track.Title := format('%s %d ch %d  (%s)', [Track.Lang, Track.Channels, track.Bitrate, track.codec]);
-
           mnu := tmenuitem.Create(mnuAudio);
           mnu.RadioItem := True;
           mnu.Checked := Track.Selected;
-          mnu.Caption := track.Title;
+          mnu.Caption := ComputeTrackTitle(track);
           mnu.Tag := i;
           mnu.GroupIndex := 1;
           mnu.OnClick := mnuTrackClick;
@@ -653,12 +690,10 @@ begin
         end;
         trkSub:
         begin
-          if Track.Title = EmptyStr then
-            Track.Title := format('%s %s', [Track.Lang, track.codec]);
           mnu := tmenuitem.Create(mnuSub);
           mnu.RadioItem := True;
           mnu.Checked := Track.Selected;
-          mnu.Caption := track.Title;
+          mnu.Caption := ComputeTrackTitle(track);
           mnu.Tag := i;
           mnu.GroupIndex := 3;
           mnu.OnClick := mnuTrackClick;

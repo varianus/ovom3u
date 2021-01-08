@@ -1,7 +1,7 @@
 object fPlayer: TfPlayer
-  Left = 704
+  Left = 169
   Height = 436
-  Top = 253
+  Top = 535
   Width = 618
   Caption = 'OvoM3U'
   ClientHeight = 436
@@ -145,7 +145,6 @@ object fPlayer: TfPlayer
     Top = 344
   end
   object ApplicationProperties1: TApplicationProperties
-    OnIdle = ApplicationProperties1Idle
     Left = 146
     Top = 292
   end
