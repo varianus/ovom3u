@@ -302,6 +302,7 @@ procedure TEpg.AfterScan;
 begin
   fTR.CommitRetaining;
   fEpgAvailable := True;
+  fScanning := False;
   if Assigned(Scanner) then
     Scanner.free;
 end;

@@ -206,8 +206,8 @@ begin
         epgData.LoadChannelList(List);
         epgData.SetLastChannelMd5(List.ListMd5);
         epgData.SetLastScan('epg',0);
-        epgData.Scan;
       end;
+    epgData.Scan;
   end;
 
 
