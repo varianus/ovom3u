@@ -37,10 +37,12 @@ type
     Id: int64;
     Title: string;
     Lang: string;
-    Channels: integer;
+    Channels: Int64;
     Codec: string;
-    w, h: integer;
-    Bitrate: integer;
+    w, h: Int64;
+    BitRate: Int64;
+    SampleRate: Int64;
+    Fps: Double;
     procedure Init;
   end;
 
@@ -105,9 +107,15 @@ uses
   , ctypes
 {$endif};
 
+const
+  Flip: longint = 1;
+  Skip: longint = 0;
+
 {$ifdef LINUX}
 function setlocale(category: cint; locale: PChar): PChar; cdecl; external 'c' Name 'setlocale';
 {$endif}
+
+
 
 
 // Used by libmpv to load OpenGL functions
@@ -151,6 +159,7 @@ begin
   w := 0;
   h := 0;
   Bitrate := 0;
+  fps := 0;
 end;
 
 { TMPVEngine }
@@ -230,8 +239,7 @@ var
   Params: array of mpv_render_param;
   glParams: mpv_opengl_init_params;
   i: integer;
-  Flip, Skip: longint;
-begin
+ begin
 
   Load_GL_version_1_3();
   Load_GL_VERSION_2_1();
@@ -256,10 +264,8 @@ begin
   RenderParams[0]._type := MPV_RENDER_PARAM_OPENGL_FBO;
   RenderParams[0].Data := nil;
   RenderParams[1]._type := MPV_RENDER_PARAM_SKIP_RENDERING;
-  Skip := 0;
   RenderParams[1].Data := @Skip;
   RenderParams[2]._type := MPV_RENDER_PARAM_FLIP_Y;
-  Flip := 1;
   RenderParams[2].Data := @Flip;
   RenderParams[3]._type := MPV_RENDER_PARAM_INVALID;
   RenderParams[3].Data := nil;
@@ -279,7 +285,7 @@ var
   Event: Pmpv_event;
   p: integer;
 begin
-  if (Command = ecPaint) and (param = 1) then
+  if (Command = ecPaint) and (param = 1)  and isRenderActive then
   begin
     isGlEnabled := True;
     gLRenderControl.invalidate; //  PostMessage(GLRenderControl.Handle, LM_PAINT,0,0);// GLRenderControl.Repaint;
@@ -385,8 +391,12 @@ begin
           fTrackList[i].h := Detail.u.int64_;
         if Value = 'demux-channel-count' then
           fTrackList[i].Channels := Detail.u.int64_;
+        if Value = 'demux-samplerate' then
+          fTrackList[i].samplerate := Detail.u.int64_;
         if Value = 'demux-bitrate' then
           fTrackList[i].Bitrate := Detail.u.int64_;
+        if Value = 'demux-fps' then
+          fTrackList[i].fps := Detail.u.double_;
         if Value = 'selected' then
           fTrackList[i].Selected := Detail.u.flag_ = 1;
         Inc(pc);
@@ -401,26 +411,8 @@ end;
 procedure TMPVEngine.GLRenderControlPaint(Sender: TObject);
 var
   mpfbo: mpv_opengl_fbo;
-  Params : array of mpv_render_param;
-  Flip, Skip: longint;
 begin
-  if not isGlEnabled then
-    exit;
-
-  if not isRenderActive then
-  begin
-    Params := nil;
-    SetLength(Params, 2);
-    Params[0]._type := MPV_RENDER_PARAM_SKIP_RENDERING;
-    Skip := 1;
-    Params[0].Data := @Skip;
-    Params[1]._type := MPV_RENDER_PARAM_INVALID;
-    Params[1].Data := nil;
-    GLRenderControl.MakeCurrent();
-    mpv_render_context_render(Context^, Pmpv_render_param(@Params[0]));
-    GLRenderControl.SwapBuffers();
-  end
-  else
+  if isGlEnabled and isRenderActive then
   begin
     GLRenderControl.MakeCurrent();
     mpfbo.fbo := 0;
@@ -428,7 +420,7 @@ begin
     mpfbo.w := GLRenderControl.Width;
     mpfbo.internal_format := 0;
     RenderParams[0].Data := @mpfbo;
-    flip := mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
+    mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
     GLRenderControl.SwapBuffers();
   end;
 
