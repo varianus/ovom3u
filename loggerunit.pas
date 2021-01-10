@@ -42,7 +42,8 @@ Type
   public
     property Level : TOvoLogLevel read FLevel write SetLevel;
     Property LogName: string read GetLogName write SetLogName;
-    procedure Log(ALevel: TOvoLogLevel; const Msg: string);
+    procedure Log(ALevel: TOvoLogLevel; const Msg: string);  overload;
+    procedure Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const); overload;
     Constructor Create;
   end;
 
@@ -92,6 +93,11 @@ procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const Msg: string);
 begin
   if ALevel < FLevel then exit;
   DebugLogger.DebugLn(DateTimeToStr(now, true), DecodeLevel(ALevel),Msg);
+end;
+
+procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const Fmt: string; Args: array of const);
+begin
+  Log(ALevel, format(fmt, Args));
 end;
 
 constructor TOvoLogger.Create;

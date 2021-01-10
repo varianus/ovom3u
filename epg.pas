@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses GeneralFunc, Config, ZStream;
+uses GeneralFunc, Config, LoggerUnit, ZStream;
 
 { TEpg }
 const
@@ -100,7 +100,7 @@ const
   UPDATECONFIG = 'UPDATE config SET Version = %d;';
 
   CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' +',ChannelsMd5 VARCHAR );';
-  CREATESCANTABLE2 = 'insert into  scans values  (0,0,null);';
+  CREATESCANTABLE2 = 'insert into  scans select 0,0,null where not EXISTS (select * from scans);';
 
   CREATECHANNELTABLE = 'CREATE TABLE channels (' + ' "ID" INTEGER primary key' + ',"Name" VARCHAR COLLATE NOCASE' + ',"ChannelNo" VARCHAR COLLATE NOCASE' + ')';
   CREATECHANNELINDEX1 = 'CREATE INDEX "idx_Channels_Name" on channels (Name ASC);';
@@ -115,6 +115,7 @@ procedure TEpg.SetupDBConnection;
 var
   i: integer;
 begin
+  OvoLogger.Log(INFO, 'Setup EPG database');
   fDB := TSQLite3Connection.Create(nil);
   fDB.DatabaseName := GetConfigDir + 'epg.db';
 
@@ -232,38 +233,51 @@ var
   TableList: TStringList;
   LoadedDBVersion: integer;
 begin
-  TableList := TStringList.Create;
+  OvoLogger.Log(INFO, 'Check EPG database');
   try
-    fDB.GetTableNames(TableList, False);
-    if TableList.IndexOf('config') < 0 then
-    begin
-      fDB.ExecuteDirect(CREATECONFIGTABLE1);
-      fDB.ExecuteDirect(CREATECONFIGTABLE2);
-      fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
-      ftr.CommitRetaining;
-    end;
-    if TableList.IndexOf('scans') < 0 then
-    begin
-      fDB.ExecuteDirect(CREATESCANTABLE1);
+    TableList := TStringList.Create;
+    try
+      fDB.GetTableNames(TableList, False);
+      if TableList.IndexOf('config') < 0 then
+      begin
+        OvoLogger.Log(DEBUG,'Creating config table');
+        fDB.ExecuteDirect(CREATECONFIGTABLE1);
+        fDB.ExecuteDirect(CREATECONFIGTABLE2);
+        fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+        ftr.CommitRetaining;
+      end;
+      if TableList.IndexOf('scans') < 0 then
+      begin
+        OvoLogger.Log(DEBUG,'Creating scans table');
+        fDB.ExecuteDirect(CREATESCANTABLE1);
+        ftr.CommitRetaining;
+      end;
+      // Make sure table contains a row
       fDB.ExecuteDirect(CREATESCANTABLE2);
       ftr.CommitRetaining;
-    end;
-    if TableList.IndexOf('channels') < 0 then
-    begin
-      fDB.ExecuteDirect(CREATECHANNELTABLE);
-      fDB.ExecuteDirect(CREATECHANNELINDEX1);
-      ftr.CommitRetaining;
-    end;
-    if TableList.IndexOf('programme') < 0 then
-    begin
-      fDB.ExecuteDirect(CREATEPROGRAMMETABLE);
-      fDB.ExecuteDirect(CREATEPROGRAMMEINDEX1);
-      fDB.ExecuteDirect(CREATEPROGRAMMEINDEX2);
-      ftr.CommitRetaining;
+      if TableList.IndexOf('channels') < 0 then
+      begin
+        OvoLogger.Log(DEBUG,'Creating channel table');
+        fDB.ExecuteDirect(CREATECHANNELTABLE);
+        fDB.ExecuteDirect(CREATECHANNELINDEX1);
+        ftr.CommitRetaining;
+      end;
+      if TableList.IndexOf('programme') < 0 then
+      begin
+        OvoLogger.Log(DEBUG,'Creating programme table');
+        fDB.ExecuteDirect(CREATEPROGRAMMETABLE);
+        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX1);
+        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX2);
+        ftr.CommitRetaining;
+      end;
+
+    finally
+      TableList.Free;
     end;
 
-  finally
-    TableList.Free;
+  except
+    on e: Exception do
+      OvoLogger.Log(ERROR, 'Error initializing EPG Database : %s',[e.Message]);
   end;
 
   LoadedDBVersion := GetDbVersion;
@@ -274,12 +288,13 @@ end;
 
 procedure TEpg.UpgradeDBStructure(LoadedDBVersion: integer);
 begin
-
+//  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, NewVersion));
 end;
 
 procedure TEpg.EndScan(AObject: TObject);
 begin
 
+  OvoLogger.Log(INFO, 'End EPG update');
   AfterScan;
   SetLastScan('epg', now);
 
@@ -313,9 +328,11 @@ begin
   Scanner := nil;
   if LastScan('epg') + 12/24 > now then
   begin
+    OvoLogger.Log(INFO, 'Skipping EPG update, used cache');
     AfterScan;
     exit;
   end;
+
   fEpgAvailable := False;
   if Assigned(FOnScanStart) then
     FOnScanStart(self);
@@ -434,6 +451,7 @@ var
   item: TM3UItem;
   qinsert: TSQLQuery;
 begin
+  OvoLogger.Log(INFO, 'Updating EPG channels list');
   qinsert := TSQLQuery.Create(fDB);
   try
     fdb.ExecuteDirect('delete from channels;');
@@ -467,7 +485,7 @@ end;
 procedure TEpgScanner.Execute;
 var
   CacheDir: string;
-  ListName: string;
+  DownloadedEpg, EpgFile: string;
   Decompress: TGZFileStream;
   FcacheFile: TFileStream;
   GzHeader: Word;
@@ -475,25 +493,30 @@ begin
 
   CacheDir := GetCacheDir;
   try
-    DownloadFromUrl(fmrl, CacheDir + 'current-epg');
-    ListName := CacheDir + 'current-epg';
-    FcacheFile := TFileStream.Create(ListName, fmOpenRead);
+    OvoLogger.Log(INFO, 'Downloading EPG from %s', [fMrl]);
+    DownloadedEpg := CacheDir + 'current-epg';
+    DownloadFromUrl(fmrl, DownloadedEpg);
+    FcacheFile := TFileStream.Create(DownloadedEpg, fmOpenRead);
     GzHeader :=FcacheFile.ReadWord;
     FcacheFile.Free;
     if NtoBe(GzHeader) = $1f8b then
     begin
-      Decompress := TGZFileStream.Create(ListName, gzopenread);
-      ListName := CacheDir + 'current-epg.xml';
-      FcacheFile := TFileStream.Create(ListName, fmOpenWrite or fmcreate);
+      EpgFile := CacheDir + 'current-epg.xml';
+      OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
+      Decompress := TGZFileStream.Create(DownloadedEpg, gzopenread);
+      FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
       Decompress.Position := 0;
       FcacheFile.CopyFrom(Decompress, 0);
       FcacheFile.Free;
-    end;
-    Load(ListName);
+    end
+    else
+      EpgFile := DownloadedEpg;
+    OvoLogger.Log(INFO, 'Scanning EPG XML file %s',[EpgFile]);
+    Load(EpgFile);
     fOwner.setlastscan('epg', now);
   except
     on e: Exception do
-      WriteLn(e.message);
+      OvoLogger.Log(ERROR, 'Error scanning EPG Data : %s',[e.Message]);
   end;
 end;
 

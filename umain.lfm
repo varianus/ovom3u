@@ -120,6 +120,8 @@ object fPlayer: TfPlayer
     Top = 192
   end
   object pmPlayer: TPopupMenu
+    OnPopup = pmPlayerPopup
+    OnClose = pmPlayerClose
     Left = 132
     Top = 212
     object mnuAudio: TMenuItem
@@ -145,6 +147,7 @@ object fPlayer: TfPlayer
     Top = 344
   end
   object ApplicationProperties1: TApplicationProperties
+    OnException = ApplicationProperties1Exception
     Left = 146
     Top = 292
   end

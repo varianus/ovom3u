@@ -52,6 +52,7 @@ type
     ToolButton1: TToolButton;
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
+    procedure ApplicationProperties1Exception(Sender: TObject; E: Exception);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -66,6 +67,7 @@ type
     procedure GLRendererMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure HideMouseTimer(Sender: TObject);
     procedure OSDTimerTimer(Sender: TObject);
+    procedure pmPlayerClose(Sender: TObject);
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure pnlContainerPaint(Sender: TObject);
@@ -191,6 +193,7 @@ begin
       if epgData.LastScan('channels') + 12/24 < now then
         begin
           try
+            OvoLogger.Log(INFO, 'Downloding channels list from '+IPTVList);
             DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
             epgData.SetLastScan('channels',now);
           except
@@ -212,7 +215,7 @@ begin
   if ConfigObj.M3UProperties.UseChno then
     begin
       List.FixChannelNumbering;
-      OvoLogger.Log(INFO, 'Renumbering channels basing on tvg-chno')
+      OvoLogger.Log(INFO, 'Renumber channels using tvg-chno')
     end;
 
   if not Configobj.M3UProperties.EPGUrl.IsEmpty then
@@ -485,10 +488,17 @@ begin
   Play(ChannelList.Row);
 end;
 
+procedure TfPlayer.ApplicationProperties1Exception(Sender: TObject; E: Exception);
+begin
+   OvoLogger.Log(ERROR, 'EXCEPTION : %s'+LineEnding+
+                                '%s',[e.message, BackTraceStrFunc(ExceptAddr)]) ;
+end;
+
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
 begin
  if (TextRec(f).mode <> fmClosed) and (IOResult = 0) then
     WriteLn(f, S);
+
 end;
 
 procedure TfPlayer.Play(Row: integer);
@@ -526,8 +536,11 @@ end;
 
 procedure TfPlayer.GLRendererMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
 begin
-  Screen.Cursor := crdefault;
-  HideMouse.Enabled := flgFullScreen;
+  if flgFullScreen then
+    begin
+      Screen.Cursor := crdefault;
+      HideMouse.Enabled := flgFullScreen;
+    end;
 end;
 
 procedure TfPlayer.HideMouseTimer(Sender: TObject);
@@ -547,14 +560,26 @@ begin
   OSDTimer.Enabled := False;
 end;
 
+procedure TfPlayer.pmPlayerClose(Sender: TObject);
+begin
+    if flgFullScreen then
+    begin
+      HideMouse.Enabled := true;
+    end;
+end;
+
 procedure TfPlayer.pmPlayerPopup(Sender: TObject);
 begin
   if mnuVideo.Count = 0 then
     mnuVideo.Enabled := False;
   if mnuAudio.Count = 0 then
     mnuAudio.Enabled := False;
-  if mnuSub.Count = 0 then
-    mnuSub.Enabled := False;
+  //if mnuSub.Count = 0 then
+  //  mnuSub.Enabled := False;
+  if flgFullScreen then
+    begin
+      HideMouse.Enabled := false;
+    end;
 end;
 
 procedure TfPlayer.pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
@@ -680,6 +705,7 @@ var
   i: integer;
   Title: string;
 begin
+  OvoLogger.Log(DEBUG,'Loading tracks');
   mnuAudio.Clear;
   mnuVideo.Clear;
   mnuAudio.Clear;
@@ -742,7 +768,9 @@ begin
   flgFullScreen := not flgFullScreen;
   if flgFullScreen then
     try
+      OvoLogger.Log(DEBUG,'Going fullscreen');
       isRenderActive := False;
+      Application.ProcessMessages;
       pnlChannel.Visible := False;
       RestoredBorderStyle := BorderStyle;
       RestoredWindowState := WindowState;
@@ -756,7 +784,9 @@ begin
     end
   else
   begin
+    OvoLogger.Log(DEBUG,'Going windowed');
     isRenderActive := False;
+    Application.ProcessMessages;
     pnlChannel.Visible := True;
     WindowState := wsNormal;
     WindowState := RestoredWindowState;
