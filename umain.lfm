@@ -1,7 +1,7 @@
 object fPlayer: TfPlayer
-  Left = 169
+  Left = 822
   Height = 436
-  Top = 535
+  Top = 316
   Width = 618
   Caption = 'OvoM3U'
   ClientHeight = 436

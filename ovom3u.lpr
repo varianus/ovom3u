@@ -25,17 +25,19 @@ uses {$IFDEF UNIX}
   athreads, {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms,
-  lazopenglcontext,
+  LazLogger,
+  Config,
   umain,
-  um3uloader,
-  Mpv_Engine,
-  uconfig,
-  epg,
-  uMyDialog, uEPGFOrm, libmpv;
+  uEPGFOrm,
+  LoggerUnit;
 
 {$R *.res}
 
 begin
+  OvoLogger.LogName := Config.GetConfigDir+'ovom3u.log';
+  OvoLogger.Level := TRACE;
+  OvoLogger.Log(FORCED, '----------------------------');
+  OvoLogger.Log(FORCED, 'OvoM3U ');
   RequireDerivedFormResource := True;
   Application.Scaled := True;
   Application.Initialize;

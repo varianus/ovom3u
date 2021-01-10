@@ -1,7 +1,7 @@
 object fConfig: TfConfig
-  Left = 601
+  Left = 1124
   Height = 550
-  Top = 147
+  Top = 193
   Width = 614
   Caption = 'Config'
   ClientHeight = 550

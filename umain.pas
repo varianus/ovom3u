@@ -112,7 +112,7 @@ var
 
 implementation
 
-uses uconfig, BaseTypes, LazUTF8, LazLogger;
+uses uconfig, BaseTypes, LoggerUnit, LazUTF8, LazLogger;
 var
   f: text;
 
@@ -130,21 +130,25 @@ begin
   repeat
     Retry := False;
     if not TMPVEngine.CheckMPV then
-      case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
-          'LibMPV shared library is missing or could not be initialized.' + #10 +
-          'OvoM3U uses this library to decode and play video.' + #10 +
-          'Click the following link to open a wiki page with information on' + #10 +
-          'how to install libMPV on your platform', [mbRetry, mbClose],
-          [WIKI_MPV_LINK]) of
+      begin
+        OvoLogger.Log(WARN, 'Cannot initialize libMPV');
+        case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
+            'LibMPV shared library is missing or could not be initialized.' + #10 +
+            'OvoM3U uses this library to decode and play video.' + #10 +
+            'Click the following link to open a wiki page with information on' + #10 +
+            'how to install libMPV on your platform', [mbRetry, mbClose],
+            [WIKI_MPV_LINK]) of
 
-        mrClose:
-        begin
-          Result := False;
-          Retry := False;
-          exit;
+          mrClose:
+          begin
+            Result := False;
+            Retry := False;
+            exit;
+          end;
+          mrRetry: Retry := True;
+          100: OpenURL(WIKI_MPV_LINK);
         end;
-        mrRetry: Retry := True;
-        100: OpenURL(WIKI_MPV_LINK);
+
       end;
   until Retry = False;
 
@@ -186,9 +190,18 @@ begin
     try
       if epgData.LastScan('channels') + 12/24 < now then
         begin
-          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
-          epgData.SetLastScan('channels',now);
-        end;
+          try
+            DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
+            epgData.SetLastScan('channels',now);
+          except
+            on e: Exception do
+              OvoLogger.Log(ERROR, 'Can''t download list at: ' +
+                                   IPTVList+ ' error:'+
+                                   E.Message);
+          end;
+        end
+      else
+        OvoLogger.Log(INFO, 'Using cached channels list');
 
       IPTVList := CacheDir + 'current-iptv.m3u';
     finally
@@ -197,12 +210,16 @@ begin
 
   list.Load(IPTVList);
   if ConfigObj.M3UProperties.UseChno then
-    List.FixChannelNumbering;
+    begin
+      List.FixChannelNumbering;
+      OvoLogger.Log(INFO, 'Renumbering channels basing on tvg-chno')
+    end;
 
   if not Configobj.M3UProperties.EPGUrl.IsEmpty then
   begin
     if List.ListMd5 <> epgData.LastChannelMd5 then
       begin
+        OvoLogger.Log(INFO, 'Channels list changed, reloading');
         epgData.LoadChannelList(List);
         epgData.SetLastChannelMd5(List.ListMd5);
         epgData.SetLastScan('epg',0);
@@ -221,6 +238,7 @@ begin
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
   ShowingInfo := false;
+  OvoLogger.Log(INFO, 'Create main GUI');
   if CheckConfigAndSystem then
   begin
     ChannelList.RowCount := 0;
@@ -236,7 +254,10 @@ begin
     fLoading := False;
     ChannelSelected := 0;
 
-  end;
+  end
+  else
+    OvoLogger.Log(WARN, 'Invalid config');
+
 end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
@@ -245,6 +266,7 @@ begin
   MpvEngine.Free;
   List.Free;
   epgData.Free;
+  OvoLogger.Log(INFO, 'Closed main GUI');
 end;
 
 procedure TfPlayer.OnLoadingState(Sender: TObject);
