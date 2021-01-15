@@ -67,14 +67,12 @@ object fPlayer: TfPlayer
       object ToolButton1: TToolButton
         Left = 1
         Top = 2
-        Caption = '⚙'
-        OnClick = ToolButton1Click
+        Action = actShowConfig
       end
       object ToolButton2: TToolButton
         Left = 32
         Top = 2
-        Caption = 'Epg'
-        OnClick = ToolButton2Click
+        Action = actShowEpg
       end
       object ToolButton3: TToolButton
         Left = 24
@@ -116,14 +114,14 @@ object fPlayer: TfPlayer
     Enabled = False
     Interval = 8000
     OnTimer = HideMouseTimer
-    Left = 48
+    Left = 40
     Top = 192
   end
   object pmPlayer: TPopupMenu
     OnPopup = pmPlayerPopup
     OnClose = pmPlayerClose
-    Left = 132
-    Top = 212
+    Left = 112
+    Top = 200
     object mnuAudio: TMenuItem
       Caption = 'Audio Tracks'
     end
@@ -136,20 +134,20 @@ object fPlayer: TfPlayer
     Interval = 50
     OnTimer = LoadingTimerTimer
     OnStartTimer = LoadingTimerStartTimer
-    Left = 54
+    Left = 40
     Top = 275
   end
   object OSDTimer: TTimer
     Enabled = False
     Interval = 8000
     OnTimer = OSDTimerTimer
-    Left = 56
+    Left = 40
     Top = 344
   end
-  object ApplicationProperties1: TApplicationProperties
-    OnException = ApplicationProperties1Exception
-    Left = 146
-    Top = 292
+  object AppProperties: TApplicationProperties
+    OnException = AppPropertiesException
+    Left = 112
+    Top = 272
   end
   object ChannelTimer: TTimer
     Enabled = False
@@ -157,5 +155,26 @@ object fPlayer: TfPlayer
     OnTimer = ChannelTimerTimer
     Left = 112
     Top = 344
+  end
+  object actList: TActionList
+    Left = 243
+    Top = 62
+    object actShowConfig: TAction
+      Caption = '⚙'
+      OnExecute = actShowConfigExecute
+    end
+    object actShowEpg: TAction
+      Caption = 'Epg'
+      OnExecute = actShowEpgExecute
+    end
+    object Action3: TAction
+      Caption = 'Action3'
+    end
+    object Action4: TAction
+      Caption = 'Action4'
+    end
+    object Action5: TAction
+      Caption = 'Action5'
+    end
   end
 end

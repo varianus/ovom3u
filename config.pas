@@ -115,7 +115,6 @@ const
   IdentResourcesPath = 'ResourcesPath';
   ResourceSubDirectory = 'Resources';
 
-const
  {$ifdef UNIX}
   DefaultDirectory = '/usr/share/ovom3u/';
   {$DEFINE NEEDCFGSUBDIR}
@@ -124,9 +123,6 @@ const
  {$ifdef DARWIN}
   BundleResourcesDirectory = '/Contents/Resources/';
  {$endif}
-
-  SectionGeneral = 'General';
-
 
 function NextToken(const S: string; var SeekPos: Integer;
   const TokenDelim: Char): string;
@@ -214,7 +210,7 @@ begin
    // Trim the oldest files if more than NumFiles
    while IntList.Count > FMax do
      IntList.Delete(IntList.Count-1);           // -1 since its 0 indexed
-
+  Result := IntList.Count;
 end;
 
 constructor TSimpleHistory.Create;

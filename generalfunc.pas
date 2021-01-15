@@ -124,7 +124,7 @@ begin
     except
       on E: Exception do
       begin
-       // somekind of error
+        Raise;
       end;
     end;
   finally

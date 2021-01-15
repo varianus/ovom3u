@@ -102,7 +102,7 @@ type
 implementation
 
 uses
-  gl, GLext, GeneralFunc, LMessages, LCLIntf
+  gl, GLext, GeneralFunc, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -329,7 +329,6 @@ end;
 procedure TMPVEngine.Play(mrl: string);
 var
   Args: array of PChar;
-  res: longint;
 begin
 
   args := nil;
@@ -338,7 +337,7 @@ begin
   args[1] := PChar(mrl);
   args[2] := 'replace';
   args[3] := nil;
-  res := mpv_command(fhandle^, ppchar(@args[0]));
+  mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
 
 end;
@@ -436,14 +435,13 @@ end;
 
 procedure TMPVEngine.SetBoolProperty(const PropertyName: string; AValue: boolean);
 var
-  res: integer;
   p: integer;
 begin
   if AValue then
     p := 1
   else
     p := 0;
-  res := mpv_set_property(fhandle^, PChar(PropertyName), MPV_FORMAT_FLAG, @p);
+  mpv_set_property(fhandle^, PChar(PropertyName), MPV_FORMAT_FLAG, @p);
 end;
 
 
@@ -473,8 +471,6 @@ begin
 end;
 
 procedure TMPVEngine.SetTrack(Index: integer);
-var
-  TrackTypeString: string;
 begin
   SetTrack(TrackList[index].Kind, TrackList[index].Id);
 end;
@@ -482,19 +478,17 @@ end;
 function TMPVEngine.GetMainVolume: integer;
 var
   vol: double;
-  res: integer;
 begin
-  res := mpv_get_property(fhandle^, 'volume', MPV_FORMAT_DOUBLE, @vol);
+  mpv_get_property(fhandle^, 'volume', MPV_FORMAT_DOUBLE, @vol);
   Result := trunc(vol);
 end;
 
 procedure TMPVEngine.SetMainVolume(const AValue: integer);
 var
   vol: double;
-  res: integer;
 begin
   vol := AValue;
-  res := mpv_set_property(fhandle^, 'volume', MPV_FORMAT_DOUBLE, @vol);
+  mpv_set_property(fhandle^, 'volume', MPV_FORMAT_DOUBLE, @vol);
 
 end;
 
@@ -502,12 +496,11 @@ end;
 procedure TMPVEngine.Stop;
 var
   Args: array of PChar;
-  res: longint;
 begin
   setlength(args, 2);
   args[0] := 'stop';
   args[1] := nil;
-  res := mpv_command(fhandle^, ppchar(@args[0]));
+  mpv_command(fhandle^, ppchar(@args[0]));
   EngineState := ENGINE_STOP;
 
 end;
@@ -516,7 +509,6 @@ procedure TMPVEngine.Seek(Seconds: integer);
 
 var
   Args: array of PChar;
-  res: longint;
 begin
 
   args := nil;
@@ -524,7 +516,7 @@ begin
   args[0] := 'seek';
   args[1] := pchar(inttostr(seconds));
   args[2] := nil;
-  res := mpv_command(fhandle^, ppchar(@args[0]));
+  mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
 
 end;
@@ -551,7 +543,6 @@ var
   Keys: array of PChar;
   values: mpv_node_array;
   res: mpv_node;
-  fres: longint;
 begin
   mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
@@ -596,7 +587,7 @@ begin
     Node.format := MPV_FORMAT_NODE_MAP;
     Node.u.list_ := @list;
 
-    fres := mpv_command_node(fHandle^, node, res);
+    mpv_command_node(fHandle^, node, res);
 
   end;
 

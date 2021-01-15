@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -32,7 +32,13 @@ uses
 type
 
   TfPlayer = class(TForm)
-    ApplicationProperties1: TApplicationProperties;
+    actShowConfig: TAction;
+    actShowEpg: TAction;
+    Action3: TAction;
+    Action4: TAction;
+    Action5: TAction;
+    actList: TActionList;
+    AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
     OSDTimer: TTimer;
     MenuItem1: TMenuItem;
@@ -52,7 +58,9 @@ type
     ToolButton1: TToolButton;
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
-    procedure ApplicationProperties1Exception(Sender: TObject; E: Exception);
+    procedure actShowEpgExecute(Sender: TObject);
+    procedure actShowConfigExecute(Sender: TObject);
+    procedure AppPropertiesException(Sender: TObject; E: Exception);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -71,8 +79,6 @@ type
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure pnlContainerPaint(Sender: TObject);
-    procedure ToolButton1Click(Sender: TObject);
-    procedure ToolButton2Click(Sender: TObject);
   private
     FLoading: boolean;
     ChannelSelecting: boolean;
@@ -343,8 +349,7 @@ begin
     end;
     VK_F: SetFullScreen;
     VK_E: begin
-        EpgForm.EpgData := epgData;
-        EPGForm.Show;
+        actShowEpg.Execute;
     end;
     VK_B: begin
         If PreviousChannel <> -1 then
@@ -488,10 +493,24 @@ begin
   Play(ChannelList.Row);
 end;
 
-procedure TfPlayer.ApplicationProperties1Exception(Sender: TObject; E: Exception);
+procedure TfPlayer.AppPropertiesException(Sender: TObject; E: Exception);
 begin
    OvoLogger.Log(ERROR, 'EXCEPTION : %s'+LineEnding+
                                 '%s',[e.message, BackTraceStrFunc(ExceptAddr)]) ;
+end;
+
+procedure TfPlayer.actShowEpgExecute(Sender: TObject);
+begin
+  if Not Assigned (EPGForm) then
+      Application.CreateForm(TEPGForm, EPGForm);
+  EPGForm.Show;
+  EpgForm.EpgData := epgData;
+  EPGForm.Show;
+end;
+
+procedure TfPlayer.actShowConfigExecute(Sender: TObject);
+begin
+  ShowConfig;
 end;
 
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
@@ -627,17 +646,6 @@ begin
 
 end;
 
-procedure TfPlayer.ToolButton1Click(Sender: TObject);
-begin
-  ShowConfig;
-end;
-
-procedure TfPlayer.ToolButton2Click(Sender: TObject);
-begin
-  EpgForm.EpgData := epgData;
-  EPGForm.Show;
-end;
-
 procedure TfPlayer.SetLoading(AValue: boolean);
 begin
 
@@ -703,7 +711,6 @@ var
   Track: TTrack;
   mnu: TMenuItem;
   i: integer;
-  Title: string;
 begin
   OvoLogger.Log(DEBUG,'Loading tracks');
   mnuAudio.Clear;
