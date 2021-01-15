@@ -328,4 +328,6 @@ begin
 
 end;
 
+initialization
+  EPGForm := nil;
 end.

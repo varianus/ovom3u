@@ -28,20 +28,24 @@ uses {$IFDEF UNIX}
   LazLogger,
   Config,
   umain,
+  sysutils,
   uEPGFOrm,
-  LoggerUnit;
+  LoggerUnit, appconsts;
 
 {$R *.res}
 
 begin
-  OvoLogger.LogName := Config.GetConfigDir+'ovom3u.log';
+  OvoLogger.LogName := Config.GetConfigDir+LogFileName;
+  OvoLogger.SaveOldLog;
   OvoLogger.Level := TRACE;
   OvoLogger.Log(FORCED, '----------------------------');
-  OvoLogger.Log(FORCED, 'OvoM3U ');
+  OvoLogger.Log(FORCED, DisplayAppName);
+  OvoLogger.Log(FORCED, format (rVersionString,[AppVersion, RevisionStr, BuildDate]));
+  OvoLogger.Log(FORCED, format (rBuildEnv,[lazVersion, fpcVersion]));
+  OvoLogger.Log(FORCED, format (rTarget,[TargetCPU, TargetOS]));
   RequireDerivedFormResource := True;
   Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
-  Application.CreateForm(TEPGForm, EPGForm);
   Application.Run;
 end.

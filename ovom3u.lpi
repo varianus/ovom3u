@@ -103,6 +103,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="LoggerUnit"/>
       </Unit>
+      <Unit>
+        <Filename Value="appconsts.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="AppConsts"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -115,16 +120,19 @@
       <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <TargetProcessor Value="pentium4"/>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
       </Debugging>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
     </Linking>
-    <Other>
-      <Verbosity>
-        <ShowDebugInfo Value="True"/>
-      </Verbosity>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

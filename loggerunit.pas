@@ -34,7 +34,6 @@ Type
 
   private
     FLevel: TOvoLogLevel;
-    FLogName: string;
     function GetLogName: string;
     procedure SetLevel(AValue: TOvoLogLevel);
     function DecodeLevel(ALevel:TOvoLogLevel): string;
@@ -42,6 +41,7 @@ Type
   public
     property Level : TOvoLogLevel read FLevel write SetLevel;
     Property LogName: string read GetLogName write SetLogName;
+    Procedure SaveOldLog;
     procedure Log(ALevel: TOvoLogLevel; const Msg: string);  overload;
     procedure Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const); overload;
     Constructor Create;
@@ -89,13 +89,30 @@ begin
   DebugLogger.LogName := AValue;
 end;
 
+procedure TOvoLogger.SaveOldLog;
+var
+  OldLogName : string;
+begin
+  try
+  If not LogName.IsEmpty and FileExists(OvoLogger.LogName) then
+    begin
+      OldLogName := ChangeFileExt(LogName,'.old.log');
+      if FileExists(OldLogName) then
+         DeleteFile(OldLogName);
+      RenameFile(LogName,  OldLogName);
+    end;
+  Except
+    // no exception here, if rename fail try at least to write in existing file
+  end;
+end;
+
 procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const Msg: string);
 begin
   if ALevel < FLevel then exit;
   DebugLogger.DebugLn(DateTimeToStr(now, true), DecodeLevel(ALevel),Msg);
 end;
 
-procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const Fmt: string; Args: array of const);
+procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const);
 begin
   Log(ALevel, format(fmt, Args));
 end;

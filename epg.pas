@@ -23,7 +23,7 @@ unit epg;
 interface
 
 uses
-  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes;
+  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes, AppConsts;
 
 type
   TEpg = class;
@@ -117,7 +117,7 @@ var
 begin
   OvoLogger.Log(INFO, 'Setup EPG database');
   fDB := TSQLite3Connection.Create(nil);
-  fDB.DatabaseName := GetConfigDir + 'epg.db';
+  fDB.DatabaseName := GetConfigDir + EPGLibraryName;
 
   ftr := TSQLTransaction.Create(nil);
 
@@ -494,14 +494,14 @@ begin
   CacheDir := GetCacheDir;
   try
     OvoLogger.Log(INFO, 'Downloading EPG from %s', [fMrl]);
-    DownloadedEpg := CacheDir + 'current-epg';
+    DownloadedEpg := CacheDir + TempEPGFile;
     DownloadFromUrl(fmrl, DownloadedEpg);
     FcacheFile := TFileStream.Create(DownloadedEpg, fmOpenRead);
     GzHeader :=FcacheFile.ReadWord;
     FcacheFile.Free;
     if NtoBe(GzHeader) = $1f8b then
     begin
-      EpgFile := CacheDir + 'current-epg.xml';
+      EpgFile := CacheDir + TempEPGFileDecompressed;
       OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
       Decompress := TGZFileStream.Create(DownloadedEpg, gzopenread);
       FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
