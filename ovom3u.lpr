@@ -35,7 +35,7 @@ uses {$IFDEF UNIX}
 {$R *.res}
 
 begin
-  OvoLogger.LogName := Config.GetConfigDir+LogFileName;
+  OvoLogger.LogName := ConfigObj.ConfigDir+LogFileName;
   OvoLogger.SaveOldLog;
   OvoLogger.Level := TRACE;
   OvoLogger.Log(FORCED, '----------------------------');

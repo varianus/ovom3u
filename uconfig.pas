@@ -107,7 +107,8 @@ begin
 
   ConfigObj.M3UProperties := M3UProperties;
   ConfigObj.SaveConfig;
-  Close;
+  ModalResult:=mrOK;
+
 end;
 
 procedure TfConfig.cbKindChange(Sender: TObject);
@@ -120,12 +121,13 @@ end;
 
 procedure TfConfig.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
-  CloseAction := caHide;
+  CloseAction:=caFree;
+  fConfig := nil;
 end;
 
 procedure TfConfig.CancelButtonClick(Sender: TObject);
 begin
-  Close;
+  ModalResult:=mrCancel;
 end;
 
 initialization
