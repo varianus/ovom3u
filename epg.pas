@@ -117,7 +117,7 @@ var
 begin
   OvoLogger.Log(INFO, 'Setup EPG database');
   fDB := TSQLite3Connection.Create(nil);
-  fDB.DatabaseName := GetConfigDir + EPGLibraryName;
+  fDB.DatabaseName := ConfigObj.ConfigDir + EPGLibraryName;
 
   ftr := TSQLTransaction.Create(nil);
 
@@ -491,7 +491,7 @@ var
   GzHeader: Word;
 begin
 
-  CacheDir := GetCacheDir;
+  CacheDir := ConfigObj.CacheDir;
   try
     OvoLogger.Log(INFO, 'Downloading EPG from %s', [fMrl]);
     DownloadedEpg := CacheDir + TempEPGFile;

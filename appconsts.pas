@@ -46,7 +46,8 @@ const
   TempEPGFile = 'current-epg';
   TempEPGFileDecompressed = 'current-epg.xml';
   LogFileName:string = appname + '.log' ;
-
+const
+  WIKI_MPV_LINK = 'https://github.com/varianus/ovom3u/wiki/LibMPV';
 
 Resourcestring
   rVersionString = 'Version: %0:s (Date %2:s)';

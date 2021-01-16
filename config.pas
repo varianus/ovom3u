@@ -45,14 +45,20 @@ type
 
   TConfig = class
   private
+    fCacheDir: string;
     FConfigFile: string;
     fConfigDir: string;
     fM3UProperties: TM3UProperties;
+    FPortableMode: boolean;
     ResourcesPath: string;
     fConfigHolder: TJsonNode;
+    fExecutableDir: string;
+    function GetCacheDir: string;
+    function GetConfigDir: string;
     procedure SetM3UProperties(AValue: TM3UProperties);
   public
     property M3UProperties: TM3UProperties read FM3UProperties write SetM3UProperties;
+    property PortableMode: boolean read FPortableMode;
     constructor Create;
     procedure ReadConfig;
     procedure SaveConfig;
@@ -70,6 +76,7 @@ type
     destructor Destroy; override;
     // -- //
     property ConfigDir: string read fConfigDir;
+    property CacheDir: string read fCacheDir;
     property ConfigFile: string read FConfigFile;
   end;
 
@@ -93,7 +100,6 @@ type
     Property Count: integer read GetCount;
   end;
 
-  function GetConfigDir: string;
 
 function ConfigObj: TConfig;
 
@@ -143,16 +149,6 @@ begin
   { We don't have to do Inc(seekPos) below. But it's obvious that searching
     for next token can skip SeekPos, since we know S[SeekPos] is TokenDelim. }
   Inc(SeekPos);
-end;
-
-function GetConfigDir: string;
-var
-  Path: string;
-begin
-  Path := GetAppConfigDir(False);
-  ForceDirectories(Path);
-  Result := IncludeTrailingPathDelimiter(Path);
-
 end;
 
 function ConfigObj: TConfig;
@@ -246,13 +242,31 @@ end;
 
 constructor TConfig.Create;
 begin
-  FConfigFile := GetAppConfigFile(False
-{$ifdef NEEDCFGSUBDIR}
-    , True
-{$ENDIF}
-    );
+   fExecutableDir:= IncludeTrailingPathDelimiter(ProgramDirectory);
+
+   if FileExists(fExecutableDir+'portable.txt') then
+    fPortableMode := True;
+
   fConfigDir := GetConfigDir;
+  fCacheDir  := GetCacheDir;
+
+
+  if FPortableMode then
+     begin
+       FConfigFile:=fConfigDir+ApplicationName+ConfigExtension
+     end
+  else
+    begin
+      FConfigFile := GetAppConfigFile(False
+    {$ifdef NEEDCFGSUBDIR}
+        , True
+    {$ENDIF}
+        );
+
+    end;
   fConfigHolder := TJsonNode.Create;
+  if NOT FileExists(FConfigFile) then
+    SaveConfig;
   ReadConfig;
 
 end;
@@ -263,6 +277,53 @@ begin
   fConfigHolder.Free;
   Finalize(fM3UProperties);
   inherited Destroy;
+end;
+
+
+function TConfig.GetConfigDir: string;
+var
+  Path: string;
+begin
+  if fPortableMode then
+    Path:= fExecutableDir + 'config'
+  else
+    Path := GetAppConfigDir(False);
+  ForceDirectories(Path);
+  Result := IncludeTrailingPathDelimiter(Path);
+
+end;
+
+function TConfig.GetCacheDir: string;
+begin
+  if FPortableMode then
+    begin
+      Result := fExecutableDir+'cache';
+      Result:=IncludeTrailingPathDelimiter(Result);
+    end
+  else
+  begin
+  {$ifdef UNIX}
+    Result:=GetEnvironmentVariable('XDG_CONFIG_HOME');
+    if (Result='') then
+      begin
+        Result:= GetEnvironmentVariable('HOME');
+        if result <> '' then
+          result:=IncludeTrailingPathDelimiter(result)+ '.cache/'
+      end
+    else
+      Result:=IncludeTrailingPathDelimiter(Result);
+
+   Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
+  {$endif}
+  {$ifdef WINDOWS}
+    Result:=GetEnvironmentVariable('LOCALAPPDATA');
+    if result <> '' then
+      result:=IncludeTrailingPathDelimiter(result)+ 'Caches\';
+
+    Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
+  {$endif}
+  end;
+  ForceDirectories(Result);
 end;
 
 procedure TConfig.SaveConfig;

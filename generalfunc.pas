@@ -29,7 +29,6 @@ function TimeToMSec(Time: double): int64;
 Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;   overload;
 Function FormatTimeRange(StartTime, EndTime:TDateTime; TimeOnly: boolean=false): string;  overload;
 function CompareBoolean (a, b: Boolean): Integer;
-Function GetCacheDir:string;
 procedure DownloadFromUrl(AFrom: String; ATo: String);
 function EpgDateToDate(const iDateStr: string): TDateTime;
 
@@ -173,35 +172,6 @@ Begin
    result := BoolOrder [a] - BoolOrder [b];
 End ;
 
-function GetCacheDir: string;
-{$ifdef UNIX}
-begin
-  Result:=GetEnvironmentVariable('XDG_CONFIG_HOME');
-  if (Result='') then
-    begin
-      Result:= GetEnvironmentVariable('HOME');
-      if result <> '' then
-        result:=IncludeTrailingPathDelimiter(result)+ '.cache/'
-    end
-  else
-    Result:=IncludeTrailingPathDelimiter(Result);
-
- Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
- ForceDirectories(Result);
-
-end;
-{$endif}
-{$ifdef WINDOWS}
-begin
-  Result:=GetEnvironmentVariable('LOCALAPPDATA');
-  if result <> '' then
-    result:=IncludeTrailingPathDelimiter(result)+ 'Caches\';
-
-  Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
-  ForceDirectories(Result);
-
-end;
-{$endif}
 
 // code from David Heffernan, from http://stackoverflow.com/questions/30548940/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-delphi
 function FormatByteString(Bytes: UInt64; Format: TByteStringFormat = bsfDefault): string;
