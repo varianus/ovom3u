@@ -120,14 +120,11 @@ var
 
 implementation
 
-uses uconfig, BaseTypes, LoggerUnit, LazUTF8, LazLogger;
+uses uconfig, BaseTypes, LoggerUnit, AppConsts, LazUTF8, LazLogger;
 var
   f: text;
 
 {$R *.lfm}
-
-const
-  WIKI_MPV_LINK = 'https://github.com/varianus/ovom3u/wiki/LibMPV';
 
 { TfPlayer }
 
@@ -178,7 +175,7 @@ begin
         Result := False;
         exit;
       end;
-      100: ShowConfig;
+      100: actShowConfig.Execute;
     end;
 
 end;
@@ -194,7 +191,7 @@ begin
 
   if Kind = URL then
   begin
-    CacheDir := GetCacheDir;
+    CacheDir := ConfigObj.CacheDir;
     try
       if epgData.LastScan('channels') + 12/24 < now then
         begin

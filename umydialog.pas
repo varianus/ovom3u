@@ -99,66 +99,77 @@ begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkYes;
+       btnList[NumButtons].ModalResult:= mrYes;
        inc(NumButtons);
      end;
      if mbYesToAll in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkYesToAll;
+       btnList[NumButtons].ModalResult:= mrYesToAll;
        inc(NumButtons);
      end;
      if mbNo in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkNo;
+       btnList[NumButtons].ModalResult:= mrNo;
        inc(NumButtons);
      end;
      if mbNoToAll in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkNoToAll;
+       btnList[NumButtons].ModalResult:= mrNoToAll;
        inc(NumButtons);
      end;
      if mbAll in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkAll;
+       btnList[NumButtons].ModalResult:= mrAll;
        inc(NumButtons);
      end;
      if mbOK in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkOK;
+       btnList[NumButtons].ModalResult:= mrOK;
        inc(NumButtons);
      end;
      if mbRetry in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkRetry;
+       btnList[NumButtons].ModalResult:= mrRetry;
        inc(NumButtons);
      end;
      if mbIgnore in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkIgnore;
+       btnList[NumButtons].ModalResult:= mrIgnore;
        inc(NumButtons);
      end;
      if mbCancel in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkCancel;
+       btnList[NumButtons].ModalResult:= mrCancel;
        inc(NumButtons);
      end;
      if mbAbort in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkAbort;
+       btnList[NumButtons].ModalResult:= mrAbort;
        inc(NumButtons);
      end;
      if mbClose in Buttons then begin
        btnList[NumButtons] := TBitBtn.Create(ToolBar1);
        btnList[NumButtons].Parent := ToolBar1;
        btnList[NumButtons].Kind:= bkClose;
+       btnList[NumButtons].ModalResult:= mrClose;
        inc(NumButtons);
      end;
 

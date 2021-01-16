@@ -1,7 +1,7 @@
 object MyDialog: TMyDialog
-  Left = 1170
+  Left = 646
   Height = 380
-  Top = 194
+  Top = 254
   Width = 580
   Anchors = [akLeft]
   AutoSize = True
@@ -11,7 +11,7 @@ object MyDialog: TMyDialog
   LCLVersion = '2.1.0.0'
   object lbText: TLabel
     Left = 12
-    Height = 214
+    Height = 213
     Top = 86
     Width = 556
     Align = alClient
@@ -27,7 +27,7 @@ object MyDialog: TMyDialog
     AnchorSideTop.Side = asrBottom
     Left = 9
     Height = 50
-    Top = 312
+    Top = 311
     Width = 562
     Align = alBottom
     BorderSpacing.Around = 9
@@ -38,13 +38,14 @@ object MyDialog: TMyDialog
     AnchorSideTop.Control = pnlActions
     AnchorSideTop.Side = asrBottom
     Left = 9
-    Height = 0
-    Top = 371
+    Height = 1
+    Top = 370
     Width = 562
     Align = alBottom
     Anchors = [akLeft, akRight]
     AutoSize = True
     BorderSpacing.Around = 9
+    BevelOuter = bvNone
     TabOrder = 1
   end
   object Panel1: TPanel
