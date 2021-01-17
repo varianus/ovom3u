@@ -41,6 +41,9 @@ type
     Url: string;
     UseChno: boolean;
     EPGUrl: string;
+    // Used to signal changes, not saved
+    ListChanged: boolean;
+    EPGChanged: boolean;
   end;
 
   TConfig = class

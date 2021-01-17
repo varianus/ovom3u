@@ -38,7 +38,7 @@ type
     function FindChannelId(Channel: string): integer;
   protected
     procedure Execute; override;
-    function Load(Channel: string): integer;
+    function Load(EPGFile: string): integer;
   public
     constructor Create(mrl: string; Owner: TEpg); reintroduce;
   end;
@@ -63,6 +63,7 @@ type
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
+    property Scanning: boolean read fScanning;
     constructor Create;
     destructor Destroy; override;
     function LastScan(const ScanType: string): TDateTime;
@@ -308,7 +309,7 @@ end;
 
 procedure TEpg.BeforeScan;
 begin
-
+  fScanning := True;
   fDB.ExecuteDirect('delete from programme');
 
 end;
@@ -333,7 +334,7 @@ begin
     exit;
   end;
 
-  fEpgAvailable := False;
+  fEpgAvailable := true;
   if Assigned(FOnScanStart) then
     FOnScanStart(self);
   BeforeScan;
@@ -540,7 +541,7 @@ begin
   end;
 end;
 
-function TEpgScanner.Load(Channel: string): integer;
+function TEpgScanner.Load(EPGFile: string): integer;
 var
   i: integer;
   CurrNode: TDOMNode;
@@ -562,7 +563,7 @@ var
   end;
 
 begin
-  ReadXMLFile(XMLDoc, Channel);
+  ReadXMLFile(XMLDoc, EPGFile);
   Root := XMLDoc.FindNode('tv');
   //  writeln(Root.NodeName, '  ', Root.ChildNodes.Count);
   OldName := '';
