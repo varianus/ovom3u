@@ -118,6 +118,7 @@ var
 begin
   OvoLogger.Log(INFO, 'Setup EPG database');
   fDB := TSQLite3Connection.Create(nil);
+  fDB.OpenFlags :=  [sofReadWrite, sofCreate, sofFullMutex, sofSharedCache];
   fDB.DatabaseName := ConfigObj.ConfigDir + EPGLibraryName;
 
   ftr := TSQLTransaction.Create(nil);

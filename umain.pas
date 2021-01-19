@@ -176,7 +176,9 @@ begin
         exit;
       end;
       100: actShowConfig.Execute;
-    end;
+    end
+  else
+  Loadlist;
 
 end;
 
@@ -217,24 +219,26 @@ begin
     IPTVList:=ConfigObj.M3UProperties.FileName;
 
   list.Load(IPTVList);
+  OvoLogger.Log(INFO, 'Found %d channels',[List.Count]);
+
   if ConfigObj.M3UProperties.UseChno then
     begin
       List.FixChannelNumbering;
       OvoLogger.Log(INFO, 'Renumber channels using tvg-chno')
     end;
 
-  if not Configobj.M3UProperties.EPGUrl.IsEmpty then
-  begin
-    if List.ListMd5 <> epgData.LastChannelMd5 then
-      begin
-        OvoLogger.Log(INFO, 'Channels list changed, reloading');
-        epgData.LoadChannelList(List);
-        epgData.SetLastChannelMd5(List.ListMd5);
-        epgData.SetLastScan('epg',0);
-      end;
-    epgData.Scan;
-  end;
+  if List.ListMd5 <> epgData.LastChannelMd5 then
+    begin
+      OvoLogger.Log(INFO, 'Channels list changed, reloading EPG');
+      epgData.LoadChannelList(List);
+      epgData.SetLastChannelMd5(List.ListMd5);
+      epgData.SetLastScan('epg',0);
+    end;
 
+  if not Configobj.M3UProperties.EPGUrl.IsEmpty then
+    epgData.Scan
+  else
+    OvoLogger.Log(INFO, 'No EPG configuration, skipping');
 
   ChannelList.RowCount := List.Count;
 
@@ -263,8 +267,6 @@ begin
   end
   else
     OvoLogger.Log(WARN, 'Invalid config');
-
-  Loadlist;
 
 end;
 
