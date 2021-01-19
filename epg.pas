@@ -298,8 +298,6 @@ begin
 
   OvoLogger.Log(INFO, 'End EPG update');
   AfterScan;
-  SetLastScan('epg', now);
-
 
   if Assigned(FOnScanComplete) then
     FOnScanComplete(Self);
@@ -321,13 +319,19 @@ begin
   fEpgAvailable := True;
   fScanning := False;
   if Assigned(Scanner) then
-    Scanner.free;
+    FreeAndNil(Scanner);
 end;
 
 
 procedure TEpg.Scan;
 begin
-  Scanner := nil;
+  if Assigned(Scanner) then
+    begin
+      Scanner.Terminate;
+      while not Scanner.Finished do
+         Sleep(100);
+      FreeAndNil(Scanner);
+    end;
   if LastScan('epg') + 12/24 > now then
   begin
     OvoLogger.Log(INFO, 'Skipping EPG update, used cache');
@@ -498,6 +502,8 @@ begin
     OvoLogger.Log(INFO, 'Downloading EPG from %s', [fMrl]);
     DownloadedEpg := CacheDir + TempEPGFile;
     DownloadFromUrl(fmrl, DownloadedEpg);
+    if Terminated then
+      exit;
     FcacheFile := TFileStream.Create(DownloadedEpg, fmOpenRead);
     GzHeader :=FcacheFile.ReadWord;
     FcacheFile.Free;
@@ -505,17 +511,25 @@ begin
     begin
       EpgFile := CacheDir + TempEPGFileDecompressed;
       OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
-      Decompress := TGZFileStream.Create(DownloadedEpg, gzopenread);
-      FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
-      Decompress.Position := 0;
-      FcacheFile.CopyFrom(Decompress, 0);
-      FcacheFile.Free;
+      try
+        Decompress := TGZFileStream.Create(DownloadedEpg, gzopenread);
+        FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
+        Decompress.Position := 0;
+        if Terminated then
+          exit;
+        FcacheFile.CopyFrom(Decompress, 0);
+      finally
+        FcacheFile.Free;
+        Decompress.Free;
+      end;
     end
     else
       EpgFile := DownloadedEpg;
     OvoLogger.Log(INFO, 'Scanning EPG XML file %s',[EpgFile]);
-    Load(EpgFile);
-    fOwner.setlastscan('epg', now);
+    if Terminated then
+      exit;
+    if Load(EpgFile) > 0 then
+      fOwner.setlastscan('epg', now);
   except
     on e: Exception do
       OvoLogger.Log(ERROR, 'Error scanning EPG Data : %s',[e.Message]);
@@ -546,7 +560,7 @@ function TEpgScanner.Load(EPGFile: string): integer;
 var
   i: integer;
   CurrNode: TDOMNode;
-  fname: DOMString;
+  fName: DOMString;
   OldName: string;
   s1, s2: TDateTime;
   idChannel: integer;
@@ -564,12 +578,17 @@ var
   end;
 
 begin
+  result := 0;
+  if Terminated then exit;
   ReadXMLFile(XMLDoc, EPGFile);
+
+  if Terminated then exit;
   Root := XMLDoc.FindNode('tv');
   //  writeln(Root.NodeName, '  ', Root.ChildNodes.Count);
   OldName := '';
   idChannel := -1;
   qInsert := TSQLQuery.Create(fOwner.Fdb);
+  try
   qInsert.Transaction := fOwner.fTR;
   qInsert.SQL.Text := INSERTPROGRAMME;
 
@@ -579,12 +598,17 @@ begin
     //      writeln(currnode.NodeName);
     if CurrNode.NodeName <> 'programme' then
       Continue;
-    fname := CurrNode.Attributes.GetNamedItem('channel').NodeValue;
-    if fname <> OldName then
-      idChannel := FindChannelId(fname);
+    fName := CurrNode.Attributes.GetNamedItem('channel').NodeValue;
+    if fName <> OldName then
+      begin
+        idChannel := FindChannelId(fName);
+        OldName := fName;
+      end;
 
     if idChannel <> -1 then
     begin
+      if Terminated then
+        exit;;
       qInsert.ParamByName('idchannel').AsInteger := idChannel;
       qInsert.ParamByName('sTitle').AsString := NodeValue('title');
       qInsert.ParamByName('sPlot').AsString := NodeValue('desc');
@@ -596,11 +620,16 @@ begin
     end;
   end;
 
+  Result := 1;
+  finally
+     qInsert.free;
+  end;
+
 end;
 
 constructor TEpgScanner.Create(mrl: string; Owner: TEpg);
 begin
-  inherited Create(False);
+  inherited Create(true);
   fOwner := Owner;
   fMrl := mrl;
 end;
