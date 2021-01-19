@@ -61,7 +61,7 @@ type
 
 implementation
 
-uses Math, Generics.Defaults, md5;
+uses Math, LoggerUnit, Generics.Defaults, md5;
 
 resourcestring
   RSEmpty = 'M3U file is empty';
@@ -105,59 +105,71 @@ var
 
 begin
   Clear;
+  Result := false;
   Index := 1;
-  MD5Init(Context);
-  p := ExtractFilePath(ListName);
-  assignfile(f, ListName);
-  reset(f);
-  Result := True;
-  if EOF(f) then
-  begin
-    Result := False;
-    fLastMessage := RSEmpty;
-    exit;
-  end;
 
-  readln(f, s);
-  MD5Update(Context, s[1], Length(s));
-  s := trim(s);
-  if uppercase(copy(s, 1, 7)) <> '#EXTM3U' then
-  begin
-    Result := False;
-    fLastMessage := RSMissingHeader;
-    exit;
-  end;
-  fData := False;
-  while EOF(f) <> True do
-  begin
+  if ListName.IsEmpty then
+    begin
+      OvoLogger.Log(WARN, 'No list to load');
+      exit;
+    end;
+
+  TRY
+    OvoLogger.Log(INFO, 'Loading list from %s',[ListName]);
+    MD5Init(Context);
+    p := ExtractFilePath(ListName);
+    assignfile(f, ListName);
+    reset(f);
+    if EOF(f) then
+    begin
+      fLastMessage := RSEmpty;
+      exit;
+    end;
+
     readln(f, s);
+    MD5Update(Context, s[1], Length(s));
     s := trim(s);
-    if (s <> EmptyStr) then
-      if (uppercase(copy(s, 1, 7)) = '#EXTINF') then
-      begin
-        item := TM3UItem.Create;
-        Item.Number := index;
-        Item.Group := FindTag('tvg-group', s);
-        item.Id := FindTag('tvg-id', s);
-        item.Icon := FindTag('tvg-logo', s);
-        item.tvg_name := FindTag('tvg-name', s);
-        item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
-        Item.Title := copy(s, RPos(',', S) + 1, Length(s));
-        Inc(index);
-        Add(Item);
-        fData := True;
-     end
-     else
-      if s[1] <> '#' then
-        if fData then
+    if uppercase(copy(s, 1, 7)) <> '#EXTM3U' then
+    begin
+      fLastMessage := RSMissingHeader;
+      exit;
+    end;
+    fData := False;
+    while EOF(f) <> True do
+    begin
+      readln(f, s);
+      s := trim(s);
+      if (s <> EmptyStr) then
+        if (uppercase(copy(s, 1, 7)) = '#EXTINF') then
         begin
-          item.Mrl := s;
-          fData := False;
-        end;
+          item := TM3UItem.Create;
+          Item.Number := index;
+          Item.Group := FindTag('tvg-group', s);
+          item.Id := FindTag('tvg-id', s);
+          item.Icon := FindTag('tvg-logo', s);
+          item.tvg_name := FindTag('tvg-name', s);
+          item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
+          Item.Title := copy(s, RPos(',', S) + 1, Length(s));
+          Inc(index);
+          Add(Item);
+          fData := True;
+       end
+       else
+        if s[1] <> '#' then
+          if fData then
+          begin
+            item.Mrl := s;
+            fData := False;
+          end;
+    end;
+    MD5Final(Context, Digest);
+    ListMd5 := MD5Print(Digest);
+    Result := true;
+  finally
+    IF not fLastMessage.IsEmpty then
+      OvoLogger.Log(WARN, fLastMessage);
+    closefile(f);
   end;
-  MD5Final(Context, Digest);
-  ListMd5 := MD5Print(Digest);
-  closefile(f);
 end;
 
 function TM3ULoader.ItemByChno(chno: integer): integer;

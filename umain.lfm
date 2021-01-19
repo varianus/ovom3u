@@ -70,12 +70,12 @@ object fPlayer: TfPlayer
         Action = actShowConfig
       end
       object ToolButton2: TToolButton
-        Left = 32
+        Left = 35
         Top = 2
         Action = actShowEpg
       end
       object ToolButton3: TToolButton
-        Left = 24
+        Left = 27
         Height = 22
         Top = 2
         Caption = 'ToolButton3'
@@ -106,7 +106,7 @@ object fPlayer: TfPlayer
       OnDrawCell = ChannelListDrawCell
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        163
+        167
       )
     end
   end

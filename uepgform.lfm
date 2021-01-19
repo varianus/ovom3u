@@ -1,7 +1,7 @@
 object EPGForm: TEPGForm
-  Left = 450
+  Left = 447
   Height = 690
-  Top = 1283
+  Top = 169
   Width = 989
   Caption = 'EPG Guide'
   ClientHeight = 690
@@ -16,14 +16,14 @@ object EPGForm: TEPGForm
     Align = alBottom
     BevelInner = bvLowered
     BorderStyle = bsSingle
-    ClientHeight = 153
-    ClientWidth = 985
+    ClientHeight = 155
+    ClientWidth = 987
     TabOrder = 0
     object stChannel: TStaticText
       Left = 14
-      Height = 16
+      Height = 21
       Top = 2
-      Width = 3
+      Width = 7
       AutoSize = True
       Caption = ' '
       TabOrder = 0
@@ -33,10 +33,10 @@ object EPGForm: TEPGForm
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = stChannel
       AnchorSideTop.Side = asrCenter
-      Left = 26
-      Height = 16
+      Left = 30
+      Height = 21
       Top = 2
-      Width = 3
+      Width = 7
       AutoSize = True
       BorderSpacing.Around = 9
       Caption = ' '
@@ -47,10 +47,10 @@ object EPGForm: TEPGForm
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = stTime
       AnchorSideTop.Side = asrCenter
-      Left = 38
-      Height = 22
+      Left = 46
+      Height = 27
       Top = -1
-      Width = 4
+      Width = 8
       AutoSize = True
       BorderSpacing.Around = 9
       Caption = ' '
@@ -68,9 +68,9 @@ object EPGForm: TEPGForm
       AnchorSideBottom.Control = Panel1
       AnchorSideBottom.Side = asrBottom
       Left = 23
-      Height = 112
-      Top = 30
-      Width = 951
+      Height = 109
+      Top = 35
+      Width = 953
       Anchors = [akTop, akLeft, akRight, akBottom]
       BorderSpacing.Around = 9
       ParentColor = True
@@ -92,14 +92,14 @@ object EPGForm: TEPGForm
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
       Caption = 'FullGuide'
-      ClientHeight = 525
-      ClientWidth = 981
+      ClientHeight = 527
+      ClientWidth = 983
       object TimeGrid: TDrawGrid
         Left = 0
-        Height = 475
+        Height = 477
         Hint = 'Click a broadcast for details'
         Top = 50
-        Width = 981
+        Width = 983
         Align = alClient
         AutoFillColumns = True
         BorderStyle = bsNone
@@ -114,7 +114,7 @@ object EPGForm: TEPGForm
           item
             MaxSize = 500
             Title.Caption = ''
-            Width = 861
+            Width = 863
           end>
         DefaultRowHeight = 30
         ExtendedSelect = False
@@ -127,18 +127,18 @@ object EPGForm: TEPGForm
         OnMouseDown = TimeGridMouseDown
         ColWidths = (
           120
-          861
+          863
         )
       end
       object pnlControl: TPanel
         Left = 0
         Height = 50
         Top = 0
-        Width = 981
+        Width = 983
         Align = alTop
         AutoSize = True
         ClientHeight = 50
-        ClientWidth = 981
+        ClientWidth = 983
         TabOrder = 1
         object arBackward: TArrow
           Left = 10
@@ -170,10 +170,10 @@ object EPGForm: TEPGForm
           AnchorSideTop.Side = asrCenter
           AnchorSideRight.Control = pnlControl
           AnchorSideRight.Side = asrBottom
-          Left = 897
-          Height = 21
-          Top = 15
-          Width = 74
+          Left = 891
+          Height = 23
+          Top = 14
+          Width = 82
           Anchors = [akTop, akRight]
           BorderSpacing.Around = 9
           Caption = 'lbMessage'
@@ -217,8 +217,8 @@ object EPGForm: TEPGForm
     end
     object tsDetail: TTabSheet
       Caption = 'Detail'
-      ClientHeight = 525
-      ClientWidth = 981
+      ClientHeight = 527
+      ClientWidth = 983
       object DetailGrid: TDrawGrid
         AnchorSideLeft.Control = tsDetail
         AnchorSideTop.Control = bBack1
@@ -251,13 +251,13 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 361
+            Width = 370
           end        
           item
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 362
+            Width = 370
           end>
         DefaultRowHeight = 30
         ExtendedSelect = False
@@ -271,8 +271,8 @@ object EPGForm: TEPGForm
         ColWidths = (
           100
           100
-          361
-          362
+          370
+          370
         )
       end
       object bBack1: TButton
@@ -292,8 +292,8 @@ object EPGForm: TEPGForm
     end
     object tsSearch: TTabSheet
       Caption = 'Search'
-      ClientHeight = 525
-      ClientWidth = 981
+      ClientHeight = 527
+      ClientWidth = 983
       object lbeSearch: TLabeledEdit
         Left = 88
         Height = 23
@@ -356,14 +356,14 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 322
+            Width = 330
           end        
           item
             MaxSize = 1000
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 322
+            Width = 331
           end>
         DefaultColWidth = 80
         DefaultRowHeight = 30
@@ -379,8 +379,8 @@ object EPGForm: TEPGForm
           120
           100
           100
-          322
-          322
+          330
+          331
         )
       end
       object bBack: TButton
@@ -402,6 +402,7 @@ object EPGForm: TEPGForm
   end
   object TimerCheck: TTimer
     Enabled = False
+    Interval = 3000
     OnTimer = TimerCheckTimer
     Left = 281
     Top = 181

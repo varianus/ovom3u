@@ -16,6 +16,12 @@
       </XPManifest>
       <Icon Value="0"/>
     </General>
+    <VersionInfo>
+      <UseVersionInfo Value="True"/>
+      <RevisionNr Value="1"/>
+      <Attributes pvaPreRelease="True" pvaPrivateBuild="True"/>
+      <StringTable CompanyName="Marco Caselli" FileDescription="A simple IPTV player"/>
+    </VersionInfo>
     <BuildModes>
       <Item Name="Default" Default="True"/>
     </BuildModes>

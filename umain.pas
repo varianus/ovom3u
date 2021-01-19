@@ -136,7 +136,7 @@ begin
     Retry := False;
     if not TMPVEngine.CheckMPV then
       begin
-        OvoLogger.Log(WARN, 'Cannot initialize libMPV');
+        OvoLogger.Log(ERROR, 'Cannot initialize libMPV');
         case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
             'LibMPV shared library is missing or could not be initialized.' + #10 +
             'OvoM3U uses this library to decode and play video.' + #10 +
@@ -212,7 +212,9 @@ begin
       IPTVList := CacheDir + 'current-iptv.m3u';
     finally
     end;
-  end;
+  end
+  else
+    IPTVList:=ConfigObj.M3UProperties.FileName;
 
   list.Load(IPTVList);
   if ConfigObj.M3UProperties.UseChno then
@@ -245,24 +247,24 @@ begin
   flgFullScreen := False;
   ShowingInfo := false;
   OvoLogger.Log(INFO, 'Create main GUI');
+  List := TM3ULoader.Create;
+  epgData := TEpg.Create;
+  ChannelList.RowCount := 0;
+  CurrentChannel := -1;
+  PreviousChannel := -1;
+  ChannelSelecting := False;
+  fLoading := False;
+  ChannelSelected := 0;
+
   if CheckConfigAndSystem then
   begin
-    ChannelList.RowCount := 0;
-    List := TM3ULoader.Create;
-    epgData := TEpg.Create;
-    Loadlist;
-
     MpvEngine := TMPVEngine.Create;
     MpvEngine.Initialize(GLRenderer);
-    CurrentChannel := -1;
-    PreviousChannel := -1;
-    ChannelSelecting := False;
-    fLoading := False;
-    ChannelSelected := 0;
-
   end
   else
     OvoLogger.Log(WARN, 'Invalid config');
+
+  Loadlist;
 
 end;
 
@@ -507,7 +509,22 @@ end;
 
 procedure TfPlayer.actShowConfigExecute(Sender: TObject);
 begin
-  ShowConfig;
+  if ShowConfig = mrOK then
+    begin
+      if ConfigObj.M3UProperties.ListChanged then
+        begin
+          OvoLogger.Log(INFO, 'List configuration changed, reloading');
+          EpgData.SetLastScan('Channels', 0);
+          LoadList;
+        end;
+      if ConfigObj.M3UProperties.EPGChanged then
+        begin
+          OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
+          EpgData.SetLastScan('epg', 0);
+          EpgData.Scan;
+        end;
+
+    end;
 end;
 
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);

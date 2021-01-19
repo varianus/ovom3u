@@ -309,13 +309,16 @@ end;
 procedure TEPGForm.TimerCheckTimer(Sender: TObject);
 begin
   if not EpgData.EpgAvailable then
-    lbMessage.Caption := 'EPG Loading - Please wait'
+    lbMessage.Caption := 'EPG Data not available'
+  else
+  if EpgData.Scanning then
+      lbMessage.Caption := 'EPG Loading'
   else
   begin
     UpdateTimeRange;
-    TimeGrid.Invalidate;
     TimerCheck.Enabled := False;
   end;
+  TimeGrid.Invalidate;
 end;
 
 procedure TEPGForm.SetEpgData(AValue: TEpg);
@@ -324,7 +327,7 @@ begin
     Exit;
   FEpgData := AValue;
   if Assigned(FEpgData) then
-    TimerCheck.Enabled := not FEpgData.EpgAvailable;
+    TimerCheck.Enabled := not FEpgData.EpgAvailable or FEpgData.Scanning;
 
 end;
 

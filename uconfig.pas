@@ -31,6 +31,7 @@ type
   { TfConfig }
 
   TfConfig = class(TForm)
+  published
     bpConfig: TButtonPanel;
     cbKind: TComboBox;
     cbUseChno: TCheckBox;
@@ -46,7 +47,6 @@ type
     tsURL: TTabSheet;
     procedure CancelButtonClick(Sender: TObject);
     procedure cbKindChange(Sender: TObject);
-    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure OKButtonClick(Sender: TObject);
   private
@@ -56,7 +56,7 @@ type
   end;
 
 
-procedure ShowConfig;
+Function ShowConfig: integer;
 
 implementation
 
@@ -65,11 +65,11 @@ uses um3uloader;
 var
   fConfig: TfConfig;
 
-procedure ShowConfig;
+Function ShowConfig: integer;
 begin
   if not Assigned(fConfig) then
     fConfig := TfConfig.Create(nil);
-  fConfig.Show;
+  Result:=fConfig.ShowModal;
 end;
 
 
@@ -99,16 +99,21 @@ var
   M3UProperties: TM3UProperties;
 begin
 
+  M3UProperties.ListChanged := (TProviderKind(cbKind.ItemIndex) <> ConfigObj.M3UProperties.Kind) or
+     (ConfigObj.M3UProperties.FileName <> edtFileName.Text) or
+     (ConfigObj.M3UProperties.Url <> edtUrl.Text) or
+     (ConfigObj.M3UProperties.UseChno <> cbUseChno.Checked);
   M3UProperties.Kind := TProviderKind(cbKind.ItemIndex);
   M3UProperties.FileName := edtFileName.Text;
   M3UProperties.Url := edtUrl.Text;
   M3UProperties.UseChno := cbUseChno.Checked;
+
+  M3UProperties.EPGChanged:= (ConfigObj.M3UProperties.EPGUrl <> edtUrl1.Text);
   M3UProperties.EPGUrl := edtUrl1.Text;
 
   ConfigObj.M3UProperties := M3UProperties;
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
-
 end;
 
 procedure TfConfig.cbKindChange(Sender: TObject);
@@ -117,12 +122,6 @@ begin
     0: pcM3u.ActivePage := tsLocal;
     1: pcM3u.ActivePage := tsURL;
   end;
-end;
-
-procedure TfConfig.FormClose(Sender: TObject; var CloseAction: TCloseAction);
-begin
-  CloseAction:=caFree;
-  fConfig := nil;
 end;
 
 procedure TfConfig.CancelButtonClick(Sender: TObject);
