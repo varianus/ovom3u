@@ -33,14 +33,13 @@ type
   private
     XMLDoc: TXMLDocument;
     Root: tdomNode;
-    fMrl: string;
     fOwner: TEpg;
     function FindChannelId(Channel: string): integer;
   protected
     procedure Execute; override;
     function Load(EPGFile: string): integer;
   public
-    constructor Create(mrl: string; Owner: TEpg); reintroduce;
+    constructor Create(Owner: TEpg); reintroduce;
   end;
 
   TEpg = class
@@ -327,6 +326,7 @@ procedure TEpg.Scan;
 begin
   if Assigned(Scanner) then
     begin
+      OvoLogger.Log(INFO, 'Stopping EPG thread');
       Scanner.Terminate;
       while not Scanner.Finished do
          Sleep(100);
@@ -343,7 +343,7 @@ begin
   if Assigned(FOnScanStart) then
     FOnScanStart(self);
   BeforeScan;
-  Scanner := TEpgScanner.Create(Configobj.M3UProperties.EPGUrl, self);
+  Scanner := TEpgScanner.Create(self);
   Scanner.OnTerminate := EndScan;
   Scanner.Start;
 end;
@@ -491,7 +491,7 @@ end;
 procedure TEpgScanner.Execute;
 var
   CacheDir: string;
-  DownloadedEpg, EpgFile: string;
+  SourceEpg, EpgFile: string;
   Decompress: TGZFileStream;
   FcacheFile: TFileStream;
   GzHeader: Word;
@@ -499,12 +499,20 @@ begin
 
   CacheDir := ConfigObj.CacheDir;
   try
-    OvoLogger.Log(INFO, 'Downloading EPG from %s', [fMrl]);
-    DownloadedEpg := CacheDir + TempEPGFile;
-    DownloadFromUrl(fmrl, DownloadedEpg);
+    if ConfigObj.M3UProperties.EpgKind = Url then
+    begin
+      OvoLogger.Log(INFO, 'Downloading EPG from %s', [ConfigObj.M3UProperties.EPGUrl]);
+      SourceEpg := CacheDir + TempEPGFile;
+      DownloadFromUrl(ConfigObj.M3UProperties.EPGUrl, SourceEpg);
+    end
+    else
+      begin
+        SourceEpg := ConfigObj.M3UProperties.EpgFileName;
+        OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.M3UProperties.EpgFileName]);
+      end;
     if Terminated then
       exit;
-    FcacheFile := TFileStream.Create(DownloadedEpg, fmOpenRead);
+    FcacheFile := TFileStream.Create(SourceEpg, fmOpenRead);
     GzHeader :=FcacheFile.ReadWord;
     FcacheFile.Free;
     if NtoBe(GzHeader) = $1f8b then
@@ -512,7 +520,7 @@ begin
       EpgFile := CacheDir + TempEPGFileDecompressed;
       OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
       try
-        Decompress := TGZFileStream.Create(DownloadedEpg, gzopenread);
+        Decompress := TGZFileStream.Create(SourceEpg, gzopenread);
         FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
         Decompress.Position := 0;
         if Terminated then
@@ -524,7 +532,7 @@ begin
       end;
     end
     else
-      EpgFile := DownloadedEpg;
+      EpgFile := SourceEpg;
     OvoLogger.Log(INFO, 'Scanning EPG XML file %s',[EpgFile]);
     if Terminated then
       exit;
@@ -627,11 +635,11 @@ begin
 
 end;
 
-constructor TEpgScanner.Create(mrl: string; Owner: TEpg);
+constructor TEpgScanner.Create(Owner: TEpg);
 begin
   inherited Create(true);
   fOwner := Owner;
-  fMrl := mrl;
+
 end;
 
 end.

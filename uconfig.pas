@@ -33,20 +33,22 @@ type
   TfConfig = class(TForm)
   published
     bpConfig: TButtonPanel;
-    cbKind: TComboBox;
+    cbChannelsKind: TComboBox;
+    cbEpgKind: TComboBox;
     cbUseChno: TCheckBox;
-    edtFileName: TFileNameEdit;
-    edtUrl: TEdit;
-    edtUrl1: TEdit;
-    Label1: TLabel;
+    edtChannelsFileName: TFileNameEdit;
+    edtEpgFileName: TFileNameEdit;
+    edtChannelsUrl: TEdit;
+    edtEpgUrl: TEdit;
+    Label5: TLabel;
+    lb: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
-    pcM3u: TPageControl;
-    tsLocal: TTabSheet;
-    tsURL: TTabSheet;
+    lb1: TLabel;
     procedure CancelButtonClick(Sender: TObject);
-    procedure cbKindChange(Sender: TObject);
+    procedure cbChannelsKindChange(Sender: TObject);
+    procedure cbEpgKindChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure OKButtonClick(Sender: TObject);
   private
@@ -81,16 +83,22 @@ procedure TfConfig.FormShow(Sender: TObject);
 var
   Kind: TProviderKind;
 begin
-  pcM3u.ShowTabs := False;
   ConfigObj.ReadConfig;
 
-  Kind := ConfigObj.M3UProperties.Kind;
-  cbKind.ItemIndex := Ord(kind);
-  cbKind.OnChange(cbKind);
-  edtFileName.Text := ConfigObj.M3UProperties.FileName;
-  edtUrl.Text := ConfigObj.M3UProperties.Url;
+  Kind := ConfigObj.M3UProperties.ChannelsKind;
+  cbChannelsKind.ItemIndex := Ord(kind);
+  cbChannelsKind.OnChange(cbChannelsKind);
+  edtChannelsFileName.Text := ConfigObj.M3UProperties.ChannelsFileName;
+  edtChannelsUrl.Text := ConfigObj.M3UProperties.ChannelsUrl;
+
+  Kind := ConfigObj.M3UProperties.EpgKind;
+  cbEpgKind.ItemIndex := Ord(kind);
+  cbEpgKind.OnChange(cbChannelsKind);
+  edtEpgFileName.Text := ConfigObj.M3UProperties.EpgFileName;
+  edtEpgUrl.Text := ConfigObj.M3UProperties.EpgUrl;
+
+
   cbUseChno.Checked := ConfigObj.M3UProperties.UseChno;
-  edtUrl1.Text := ConfigObj.M3UProperties.EPGUrl;
 
 end;
 
@@ -99,28 +107,53 @@ var
   M3UProperties: TM3UProperties;
 begin
 
-  M3UProperties.ListChanged := (TProviderKind(cbKind.ItemIndex) <> ConfigObj.M3UProperties.Kind) or
-     (ConfigObj.M3UProperties.FileName <> edtFileName.Text) or
-     (ConfigObj.M3UProperties.Url <> edtUrl.Text) or
+  M3UProperties.ListChanged := (TProviderKind(cbChannelsKind.ItemIndex) <> ConfigObj.M3UProperties.ChannelsKind) or
+     (ConfigObj.M3UProperties.ChannelsFileName <> edtChannelsFileName.Text) or
+     (ConfigObj.M3UProperties.ChannelsUrl <> edtChannelsUrl.Text) or
      (ConfigObj.M3UProperties.UseChno <> cbUseChno.Checked);
-  M3UProperties.Kind := TProviderKind(cbKind.ItemIndex);
-  M3UProperties.FileName := edtFileName.Text;
-  M3UProperties.Url := edtUrl.Text;
+  M3UProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
+  M3UProperties.ChannelsFileName := edtChannelsFileName.Text;
+  M3UProperties.ChannelsUrl := edtChannelsUrl.Text;
+
+  M3UProperties.EPGChanged := (TProviderKind(cbEpgKind.ItemIndex) <> ConfigObj.M3UProperties.EpgKind) or
+     (ConfigObj.M3UProperties.EpgFileName <> edtEpgFileName.Text) or
+     (ConfigObj.M3UProperties.EpgUrl <> edtEpgUrl.Text) or
+     (ConfigObj.M3UProperties.UseChno <> cbUseChno.Checked);
+  M3UProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
+  M3UProperties.EpgFileName := edtEpgFileName.Text;
+  M3UProperties.EpgUrl := edtEpgUrl.Text;
+
   M3UProperties.UseChno := cbUseChno.Checked;
-
-  M3UProperties.EPGChanged:= (ConfigObj.M3UProperties.EPGUrl <> edtUrl1.Text);
-  M3UProperties.EPGUrl := edtUrl1.Text;
-
   ConfigObj.M3UProperties := M3UProperties;
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
 end;
 
-procedure TfConfig.cbKindChange(Sender: TObject);
+procedure TfConfig.cbChannelsKindChange(Sender: TObject);
 begin
-  case cbKind.ItemIndex of
-    0: pcM3u.ActivePage := tsLocal;
-    1: pcM3u.ActivePage := tsURL;
+  case cbChannelsKind.ItemIndex of
+    0: begin
+         edtChannelsFileName.Enabled := true;
+         edtChannelsUrl.Enabled := false;
+    end;
+    1: begin
+         edtChannelsFileName.Enabled := false;
+         edtChannelsUrl.Enabled := true;
+    end;
+  end;
+end;
+
+procedure TfConfig.cbEpgKindChange(Sender: TObject);
+begin
+  case cbEpgKind.ItemIndex of
+    0: begin
+         edtEpgFileName.Enabled := true;
+         edtEpgUrl.Enabled := false;
+    end;
+    1: begin
+         edtEpgFileName.Enabled := false;
+         edtEpgUrl.Enabled := true;
+    end;
   end;
 end;
 

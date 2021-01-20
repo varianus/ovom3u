@@ -36,10 +36,12 @@ type
 
 { TConfig }
   TM3UProperties = record
-    Kind: TProviderKind;
-    FileName: string;
-    Url: string;
+    ChannelsKind: TProviderKind;
+    ChannelsFileName: string;
+    ChannelsUrl: string;
     UseChno: boolean;
+    EpgKind: TProviderKind;
+    EpgFileName: string;
     EPGUrl: string;
     // Used to signal changes, not saved
     ListChanged: boolean;
@@ -331,11 +333,15 @@ end;
 
 procedure TConfig.SaveConfig;
 begin
-  WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fM3UProperties.Kind));
-  WriteString('m3u/FileName',fM3UProperties.FileName);
-  WriteString('m3u/Url',fM3UProperties.Url);
+  WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fM3UProperties.ChannelsKind));
+  WriteString('m3u/FileName',fM3UProperties.ChannelsFileName);
+  WriteString('m3u/Url',fM3UProperties.ChannelsUrl);
+
+  WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(fM3UProperties.EPGKind));
+  WriteString('EPG/FileName',fM3UProperties.EPGFileName);
+  WriteString('EPG/Url',fM3UProperties.EPGUrl);
+
   WriteBoolean('m3u/UseChno', fM3UProperties.UseChno);
-  WriteString('EPG/Url', fM3UProperties.EPGUrl);
   fConfigHolder.SaveToFile(FConfigFile, true);
 end;
 
@@ -352,12 +358,15 @@ begin
   {$endif}
 {$endif}
 
-  fM3UProperties.Kind:= TEnum<TProviderKind>.FromString(ReadString('m3u/ProviderKind',''), Local);
+  fM3UProperties.ChannelsKind:= TEnum<TProviderKind>.FromString(ReadString('m3u/ProviderKind',''), Local);
+  fM3UProperties.ChannelsFileName:= ReadString('m3u/FileName','');
+  fM3UProperties.ChannelsUrl:= ReadString('m3u/Url','');
 
-  fM3UProperties.FileName:= ReadString('m3u/FileName','');
-  fM3UProperties.Url:= ReadString('m3u/Url','');
+  fM3UProperties.EpgKind:= TEnum<TProviderKind>.FromString(ReadString('EPG/ProviderKind',''), Local);
+  fM3UProperties.EpgFileName:= ReadString('EPG/FileName','');
+  fM3UProperties.EpgUrl:= ReadString('EPG/Url','');
+
   fM3UProperties.UseChno :=ReadBoolean('m3u/UseChno', false);
-  fM3UProperties.EPGUrl:= ReadString('EPG/Url','');
 
 end;
 

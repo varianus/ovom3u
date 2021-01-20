@@ -159,10 +159,10 @@ begin
 
 
   Result := True;
-  Kind := ConfigObj.M3UProperties.Kind;
+  Kind := ConfigObj.M3UProperties.ChannelsKind;
   case Kind of
-    Local: IPTVList := ConfigObj.M3UProperties.FileName;
-    URL: IPTVList := ConfigObj.M3UProperties.Url;
+    Local: IPTVList := ConfigObj.M3UProperties.ChannelsFileName;
+    URL: IPTVList := ConfigObj.M3UProperties.ChannelsUrl;
   end;
 
   if IPTVList.IsEmpty then
@@ -189,7 +189,7 @@ begin
 
   ConfigObj.ReadConfig;
 
-  Kind := ConfigObj.M3UProperties.Kind;
+  Kind := ConfigObj.M3UProperties.ChannelsKind;
 
   if Kind = URL then
   begin
@@ -216,7 +216,7 @@ begin
     end;
   end
   else
-    IPTVList:=ConfigObj.M3UProperties.FileName;
+    IPTVList:=ConfigObj.M3UProperties.ChannelsFileName;
 
   list.Load(IPTVList);
   OvoLogger.Log(INFO, 'Found %d channels',[List.Count]);
