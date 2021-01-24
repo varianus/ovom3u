@@ -31,14 +31,25 @@ type
 
   TEpgScanner = class(TThread)
   private
+    FOnEndWork: TNotifyEvent;
+    FScanEvent: PRTLEvent;
     XMLDoc: TXMLDocument;
     Root: tdomNode;
     fOwner: TEpg;
+    Success: boolean;
+    FStopped : boolean;
     function FindChannelId(Channel: string): integer;
+    procedure SetOnEndWork(AValue: TNotifyEvent);
+
   protected
     procedure Execute; override;
     function Load(EPGFile: string): integer;
+    Procedure DoEndWork;
+    Function StoppedCheck: boolean;
   public
+    Procedure Stop;
+    Property OnEndWork: TNotifyEvent read FOnEndWork write SetOnEndWork;
+    Property ScanEvent: PRTLEvent read FScanEvent;
     constructor Create(Owner: TEpg); reintroduce;
   end;
 
@@ -52,7 +63,6 @@ type
     fScanning: boolean;
     Scanner: TEpgScanner;
     procedure AfterScan;
-    procedure BeforeScan;
     procedure CheckDBStructure;
     procedure EndScan(AObject: TObject);
     function GetDbVersion: integer;
@@ -294,8 +304,9 @@ end;
 
 procedure TEpg.EndScan(AObject: TObject);
 begin
-
-  OvoLogger.Log(INFO, 'End EPG update');
+  if not TEpgScanner(AObject).Success then
+     OvoLogger.Log(INFO, 'EPG update Not completed');
+  OvoLogger.Log(INFO, 'EPG update thread stopped');
   AfterScan;
 
   if Assigned(FOnScanComplete) then
@@ -305,20 +316,12 @@ begin
 
 end;
 
-procedure TEpg.BeforeScan;
-begin
-  fScanning := True;
-  fDB.ExecuteDirect('delete from programme');
-
-end;
 
 procedure TEpg.AfterScan;
 begin
   fTR.CommitRetaining;
   fEpgAvailable := True;
   fScanning := False;
-  if Assigned(Scanner) then
-    FreeAndNil(Scanner);
 end;
 
 
@@ -326,26 +329,21 @@ procedure TEpg.Scan;
 begin
   if Assigned(Scanner) then
     begin
-      OvoLogger.Log(INFO, 'Stopping EPG thread');
-      Scanner.Terminate;
-      while not Scanner.Finished do
-         Sleep(100);
-      FreeAndNil(Scanner);
+      Scanner.Stop;
     end;
+
   if LastScan('epg') + 12/24 > now then
   begin
     OvoLogger.Log(INFO, 'Skipping EPG update, used cache');
     AfterScan;
     exit;
   end;
+  RTLEventSetEvent(Scanner.FScanEvent);
 
   fEpgAvailable := true;
   if Assigned(FOnScanStart) then
     FOnScanStart(self);
-  BeforeScan;
-  Scanner := TEpgScanner.Create(self);
-  Scanner.OnTerminate := EndScan;
-  Scanner.Start;
+
 end;
 
 function TEpg.GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo;
@@ -450,6 +448,9 @@ begin
   fEpgAvailable := False;
   SetupDBConnection;
   CheckDBStructure;
+  Scanner := TEpgScanner.Create(self);
+  Scanner.OnEndWork := EndScan;
+  Scanner.Start;
 end;
 
 procedure TEpg.LoadChannelList(List: TM3ULoader);
@@ -496,51 +497,67 @@ var
   FcacheFile: TFileStream;
   GzHeader: Word;
 begin
-
-  CacheDir := ConfigObj.CacheDir;
-  try
-    if ConfigObj.M3UProperties.EpgKind = Url then
-    begin
-      OvoLogger.Log(INFO, 'Downloading EPG from %s', [ConfigObj.M3UProperties.EPGUrl]);
-      SourceEpg := CacheDir + TempEPGFile;
-      DownloadFromUrl(ConfigObj.M3UProperties.EPGUrl, SourceEpg);
-    end
-    else
+  While not Terminated do
+  begin
+    RTLEventWaitFor(FScanEvent);
+    if StoppedCheck then
+      Continue;
+    RTLEventResetEvent(FScanEvent);
+    CacheDir := ConfigObj.CacheDir;
+    if StoppedCheck then
+      Continue;
+    try
+      Success := false;
+      fOwner.fScanning := True;
+      fOwner.fDB.ExecuteDirect('delete from programme');
+      OvoLogger.Log(INFO, 'EPG update thread started');
+      if ConfigObj.M3UProperties.EpgKind = Url then
       begin
-        SourceEpg := ConfigObj.M3UProperties.EpgFileName;
-        OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.M3UProperties.EpgFileName]);
-      end;
-    if Terminated then
-      exit;
-    FcacheFile := TFileStream.Create(SourceEpg, fmOpenRead);
-    GzHeader :=FcacheFile.ReadWord;
-    FcacheFile.Free;
-    if NtoBe(GzHeader) = $1f8b then
-    begin
-      EpgFile := CacheDir + TempEPGFileDecompressed;
-      OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
-      try
-        Decompress := TGZFileStream.Create(SourceEpg, gzopenread);
-        FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
-        Decompress.Position := 0;
-        if Terminated then
-          exit;
-        FcacheFile.CopyFrom(Decompress, 0);
-      finally
-        FcacheFile.Free;
-        Decompress.Free;
-      end;
-    end
-    else
-      EpgFile := SourceEpg;
-    OvoLogger.Log(INFO, 'Scanning EPG XML file %s',[EpgFile]);
-    if Terminated then
-      exit;
-    if Load(EpgFile) > 0 then
-      fOwner.setlastscan('epg', now);
-  except
-    on e: Exception do
-      OvoLogger.Log(ERROR, 'Error scanning EPG Data : %s',[e.Message]);
+        OvoLogger.Log(INFO, 'Downloading EPG from %s', [ConfigObj.M3UProperties.EPGUrl]);
+        SourceEpg := CacheDir + TempEPGFile;
+        DownloadFromUrl(ConfigObj.M3UProperties.EPGUrl, SourceEpg, StoppedCheck);
+      end
+      else
+        begin
+          SourceEpg := ConfigObj.M3UProperties.EpgFileName;
+          OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.M3UProperties.EpgFileName]);
+        end;
+      if StoppedCheck then
+        Continue;
+      FcacheFile := TFileStream.Create(SourceEpg, fmOpenRead);
+      GzHeader :=FcacheFile.ReadWord;
+      FcacheFile.Free;
+      if NtoBe(GzHeader) = $1f8b then
+      begin
+        EpgFile := CacheDir + TempEPGFileDecompressed;
+        OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
+        try
+          Decompress := TGZFileStream.Create(SourceEpg, gzopenread);
+          FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
+          Decompress.Position := 0;
+          if StoppedCheck then
+            Continue;
+          FcacheFile.CopyFrom(Decompress, 0);
+        finally
+          FcacheFile.Free;
+          Decompress.Free;
+        end;
+      end
+      else
+        EpgFile := SourceEpg;
+      OvoLogger.Log(INFO, 'Scanning EPG XML file %s',[EpgFile]);
+      if StoppedCheck then
+        Continue;
+      if Load(EpgFile) > 0 then
+        begin
+          fOwner.setlastscan('epg', now);
+          Success := true;
+        end;
+    except
+      on e: Exception do
+        OvoLogger.Log(ERROR, 'Error scanning EPG Data : %s',[e.Message]);
+    end;
+    Synchronize(DoEndWork);
   end;
 end;
 
@@ -563,6 +580,12 @@ begin
     qFind.Free;
   end;
 end;
+
+procedure TEpgScanner.SetOnEndWork(AValue: TNotifyEvent);
+begin
+  FOnEndWork := AValue;
+end;
+
 
 function TEpgScanner.Load(EPGFile: string): integer;
 var
@@ -587,10 +610,10 @@ var
 
 begin
   result := 0;
-  if Terminated then exit;
+  if  StoppedCheck then exit;
   ReadXMLFile(XMLDoc, EPGFile);
 
-  if Terminated then exit;
+  if  StoppedCheck then exit;
   Root := XMLDoc.FindNode('tv');
   //  writeln(Root.NodeName, '  ', Root.ChildNodes.Count);
   OldName := '';
@@ -615,8 +638,8 @@ begin
 
     if idChannel <> -1 then
     begin
-      if Terminated then
-        exit;;
+      if StoppedCheck then
+        exit;
       qInsert.ParamByName('idchannel').AsInteger := idChannel;
       qInsert.ParamByName('sTitle').AsString := NodeValue('title');
       qInsert.ParamByName('sPlot').AsString := NodeValue('desc');
@@ -635,11 +658,32 @@ begin
 
 end;
 
+procedure TEpgScanner.DoEndWork;
+begin
+ if Assigned(FOnEndWork) then
+   FOnEndWork(self);
+end;
+
+function TEpgScanner.StoppedCheck: boolean;
+begin
+  Result := Terminated or FStopped;
+  if Result then
+    FStopped := false;
+end;
+
+procedure TEpgScanner.Stop;
+begin
+  FStopped:= true;
+  OvoLogger.Log(INFO, 'Stopping EPG thread');
+  RTLEventSetEvent(FScanEvent);
+end;
+
 constructor TEpgScanner.Create(Owner: TEpg);
 begin
   inherited Create(true);
   fOwner := Owner;
-
+  FScanEvent := RTLEventCreate;
 end;
+
 
 end.
