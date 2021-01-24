@@ -24,12 +24,14 @@ interface
 
 uses
   Classes, SysUtils,  LazLoggerBase;
+type
+TStopDownloadFunc = function ():boolean of object;
 
 function TimeToMSec(Time: double): int64;
 Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;   overload;
 Function FormatTimeRange(StartTime, EndTime:TDateTime; TimeOnly: boolean=false): string;  overload;
 function CompareBoolean (a, b: Boolean): Integer;
-procedure DownloadFromUrl(AFrom: String; ATo: String);
+procedure DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc:TStopDownloadFunc=nil);
 function EpgDateToDate(const iDateStr: string): TDateTime;
 
 
@@ -58,8 +60,10 @@ type
   private
     FOnWriteStream: TOnWriteStream;
     FStream: TStream;
+    fStopDownloadFunc: TStopDownloadFunc;
+    FHTTPClient : TFPHTTPClient;
   public
-    constructor Create(AStream: TStream);
+    constructor Create(AStream: TStream; StopDownloadFunc: TStopDownloadFunc);
     destructor Destroy; override;
     function Read(var Buffer; Count: LongInt): LongInt; override;
     function Write(const Buffer; Count: LongInt): LongInt; override;
@@ -74,11 +78,12 @@ type
 
 { TDownloadStream }
 
-constructor TDownloadStream.Create(AStream: TStream);
+constructor TDownloadStream.Create(AStream: TStream; StopDownloadFunc: TStopDownloadFunc);
 begin
   inherited Create;
   FStream := AStream;
   FStream.Position := 0;
+  fStopDownloadFunc := StopDownloadFunc;
 end;
 
 destructor TDownloadStream.Destroy;
@@ -105,21 +110,23 @@ end;
 
 procedure TDownloadStream.DoProgress;
 begin
+  if Assigned(fStopDownloadFunc) and fStopDownloadFunc then
+    FHTTPClient.Terminate;
+
   if Assigned(FOnWriteStream) then
     FOnWriteStream(Self, Self.Position);
 end;
 
-procedure DownloadFromUrl(AFrom: String; ATo: String);
+procedure DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc: TStopDownloadFunc);
 var
   DS: TDownloadStream;
-  FHTTPClient : TFPHTTPClient;
 begin
-  DS := TDownloadStream.Create(TFileStream.Create(ATo, fmCreate));
+  DS := TDownloadStream.Create(TFileStream.Create(ATo, fmCreate), StopDownloadFunc);
   try
     try
-      FHTTPClient := TFPHTTPClient.Create(nil);
-      FHTTPClient.AllowRedirect:=true;
-      FHTTPClient.HTTPMethod('GET', AFrom, DS, [200,301, 302, 307]);
+      DS.FHTTPClient := TFPHTTPClient.Create(nil);
+      DS.FHTTPClient.AllowRedirect:=true;
+      DS.FHTTPClient.HTTPMethod('GET', AFrom, DS, [200,301, 302, 307]);
     except
       on E: Exception do
       begin
