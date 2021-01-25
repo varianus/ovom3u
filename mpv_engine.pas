@@ -254,20 +254,17 @@ var
   Params[1].Data := @glParams;
   Params[2]._type := MPV_RENDER_PARAM_INVALID;
   Params[2].Data := nil;
-  Params[3]._type := MPV_RENDER_PARAM_INVALID;
-  Params[3].Data := nil;
+
   i := mpv_render_context_create(Context, fHandle^, Pmpv_render_param(@Params[0]));
   if (i < 0) then
     raise Exception.Create('failed to initialize mpv GL context');
 
-  SetLength(RenderParams, 4);
+  SetLength(RenderParams, 3);
   RenderParams[0]._type := MPV_RENDER_PARAM_OPENGL_FBO;
   RenderParams[0].Data := nil;
-  RenderParams[1]._type := MPV_RENDER_PARAM_SKIP_RENDERING;
-  RenderParams[1].Data := @Skip;
-  RenderParams[2]._type := MPV_RENDER_PARAM_FLIP_Y;
-  RenderParams[2].Data := @Flip;
-  RenderParams[3]._type := MPV_RENDER_PARAM_INVALID;
+  RenderParams[1]._type := MPV_RENDER_PARAM_FLIP_Y;
+  RenderParams[1].Data := @Flip;
+  RenderParams[2]._type := MPV_RENDER_PARAM_INVALID;
   RenderParams[3].Data := nil;
 
   mpv_render_context_set_update_callback(Context^, @update_gl, self);
