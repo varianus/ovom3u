@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, EditBtn, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -92,6 +92,7 @@ type
     function CheckConfigAndSystem: boolean;
     function ComputeTrackTitle(Track: TTrack): string;
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
+    procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure Play(Row: integer);
@@ -250,6 +251,11 @@ begin
 
 end;
 
+procedure TfPlayer.OnListChanged(Sender: TObject);
+begin
+  ChannelList.invalidate;
+end;
+
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
   Progress := 0;
@@ -258,6 +264,7 @@ begin
   ShowingInfo := false;
   OvoLogger.Log(INFO, 'Create main GUI');
   List := TM3ULoader.Create;
+  list.OnListChanged := OnListChanged;
   epgData := TEpg.Create;
   ChannelList.RowCount := 0;
   CurrentChannel := -1;

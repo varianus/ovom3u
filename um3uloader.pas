@@ -48,10 +48,14 @@ type
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
     fLastMessage: string;
+    FOnListChanged: TNotifyEvent;
+    procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(constref Left, Right: TM3UItem): integer;
   public
     ListMd5: string;
+    procedure DoListChanged;
     property LastMessage: string read fLastMessage;
+    property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
     constructor Create;
     destructor Destroy; override;
     function Load(const ListName: string): boolean;
@@ -93,29 +97,31 @@ var
   i: integer;
   Item: TM3UItem;
 begin
-  While not Terminated do
-  begin
-   if Terminated then
-      exit;
+  if Terminated then
+    exit;
 
-   for item in fOwner do
-     begin
+  for item in fOwner do
+    begin
       if Terminated then
-         exit;
+        exit;
 
       if not Item.IconLocal.IsEmpty then
         begin
           if FileExists(Item.IconLocal) then
-             Item.IconAvailable := true
+             begin
+               Item.IconAvailable := true;
+               Queue(fOwner.DoListChanged);
+             end
           else
             if not DownloadFromUrl(Item.IconUrl, Item.IconLocal) then
               Item.IconLocal :=  ''
             else
-              Item.IconAvailable := true;
+              begin
+                Item.IconAvailable := true;
+                Queue(fOwner.DoListChanged);
+              end;
         end;
       end;
-   end;
-
 end;
 
 constructor TLogoLoader.Create(Owner: TM3ULoader);
@@ -239,6 +245,7 @@ begin
     MD5Final(Context, Digest);
     ListMd5 := MD5Print(Digest);
     Result := true;
+    DoListChanged;
   finally
     IF not fLastMessage.IsEmpty then
       OvoLogger.Log(WARN, fLastMessage);
@@ -262,6 +269,17 @@ end;
 function TM3ULoader.SortbyNumber(constref Left, Right: TM3UItem): integer;
 begin
   Result := CompareValue(left.Number, Right.Number);
+end;
+
+procedure TM3ULoader.DoListChanged;
+begin
+  if Assigned(FOnListChanged) then
+    FOnListChanged(self);
+end;
+
+procedure TM3ULoader.SetOnListChange(AValue: TNotifyEvent);
+begin
+  FOnListChanged := AValue;
 end;
 
 procedure TM3ULoader.FixChannelNumbering;
