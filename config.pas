@@ -35,7 +35,7 @@ type
   end;
 
 { TConfig }
-  TM3UProperties = record
+  TListsProperties = record
     ChannelsKind: TProviderKind;
     ChannelsFileName: string;
     ChannelsUrl: string;
@@ -53,16 +53,16 @@ type
     fCacheDir: string;
     FConfigFile: string;
     fConfigDir: string;
-    fM3UProperties: TM3UProperties;
+    fListsProperties: TListsProperties;
     FPortableMode: boolean;
     ResourcesPath: string;
     fConfigHolder: TJsonNode;
     fExecutableDir: string;
     function GetCacheDir: string;
     function GetConfigDir: string;
-    procedure SetM3UProperties(AValue: TM3UProperties);
+    procedure SetM3UProperties(AValue: TListsProperties);
   public
-    property M3UProperties: TM3UProperties read FM3UProperties write SetM3UProperties;
+    property M3UProperties: TListsProperties read fListsProperties write SetM3UProperties;
     property PortableMode: boolean read FPortableMode;
     constructor Create;
     procedure ReadConfig;
@@ -240,9 +240,9 @@ begin
   Config.WriteStrings(APath, IntList);
 end;
 
-procedure TConfig.SetM3UProperties(AValue: TM3UProperties);
+procedure TConfig.SetM3UProperties(AValue: TListsProperties);
 begin
-  FM3UProperties:=AValue;
+  fListsProperties:=AValue;
 end;
 
 constructor TConfig.Create;
@@ -280,7 +280,7 @@ destructor TConfig.Destroy;
 begin
   SaveConfig;
   fConfigHolder.Free;
-  Finalize(fM3UProperties);
+  Finalize(fListsProperties);
   inherited Destroy;
 end;
 
@@ -333,15 +333,15 @@ end;
 
 procedure TConfig.SaveConfig;
 begin
-  WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fM3UProperties.ChannelsKind));
-  WriteString('m3u/FileName',fM3UProperties.ChannelsFileName);
-  WriteString('m3u/Url',fM3UProperties.ChannelsUrl);
+  WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fListsProperties.ChannelsKind));
+  WriteString('m3u/FileName',fListsProperties.ChannelsFileName);
+  WriteString('m3u/Url',fListsProperties.ChannelsUrl);
 
-  WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(fM3UProperties.EPGKind));
-  WriteString('EPG/FileName',fM3UProperties.EPGFileName);
-  WriteString('EPG/Url',fM3UProperties.EPGUrl);
+  WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(fListsProperties.EPGKind));
+  WriteString('EPG/FileName',fListsProperties.EPGFileName);
+  WriteString('EPG/Url',fListsProperties.EPGUrl);
 
-  WriteBoolean('m3u/UseChno', fM3UProperties.UseChno);
+  WriteBoolean('m3u/UseChno', fListsProperties.UseChno);
   fConfigHolder.SaveToFile(FConfigFile, true);
 end;
 
@@ -358,15 +358,15 @@ begin
   {$endif}
 {$endif}
 
-  fM3UProperties.ChannelsKind:= TEnum<TProviderKind>.FromString(ReadString('m3u/ProviderKind',''), Local);
-  fM3UProperties.ChannelsFileName:= ReadString('m3u/FileName','');
-  fM3UProperties.ChannelsUrl:= ReadString('m3u/Url','');
+  fListsProperties.ChannelsKind:= TEnum<TProviderKind>.FromString(ReadString('m3u/ProviderKind',''), Local);
+  fListsProperties.ChannelsFileName:= ReadString('m3u/FileName','');
+  fListsProperties.ChannelsUrl:= ReadString('m3u/Url','');
 
-  fM3UProperties.EpgKind:= TEnum<TProviderKind>.FromString(ReadString('EPG/ProviderKind',''), Local);
-  fM3UProperties.EpgFileName:= ReadString('EPG/FileName','');
-  fM3UProperties.EpgUrl:= ReadString('EPG/Url','');
+  fListsProperties.EpgKind:= TEnum<TProviderKind>.FromString(ReadString('EPG/ProviderKind',''), Local);
+  fListsProperties.EpgFileName:= ReadString('EPG/FileName','');
+  fListsProperties.EpgUrl:= ReadString('EPG/Url','');
 
-  fM3UProperties.UseChno :=ReadBoolean('m3u/UseChno', false);
+  fListsProperties.UseChno :=ReadBoolean('m3u/UseChno', false);
 
 end;
 

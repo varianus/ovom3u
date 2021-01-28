@@ -31,9 +31,9 @@ function TimeToMSec(Time: double): int64;
 Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;   overload;
 Function FormatTimeRange(StartTime, EndTime:TDateTime; TimeOnly: boolean=false): string;  overload;
 function CompareBoolean (a, b: Boolean): Integer;
-procedure DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc:TStopDownloadFunc=nil);
+FUNCTION DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc:TStopDownloadFunc=nil):boolean;
 function EpgDateToDate(const iDateStr: string): TDateTime;
-
+function CleanupFileName(AString: string): string;
 
  type
   TByteStringFormat = (bsfDefault, bsfBytes, bsfKB, bsfMB, bsfGB, bsfTB);
@@ -72,10 +72,6 @@ type
   published
     property OnWriteStream: TOnWriteStream read FOnWriteStream write FOnWriteStream;
   end;
-
-{ TForm1 }
-
-
 { TDownloadStream }
 
 constructor TDownloadStream.Create(AStream: TStream; StopDownloadFunc: TStopDownloadFunc);
@@ -117,25 +113,40 @@ begin
     FOnWriteStream(Self, Self.Position);
 end;
 
-procedure DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc: TStopDownloadFunc);
+function DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc: TStopDownloadFunc): boolean;
 var
   DS: TDownloadStream;
 begin
+  Result := false;
   DS := TDownloadStream.Create(TFileStream.Create(ATo, fmCreate), StopDownloadFunc);
   try
     try
       DS.FHTTPClient := TFPHTTPClient.Create(nil);
       DS.FHTTPClient.AllowRedirect:=true;
-      DS.FHTTPClient.HTTPMethod('GET', AFrom, DS, [200,301, 302, 307]);
+      DS.FHTTPClient.HTTPMethod('GET', AFrom, DS, [200]);
+      Result := true;
     except
       on E: Exception do
       begin
-        Raise;
+        Result := false;
       end;
     end;
   finally
     DS.Free
   end;
+end;
+
+function CleanupFileName(AString: string): string;
+var
+  x: integer;
+const
+  IllegalCharSet: set of char =
+    ['|','<','>','\','^','+','=','?','/','[',']','"',';',',','*'];
+begin
+  for x := 1 to Length(AString) do
+    if AString[x] in IllegalCharSet then
+      AString[x] := '_';
+  Result := AString;
 end;
 
 function EpgDateToDate(const iDateStr: string): TDateTime;

@@ -102,7 +102,7 @@ type
 implementation
 
 uses
-  gl, GLext, GeneralFunc, LCLIntf
+  gl, GLext, GeneralFunc, LoggerUnit, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -296,7 +296,7 @@ begin
     begin
       case (Event^.event_id) of
         MPV_EVENT_LOG_MESSAGE:
-          WriteLn(Pmpv_event_log_message(Event^.Data)^.Text);
+          OvoLogger.Log(INFO, Pmpv_event_log_message(Event^.Data)^.Text);
         MPV_EVENT_PLAYBACK_RESTART:
         begin
           Loading := False;

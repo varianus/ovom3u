@@ -37,7 +37,9 @@ type
     Mrl: string;
     Id: string;
     Group: string;
-    Icon: string;
+    IconUrl: string;
+    IconLocal: string;
+    IconAvailable:boolean;
     CurrProgram: string;
   end;
 
@@ -55,17 +57,72 @@ type
     function Load(const ListName: string): boolean;
     function ItemByChno(chno: integer): integer;
     procedure FixChannelNumbering;
+    Procedure UpdateLogo;
 
   end;
 
+  { TLogoLoader }
+
+  TLogoLoader = class(TThread)
+  private
+    fOwner: TM3ULoader;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(Owner: TM3ULoader); reintroduce;
+  end;
 
 implementation
 
-uses Math, LoggerUnit, Generics.Defaults, md5;
+uses Math, LoggerUnit, Config, GeneralFunc, Generics.Defaults, md5;
+
+
+const
+  CountExt = 4;
+  CoverExt : array [0..CountExt - 1] of string =
+     ('.png', '.jpg', '.jpeg', '.gif');
 
 resourcestring
   RSEmpty = 'M3U file is empty';
   RSMissingHeader = 'Missing #EXTM3U Header';
+
+{ TLogoLoader }
+
+procedure TLogoLoader.Execute;
+var
+  i: integer;
+  Item: TM3UItem;
+begin
+  While not Terminated do
+  begin
+   if Terminated then
+      exit;
+
+   for item in fOwner do
+     begin
+      if Terminated then
+         exit;
+
+      if not Item.IconLocal.IsEmpty then
+        begin
+          if FileExists(Item.IconLocal) then
+             Item.IconAvailable := true
+          else
+            if not DownloadFromUrl(Item.IconUrl, Item.IconLocal) then
+              Item.IconLocal :=  ''
+            else
+              Item.IconAvailable := true;
+        end;
+      end;
+   end;
+
+end;
+
+constructor TLogoLoader.Create(Owner: TM3ULoader);
+begin
+  inherited Create(false);
+  fOwner := Owner;
+end;
 
 { TM3ULoader }
 
@@ -83,12 +140,14 @@ function TM3ULoader.Load(const ListName: string): boolean;
 var
   f: textfile;
   s: string;
-  p: string;
+  p, ext: string;
   Item: TM3UItem;
   fData: boolean;
   index: integer;
   Context: TMD5Context;
   Digest: TMD5Digest;
+  i: integer ;
+  Cachedir: string;
 
   function FindTag(const tag: string; const st: string): string;
   var
@@ -117,6 +176,8 @@ begin
   TRY
     OvoLogger.Log(INFO, 'Loading list from %s',[ListName]);
     MD5Init(Context);
+    Cachedir := IncludeTrailingPathDelimiter(ConfigObj.CacheDir+'logo');
+    ForceDirectories(Cachedir);
     p := ExtractFilePath(ListName);
     assignfile(f, ListName);
     reset(f);
@@ -146,10 +207,23 @@ begin
           Item.Number := index;
           Item.Group := FindTag('tvg-group', s);
           item.Id := FindTag('tvg-id', s);
-          item.Icon := FindTag('tvg-logo', s);
+          item.IconUrl := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
           item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
           Item.Title := copy(s, RPos(',', S) + 1, Length(s));
+          if not Trim(item.IconUrl).IsEmpty then
+            begin
+              ext := LowerCase(ExtractFileExt(Item.IconUrl));
+              i:=0;
+              While i < CountExt do
+                if ext = CoverExt[i] then
+                  i := CountExt+1
+                else
+                  inc(i);
+              if i > CountExt then
+                 Item.IconLocal:= CacheDir+CleanupFileName(Item.Title)+ext;
+            end;
+          item.IconAvailable := false;
           Inc(index);
           Add(Item);
           fData := True;
@@ -210,6 +284,15 @@ begin
       items[i].Number := MaxChno;
     end;
   Sort(TComparer<TM3UItem>.Construct(SortByNumber));
+end;
+
+procedure TM3ULoader.UpdateLogo;
+begin
+  With TLogoLoader.Create(self) do
+    begin
+       FreeOnTerminate := true;
+       Start;
+    end;
 end;
 
 end.

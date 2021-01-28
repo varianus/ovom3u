@@ -104,7 +104,7 @@ end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
-  M3UProperties: TM3UProperties;
+  M3UProperties: TListsProperties;
 begin
 
   M3UProperties.ListChanged := (TProviderKind(cbChannelsKind.ItemIndex) <> ConfigObj.M3UProperties.ChannelsKind) or

@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, EditBtn, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -40,6 +40,8 @@ type
     actList: TActionList;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
+    MenuItem4: TMenuItem;
+    MenuItem5: TMenuItem;
     OSDTimer: TTimer;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -49,15 +51,16 @@ type
     mnuVideo: TMenuItem;
     GLRenderer: TOpenGLControl;
     ChannelTimer: TTimer;
+    Panel1: TPanel;
     pnlChannel: TPanel;
     pnlContainer: TPanel;
     pmPlayer: TPopupMenu;
     HideMouse: TTimer;
     LoadingTimer: TTimer;
-    ToolBar1: TToolBar;
-    ToolButton1: TToolButton;
-    ToolButton2: TToolButton;
-    ToolButton3: TToolButton;
+    PopupMenu1: TPopupMenu;
+    ToolButton1: TSpeedButton;
+    ToolButton2: TSpeedButton;
+    ToolButton5: TSpeedButton;
     procedure actShowEpgExecute(Sender: TObject);
     procedure actShowConfigExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
@@ -194,6 +197,7 @@ begin
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
+    IPTVList:=ConfigObj.M3UProperties.ChannelsUrl;
     try
       if epgData.LastScan('channels') + 12/24 < now then
         begin
@@ -234,6 +238,8 @@ begin
       epgData.SetLastChannelMd5(List.ListMd5);
       epgData.SetLastScan('epg',0);
     end;
+
+  List.UpdateLogo;
 
   if not Configobj.M3UProperties.EPGUrl.IsEmpty then
     epgData.Scan
@@ -440,8 +446,41 @@ end;
 procedure TfPlayer.ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
 var
   cv: TCanvas;
+  Element : TM3UItem;
+  bmp: TPicture;
+  r: Trect;
+  Scale:double;
+  H:integer;
 begin
+  Element := List[arow];
+  h:= ChannelList.RowHeights[aRow];
   cv := ChannelList.Canvas;
+
+  if Element.IconAvailable then
+    begin
+      bmp:= TPicture.Create;
+      bmp.LoadFromFile(element.IconLocal);
+      if bmp.Height > bmp.Width then
+        begin
+          scale := bmp.Width / bmp.Height ;
+          r:= rect(arect.left,arect.Top, arect.Left+round(h*scale), aRect.Top+round(h)) ;
+       end
+      else
+      BEGIN
+        scale :=  bmp.Height / bmp.Width;
+        r:= rect(arect.left,arect.Top, arect.Left+round(h), aRect.Top+round(h*scale)) ;
+      end;
+      cv.StretchDraw(r, bmp.Graphic);
+      bmp.free
+    end
+  else
+    begin
+      bmp:= TPicture.Create;
+      bmp.LoadFromFile('PROVA.png');
+      cv.StretchDraw(rect(arect.left,arect.Top, arect.Left+h, aRect.Top+h), bmp.Graphic);
+      bmp.free;
+    end;
+
   cv.Font.Size := 9;
   if CurrentChannel = aRow then
   begin
@@ -453,11 +492,11 @@ begin
   else
     cv.Font.Style := [fsBold];
 
-  cv.TextRect(aRect, 0, aRect.top + 5, Format('%3.3d: %s', [List[arow].Number, List[arow].title]));
+  cv.TextRect(aRect, h+2, aRect.top + 5, Format('%3.3d: %s', [Element.Number, Element.title]));
 
   cv.Font.Size := 9;
   cv.Font.Style := [];
-  cv.TextRect(aRect, 0, aRect.top + 25, List[arow].CurrProgram);
+  cv.TextRect(aRect, h+2, aRect.top + 25, Element.CurrProgram);
 end;
 
 procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
