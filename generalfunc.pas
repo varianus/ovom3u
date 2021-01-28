@@ -129,6 +129,9 @@ begin
       on E: Exception do
       begin
         Result := false;
+        ds.FStream.Free;
+        ds.FStream := nil;
+        DeleteFile(Ato);
       end;
     end;
   finally
