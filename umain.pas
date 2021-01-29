@@ -908,6 +908,7 @@ begin
       isRenderActive := False;
       Application.ProcessMessages;
       pnlChannel.Visible := False;
+      Splitter1.Visible:= False;
       RestoredBorderStyle := BorderStyle;
       RestoredWindowState := WindowState;
         {$IFDEF WINDOWS}
@@ -924,6 +925,7 @@ begin
     isRenderActive := False;
     Application.ProcessMessages;
     pnlChannel.Visible := True;
+    Splitter1.Visible:= True;
     WindowState := wsNormal;
     WindowState := RestoredWindowState;
     BorderStyle := RestoredBorderStyle;
