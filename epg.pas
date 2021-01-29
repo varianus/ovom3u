@@ -365,6 +365,7 @@ begin
       Result.Plot := qSearch.FieldByName('sPlot').AsString;
       Result.StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result.EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
+      Result.HaveData := true;
     end;
   finally
     qSearch.Free;
@@ -396,6 +397,7 @@ begin
       Result[i].Plot := qSearch.FieldByName('sPlot').AsString;
       Result[i].StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result[i].EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
+      Result[i].HaveData := true;
       Inc(i);
       qsearch.Next;
     end;
@@ -433,6 +435,7 @@ begin
       Result[i].Plot := qSearch.FieldByName('sPlot').AsString;
       Result[i].StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result[i].EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
+      Result[i].HaveData := true;
       Inc(i);
       qsearch.Next;
     end;
@@ -511,16 +514,16 @@ begin
       fOwner.fScanning := True;
       fOwner.fDB.ExecuteDirect('delete from programme');
       OvoLogger.Log(INFO, 'EPG update thread started');
-      if ConfigObj.M3UProperties.EpgKind = Url then
+      if ConfigObj.ListProperties.EpgKind = Url then
       begin
-        OvoLogger.Log(INFO, 'Downloading EPG from %s', [ConfigObj.M3UProperties.EPGUrl]);
+        OvoLogger.Log(INFO, 'Downloading EPG from %s', [ConfigObj.ListProperties.EPGUrl]);
         SourceEpg := CacheDir + TempEPGFile;
-        DownloadFromUrl(ConfigObj.M3UProperties.EPGUrl, SourceEpg, StoppedCheck);
+        DownloadFromUrl(ConfigObj.ListProperties.EPGUrl, SourceEpg, StoppedCheck);
       end
       else
         begin
-          SourceEpg := ConfigObj.M3UProperties.EpgFileName;
-          OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.M3UProperties.EpgFileName]);
+          SourceEpg := ConfigObj.ListProperties.EpgFileName;
+          OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.ListProperties.EpgFileName]);
         end;
       if StoppedCheck then
         Continue;

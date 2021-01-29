@@ -213,4 +213,18 @@ object fConfig: TfConfig
     MaxLength = 0
     TabOrder = 7
   end
+  object cbDownloadLogo: TCheckBox
+    AnchorSideLeft.Control = cbUseChno
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = edtChannelsUrl
+    AnchorSideTop.Side = asrBottom
+    Left = 323
+    Height = 19
+    Top = 115
+    Width = 151
+    BorderSpacing.Left = 9
+    BorderSpacing.Top = 9
+    Caption = 'Download channels logo'
+    TabOrder = 8
+  end
 end

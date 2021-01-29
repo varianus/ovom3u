@@ -36,6 +36,7 @@ type
     cbChannelsKind: TComboBox;
     cbEpgKind: TComboBox;
     cbUseChno: TCheckBox;
+    cbDownloadLogo: TCheckBox;
     edtChannelsFileName: TFileNameEdit;
     edtEpgFileName: TFileNameEdit;
     edtChannelsUrl: TEdit;
@@ -85,46 +86,47 @@ var
 begin
   ConfigObj.ReadConfig;
 
-  Kind := ConfigObj.M3UProperties.ChannelsKind;
+  Kind := ConfigObj.ListProperties.ChannelsKind;
   cbChannelsKind.ItemIndex := Ord(kind);
   cbChannelsKind.OnChange(cbChannelsKind);
-  edtChannelsFileName.Text := ConfigObj.M3UProperties.ChannelsFileName;
-  edtChannelsUrl.Text := ConfigObj.M3UProperties.ChannelsUrl;
+  edtChannelsFileName.Text := ConfigObj.ListProperties.ChannelsFileName;
+  edtChannelsUrl.Text := ConfigObj.ListProperties.ChannelsUrl;
 
-  Kind := ConfigObj.M3UProperties.EpgKind;
+  Kind := ConfigObj.ListProperties.EpgKind;
   cbEpgKind.ItemIndex := Ord(kind);
   cbEpgKind.OnChange(cbChannelsKind);
-  edtEpgFileName.Text := ConfigObj.M3UProperties.EpgFileName;
-  edtEpgUrl.Text := ConfigObj.M3UProperties.EpgUrl;
+  edtEpgFileName.Text := ConfigObj.ListProperties.EpgFileName;
+  edtEpgUrl.Text := ConfigObj.ListProperties.EpgUrl;
 
 
-  cbUseChno.Checked := ConfigObj.M3UProperties.UseChno;
+  cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
 
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
-  M3UProperties: TListsProperties;
+  ListProperties: TListsProperties;
 begin
 
-  M3UProperties.ListChanged := (TProviderKind(cbChannelsKind.ItemIndex) <> ConfigObj.M3UProperties.ChannelsKind) or
-     (ConfigObj.M3UProperties.ChannelsFileName <> edtChannelsFileName.Text) or
-     (ConfigObj.M3UProperties.ChannelsUrl <> edtChannelsUrl.Text) or
-     (ConfigObj.M3UProperties.UseChno <> cbUseChno.Checked);
-  M3UProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
-  M3UProperties.ChannelsFileName := edtChannelsFileName.Text;
-  M3UProperties.ChannelsUrl := edtChannelsUrl.Text;
+  ListProperties.ListChanged := (TProviderKind(cbChannelsKind.ItemIndex) <> ConfigObj.ListProperties.ChannelsKind) or
+     (ConfigObj.ListProperties.ChannelsFileName <> edtChannelsFileName.Text) or
+     (ConfigObj.ListProperties.ChannelsUrl <> edtChannelsUrl.Text) or
+     (ConfigObj.ListProperties.UseChno <> cbUseChno.Checked) or
+     (ConfigObj.ListProperties.ChannelsDownloadLogo <> cbDownloadLogo.Checked);
+  ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
+  ListProperties.ChannelsFileName := edtChannelsFileName.Text;
+  ListProperties.ChannelsUrl := edtChannelsUrl.Text;
 
-  M3UProperties.EPGChanged := (TProviderKind(cbEpgKind.ItemIndex) <> ConfigObj.M3UProperties.EpgKind) or
-     (ConfigObj.M3UProperties.EpgFileName <> edtEpgFileName.Text) or
-     (ConfigObj.M3UProperties.EpgUrl <> edtEpgUrl.Text) or
-     (ConfigObj.M3UProperties.UseChno <> cbUseChno.Checked);
-  M3UProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
-  M3UProperties.EpgFileName := edtEpgFileName.Text;
-  M3UProperties.EpgUrl := edtEpgUrl.Text;
+  ListProperties.EPGChanged := (TProviderKind(cbEpgKind.ItemIndex) <> ConfigObj.ListProperties.EpgKind) or
+     (ConfigObj.ListProperties.EpgFileName <> edtEpgFileName.Text) or
+     (ConfigObj.ListProperties.EpgUrl <> edtEpgUrl.Text) or
+     (ConfigObj.ListProperties.UseChno <> cbUseChno.Checked);
+  ListProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
+  ListProperties.EpgFileName := edtEpgFileName.Text;
+  ListProperties.EpgUrl := edtEpgUrl.Text;
 
-  M3UProperties.UseChno := cbUseChno.Checked;
-  ConfigObj.M3UProperties := M3UProperties;
+  ListProperties.UseChno := cbUseChno.Checked;
+  ConfigObj.ListProperties := ListProperties;
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
 end;

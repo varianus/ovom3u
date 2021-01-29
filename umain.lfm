@@ -1,7 +1,7 @@
 object fPlayer: TfPlayer
-  Left = 867
+  Left = 755
   Height = 436
-  Top = 252
+  Top = 306
   Width = 618
   Caption = 'OvoM3U'
   ClientHeight = 436
@@ -13,14 +13,14 @@ object fPlayer: TfPlayer
   OnKeyDown = FormKeyDown
   LCLVersion = '2.1.0.0'
   object pnlContainer: TPanel
-    Left = 186
+    Left = 191
     Height = 436
     Top = 0
-    Width = 432
+    Width = 427
     Align = alClient
     BevelOuter = bvNone
     ClientHeight = 436
-    ClientWidth = 432
+    ClientWidth = 427
     Color = clBlack
     ParentColor = False
     ParentFont = False
@@ -31,7 +31,7 @@ object fPlayer: TfPlayer
       Left = 0
       Height = 436
       Top = 0
-      Width = 432
+      Width = 427
       Align = alClient
       AutoResizeViewport = True
       OpenGLMajorVersion = 2
@@ -62,7 +62,7 @@ object fPlayer: TfPlayer
       Align = alClient
       AutoFillColumns = True
       ColCount = 1
-      DefaultRowHeight = 64
+      DefaultRowHeight = 32
       ExtendedSelect = False
       FixedCols = 0
       FixedRows = 0
@@ -113,18 +113,25 @@ object fPlayer: TfPlayer
         ParentFont = False
       end
       object ToolButton5: TSpeedButton
-        Left = 138
+        Left = 122
         Height = 29
         Top = 1
-        Width = 45
+        Width = 61
         Align = alRight
         AutoSize = True
-        Caption = 'View'
+        Caption = 'View▼'
         Font.Height = -19
+        OnMouseDown = ToolButton5MouseDown
         ParentFont = False
-        PopupMenu = PopupMenu1
+        PopupMenu = pmuView
       end
     end
+  end
+  object Splitter1: TSplitter
+    Left = 186
+    Height = 436
+    Top = 0
+    Width = 5
   end
   object HideMouse: TTimer
     Enabled = False
@@ -173,8 +180,9 @@ object fPlayer: TfPlayer
     Top = 344
   end
   object actList: TActionList
-    Left = 243
-    Top = 62
+    OnUpdate = actListUpdate
+    Left = 200
+    Top = 80
     object actShowConfig: TAction
       Caption = '⚙'
       OnExecute = actShowConfigExecute
@@ -183,33 +191,27 @@ object fPlayer: TfPlayer
       Caption = 'Epg'
       OnExecute = actShowEpgExecute
     end
-    object Action3: TAction
-      Caption = 'Action3'
+    object actViewLogo: TAction
+      Caption = 'Logo'
+      OnExecute = actViewLogoExecute
     end
-    object Action4: TAction
-      Caption = 'Action4'
-    end
-    object Action5: TAction
-      Caption = 'Action5'
+    object actViewCurrentProgram: TAction
+      Caption = 'actViewCurrentProgram'
+      OnExecute = actViewCurrentProgramExecute
     end
   end
-  object PopupMenu1: TPopupMenu
-    Left = 215
-    Top = 58
+  object pmuView: TPopupMenu
+    Left = 200
+    Top = 8
     object MenuItem1: TMenuItem
-      Caption = 'MenuItem1'
+      Action = actViewLogo
     end
     object MenuItem2: TMenuItem
-      Caption = 'MenuItem2'
+      Action = actViewCurrentProgram
+      Caption = 'Current Program'
     end
-    object MenuItem3: TMenuItem
-      Caption = 'MenuItem3'
-    end
-    object MenuItem4: TMenuItem
-      Caption = 'MenuItem4'
-    end
-    object MenuItem5: TMenuItem
-      Caption = 'MenuItem5'
+    object N1: TMenuItem
+      Caption = '-'
     end
   end
 end

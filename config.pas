@@ -39,6 +39,7 @@ type
     ChannelsKind: TProviderKind;
     ChannelsFileName: string;
     ChannelsUrl: string;
+    ChannelsDownloadLogo: boolean;
     UseChno: boolean;
     EpgKind: TProviderKind;
     EpgFileName: string;
@@ -48,11 +49,20 @@ type
     EPGChanged: boolean;
   end;
 
+  TGuiProperties = record
+    fViewLogo:boolean;
+    fViewCurrentProgram: boolean;
+  public
+    property ViewLogo:boolean read fViewLogo write fViewLogo;
+    property ViewCurrentProgram: boolean read fViewCurrentProgram write fViewCurrentProgram;
+  end;
+
   TConfig = class
   private
     fCacheDir: string;
     FConfigFile: string;
     fConfigDir: string;
+    FGuiProperties: TGuiProperties;
     fListsProperties: TListsProperties;
     FPortableMode: boolean;
     ResourcesPath: string;
@@ -60,9 +70,11 @@ type
     fExecutableDir: string;
     function GetCacheDir: string;
     function GetConfigDir: string;
-    procedure SetM3UProperties(AValue: TListsProperties);
+    procedure SetGuiProperties(AValue: TGuiProperties);
+    procedure SetListProperties(AValue: TListsProperties);
   public
-    property M3UProperties: TListsProperties read fListsProperties write SetM3UProperties;
+    property ListProperties: TListsProperties read fListsProperties write SetListProperties;
+    property GuiProperties: TGuiProperties read FGuiProperties write SetGuiProperties;
     property PortableMode: boolean read FPortableMode;
     constructor Create;
     procedure ReadConfig;
@@ -240,7 +252,7 @@ begin
   Config.WriteStrings(APath, IntList);
 end;
 
-procedure TConfig.SetM3UProperties(AValue: TListsProperties);
+procedure TConfig.SetListProperties(AValue: TListsProperties);
 begin
   fListsProperties:=AValue;
 end;
@@ -298,6 +310,12 @@ begin
 
 end;
 
+procedure TConfig.SetGuiProperties(AValue: TGuiProperties);
+begin
+
+  FGuiProperties := AValue;
+end;
+
 function TConfig.GetCacheDir: string;
 begin
   if FPortableMode then
@@ -342,6 +360,11 @@ begin
   WriteString('EPG/Url',fListsProperties.EPGUrl);
 
   WriteBoolean('m3u/UseChno', fListsProperties.UseChno);
+  WriteBoolean('m3u/DownloadLogo', fListsProperties.ChannelsDownloadLogo);
+
+  WriteBoolean('gui/ViewLogo', FGuiProperties.ViewLogo);
+  WriteBoolean('gui/ViewCurrentProgram', FGuiProperties.ViewCurrentProgram);
+
   fConfigHolder.SaveToFile(FConfigFile, true);
 end;
 
@@ -366,7 +389,13 @@ begin
   fListsProperties.EpgFileName:= ReadString('EPG/FileName','');
   fListsProperties.EpgUrl:= ReadString('EPG/Url','');
 
-  fListsProperties.UseChno :=ReadBoolean('m3u/UseChno', false);
+
+  fListsProperties.UseChno := ReadBoolean('m3u/UseChno', false);
+  fListsProperties.ChannelsDownloadLogo := ReadBoolean('m3u/DownloadLogo', false);
+
+  FGuiProperties.ViewLogo := ReadBoolean('gui/ViewLogo', false);
+  FGuiProperties.ViewCurrentProgram := ReadBoolean('gui/ViewCurrentProgram', false);
+
 
 end;
 

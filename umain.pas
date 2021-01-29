@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, EditBtn, StdCtrls, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -34,18 +34,15 @@ type
   TfPlayer = class(TForm)
     actShowConfig: TAction;
     actShowEpg: TAction;
-    Action3: TAction;
-    Action4: TAction;
-    Action5: TAction;
+    actViewLogo: TAction;
+    actViewCurrentProgram: TAction;
     actList: TActionList;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
-    MenuItem4: TMenuItem;
-    MenuItem5: TMenuItem;
     OSDTimer: TTimer;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
-    MenuItem3: TMenuItem;
+    N1: TMenuItem;
     mnuSub: TMenuItem;
     mnuAudio: TMenuItem;
     mnuVideo: TMenuItem;
@@ -57,12 +54,16 @@ type
     pmPlayer: TPopupMenu;
     HideMouse: TTimer;
     LoadingTimer: TTimer;
-    PopupMenu1: TPopupMenu;
+    pmuView: TPopupMenu;
+    Splitter1: TSplitter;
     ToolButton1: TSpeedButton;
     ToolButton2: TSpeedButton;
     ToolButton5: TSpeedButton;
+    procedure actListUpdate(AAction: TBasicAction; var Handled: Boolean);
     procedure actShowEpgExecute(Sender: TObject);
     procedure actShowConfigExecute(Sender: TObject);
+    procedure actViewCurrentProgramExecute(Sender: TObject);
+    procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
@@ -82,6 +83,7 @@ type
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure pnlContainerPaint(Sender: TObject);
+    procedure ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     FLoading: boolean;
     ChannelSelecting: boolean;
@@ -163,10 +165,10 @@ begin
 
 
   Result := True;
-  Kind := ConfigObj.M3UProperties.ChannelsKind;
+  Kind := ConfigObj.ListProperties.ChannelsKind;
   case Kind of
-    Local: IPTVList := ConfigObj.M3UProperties.ChannelsFileName;
-    URL: IPTVList := ConfigObj.M3UProperties.ChannelsUrl;
+    Local: IPTVList := ConfigObj.ListProperties.ChannelsFileName;
+    URL: IPTVList := ConfigObj.ListProperties.ChannelsUrl;
   end;
 
   if IPTVList.IsEmpty then
@@ -193,12 +195,12 @@ begin
 
   ConfigObj.ReadConfig;
 
-  Kind := ConfigObj.M3UProperties.ChannelsKind;
+  Kind := ConfigObj.ListProperties.ChannelsKind;
 
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
-    IPTVList:=ConfigObj.M3UProperties.ChannelsUrl;
+    IPTVList:=ConfigObj.ListProperties.ChannelsUrl;
     try
       if epgData.LastScan('channels') + 12/24 < now then
         begin
@@ -221,12 +223,14 @@ begin
     end;
   end
   else
-    IPTVList:=ConfigObj.M3UProperties.ChannelsFileName;
+    IPTVList:=ConfigObj.ListProperties.ChannelsFileName;
 
-  list.Load(IPTVList);
+  if FileExists(IPTVList) then
+     list.Load(IPTVList);
+
   OvoLogger.Log(INFO, 'Found %d channels',[List.Count]);
 
-  if ConfigObj.M3UProperties.UseChno then
+  if ConfigObj.ListProperties.UseChno then
     begin
       List.FixChannelNumbering;
       OvoLogger.Log(INFO, 'Renumber channels using tvg-chno')
@@ -240,9 +244,11 @@ begin
       epgData.SetLastScan('epg',0);
     end;
 
-  List.UpdateLogo;
+  if ConfigObj.ListProperties.ChannelsDownloadLogo then
+     List.UpdateLogo;
 
-  if not Configobj.M3UProperties.EPGUrl.IsEmpty then
+  if not Configobj.ListProperties.EPGUrl.IsEmpty or
+     not Configobj.ListProperties.EpgFileName.IsEmpty then
     epgData.Scan
   else
     OvoLogger.Log(INFO, 'No EPG configuration, skipping');
@@ -336,7 +342,7 @@ begin
       end;
       VK_RETURN: if ChannelSelecting then
         begin
-          if ConfigObj.M3UProperties.UseChno then
+          if ConfigObj.ListProperties.UseChno then
             ChannelSelected := List.ItemByChno(ChannelSelected);
           play(ChannelSelected);
           ChannelSelecting := False;
@@ -458,35 +464,40 @@ var
   r: Trect;
   Scale:double;
   H:integer;
+  epgInfo: REpgInfo;
 begin
   Element := List[arow];
-  h:= ChannelList.RowHeights[aRow];
+  h:= 0;
   cv := ChannelList.Canvas;
-
-  if Element.IconAvailable then
-    begin
-      bmp:= TPicture.Create;
-      bmp.LoadFromFile(element.IconLocal);
-      if bmp.Height > bmp.Width then
-        begin
-          scale := bmp.Width / bmp.Height ;
-          r:= rect(arect.left,arect.Top, arect.Left+round(h*scale), aRect.Top+round(h)) ;
-       end
-      else
-      BEGIN
-        scale :=  bmp.Height / bmp.Width;
-        r:= rect(arect.left,arect.Top, arect.Left+round(h), aRect.Top+round(h*scale)) ;
+  if ConfigObj.GuiProperties.ViewLogo then
+  begin
+    h:= ChannelList.RowHeights[aRow];
+    if Element.IconAvailable then
+      begin
+        bmp:= TPicture.Create;
+        bmp.LoadFromFile(element.IconLocal);
+        if bmp.Height > bmp.Width then
+          begin
+            scale := bmp.Width / bmp.Height ;
+            r:= rect(arect.left,arect.Top, arect.Left+round(h*scale), aRect.Top+round(h)) ;
+         end
+        else
+        BEGIN
+          scale :=  bmp.Height / bmp.Width;
+          r:= rect(arect.left,arect.Top, arect.Left+round(h), aRect.Top+round(h*scale)) ;
+        end;
+        cv.StretchDraw(r, bmp.Graphic);
+        bmp.free
+      end
+    else
+      begin
+        bmp:= TPicture.Create;
+        bmp.LoadFromFile('PROVA.png');
+        cv.StretchDraw(rect(arect.left,arect.Top, arect.Left+h, aRect.Top+h), bmp.Graphic);
+        bmp.free;
       end;
-      cv.StretchDraw(r, bmp.Graphic);
-      bmp.free
-    end
-  else
-    begin
-      bmp:= TPicture.Create;
-      bmp.LoadFromFile('PROVA.png');
-      cv.StretchDraw(rect(arect.left,arect.Top, arect.Left+h, aRect.Top+h), bmp.Graphic);
-      bmp.free;
-    end;
+
+  end;
 
   cv.Font.Size := 9;
   if CurrentChannel = aRow then
@@ -500,10 +511,19 @@ begin
     cv.Font.Style := [fsBold];
 
   cv.TextRect(aRect, h+2, aRect.top + 5, Format('%3.3d: %s', [Element.Number, Element.title]));
+  if ConfigObj.GuiProperties.ViewCurrentProgram then
+    begin
+      epgInfo := epgdata.GetEpgInfo(aRow, now);
+      if epgInfo.HaveData then
+        begin
+          cv.Font.Size := 9;
+          cv.Font.Style := [];
+          Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime,EpgInfo.EndTime, True);
+          cv.TextRect(aRect, h+2, aRect.top + 25, Element.CurrProgram);
+          cv.TextRect(aRect, h+2, aRect.top + 37, EpgInfo.Title);
 
-  cv.Font.Size := 9;
-  cv.Font.Style := [];
-  cv.TextRect(aRect, h+2, aRect.top + 25, Element.CurrProgram);
+        end;
+    end;
 end;
 
 procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -516,7 +536,7 @@ procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
   begin
-    if ConfigObj.M3UProperties.UseChno then
+    if ConfigObj.ListProperties.UseChno then
       ChannelSelected := List.ItemByChno(ChannelSelected)
     else
       ChannelSelected := ChannelSelected - 1;
@@ -531,7 +551,8 @@ end;
 
 procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
-  MpvEngine.isRenderActive := False;
+  if Assigned(MpvEngine) then
+     MpvEngine.isRenderActive := False;
   CloseAction := caFree;
 end;
 
@@ -555,17 +576,23 @@ begin
   EPGForm.Show;
 end;
 
+procedure TfPlayer.actListUpdate(AAction: TBasicAction; var Handled: Boolean);
+begin
+ actViewLogo.Checked := ConfigObj.GuiProperties.ViewLogo;
+ actViewCurrentProgram.Checked := ConfigObj.GuiProperties.ViewCurrentProgram;
+end;
+
 procedure TfPlayer.actShowConfigExecute(Sender: TObject);
 begin
   if ShowConfig = mrOK then
     begin
-      if ConfigObj.M3UProperties.ListChanged then
+      if ConfigObj.ListProperties.ListChanged then
         begin
           OvoLogger.Log(INFO, 'List configuration changed, reloading');
           EpgData.SetLastScan('Channels', 0);
           LoadList;
         end;
-      if ConfigObj.M3UProperties.EPGChanged then
+      if ConfigObj.ListProperties.EPGChanged then
         begin
           OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
           EpgData.SetLastScan('epg', 0);
@@ -573,6 +600,38 @@ begin
         end;
 
     end;
+end;
+
+procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
+begin
+  actViewCurrentProgram.Checked :=  not actViewCurrentProgram.Checked;
+  ConfigObj.GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
+  if actViewLogo.Checked then
+    begin
+      ChannelList.DefaultRowHeight := 64;
+      list.UpdateLogo;
+    end
+  else
+    begin
+      ChannelList.DefaultRowHeight := 32;
+    end;
+  ChannelList.Invalidate;
+end;
+
+procedure TfPlayer.actViewLogoExecute(Sender: TObject);
+begin
+  actViewLogo.Checked :=  not actViewLogo.Checked;
+  ConfigObj.GuiProperties.ViewLogo := actViewLogo.Checked;
+  if actViewLogo.Checked then
+    begin
+      ChannelList.DefaultRowHeight := 64;
+      list.UpdateLogo;
+    end
+  else
+    begin
+      ChannelList.DefaultRowHeight := 32;
+    end;
+  ChannelList.Invalidate;
 end;
 
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
@@ -706,6 +765,14 @@ begin
   cv.font.Height := trunc(55 * scaling);
   cv.TextOut(trunc(scaling * 25), trunc(scaling * 22), fLastMessage);
 
+end;
+
+procedure TfPlayer.ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  p:Tpoint;
+begin
+  p:= ToolButton5.ClientToScreen(Point(x,y));
+  pmuView.PopUp(p.x,p.y);
 end;
 
 procedure TfPlayer.SetLoading(AValue: boolean);
