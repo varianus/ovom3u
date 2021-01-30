@@ -37,20 +37,22 @@ type
     Root: tdomNode;
     fOwner: TEpg;
     Success: boolean;
-    FStopped : boolean;
+    FStopped: boolean;
     function FindChannelId(Channel: string): integer;
     procedure SetOnEndWork(AValue: TNotifyEvent);
 
   protected
     procedure Execute; override;
     function Load(EPGFile: string): integer;
-    Procedure DoEndWork;
-    Function StoppedCheck: boolean;
+    procedure DoEndWork;
+    procedure TerminatedSet; override;
+    function StoppedCheck: boolean;
   public
-    Procedure Stop;
-    Property OnEndWork: TNotifyEvent read FOnEndWork write SetOnEndWork;
-    Property ScanEvent: PRTLEvent read FScanEvent;
+    procedure Stop;
+    property OnEndWork: TNotifyEvent read FOnEndWork write SetOnEndWork;
+    property ScanEvent: PRTLEvent read FScanEvent;
     constructor Create(Owner: TEpg); reintroduce;
+    destructor Destroy; override;
   end;
 
   TEpg = class
@@ -66,7 +68,7 @@ type
     procedure CheckDBStructure;
     procedure EndScan(AObject: TObject);
     function GetDbVersion: integer;
-     procedure SetupDBConnection;
+    procedure SetupDBConnection;
     procedure UpgradeDBStructure(LoadedDBVersion: integer);
   public
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
@@ -79,8 +81,8 @@ type
     function LastChannelMd5: string;
     procedure LoadChannelList(List: TM3ULoader);
     procedure Scan;
-    procedure SetLastScan(ScanType: string; Date:TdateTime);
-    Procedure SetLastChannelMd5(const ComputedMD5: string);
+    procedure SetLastScan(ScanType: string; Date: TdateTime);
+    procedure SetLastChannelMd5(const ComputedMD5: string);
 
     function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
@@ -109,7 +111,7 @@ const
   CREATECONFIGTABLE2 = ' INSERT INTO config (Version) VALUES(1);';
   UPDATECONFIG = 'UPDATE config SET Version = %d;';
 
-  CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' +',ChannelsMd5 VARCHAR );';
+  CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' + ',ChannelsMd5 VARCHAR );';
   CREATESCANTABLE2 = 'insert into  scans select 0,0,null where not EXISTS (select * from scans);';
 
   CREATECHANNELTABLE = 'CREATE TABLE channels (' + ' "ID" INTEGER primary key' + ',"Name" VARCHAR COLLATE NOCASE' + ',"ChannelNo" VARCHAR COLLATE NOCASE' + ')';
@@ -127,7 +129,7 @@ var
 begin
   OvoLogger.Log(INFO, 'Setup EPG database');
   fDB := TSQLite3Connection.Create(nil);
-  fDB.OpenFlags :=  [sofReadWrite, sofCreate, sofFullMutex, sofSharedCache];
+  fDB.OpenFlags := [sofReadWrite, sofCreate, sofFullMutex, sofSharedCache];
   fDB.DatabaseName := ConfigObj.ConfigDir + EPGLibraryName;
 
   ftr := TSQLTransaction.Create(nil);
@@ -174,7 +176,7 @@ begin
 
 end;
 
-function TEpg.LastChannelMd5:string;
+function TEpg.LastChannelMd5: string;
 var
   tmpQuery: TSQLQuery;
 begin
@@ -196,7 +198,7 @@ end;
 
 procedure TEpg.SetLastChannelMd5(const ComputedMD5: string);
 begin
-  fDB.ExecuteDirect('update scans set ChannelsMd5 = ' +QuotedStr(ComputedMD5));
+  fDB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5));
 end;
 
 function TEpg.LastScan(const ScanType: string): TDateTime;
@@ -251,7 +253,7 @@ begin
       fDB.GetTableNames(TableList, False);
       if TableList.IndexOf('config') < 0 then
       begin
-        OvoLogger.Log(DEBUG,'Creating config table');
+        OvoLogger.Log(DEBUG, 'Creating config table');
         fDB.ExecuteDirect(CREATECONFIGTABLE1);
         fDB.ExecuteDirect(CREATECONFIGTABLE2);
         fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
@@ -259,7 +261,7 @@ begin
       end;
       if TableList.IndexOf('scans') < 0 then
       begin
-        OvoLogger.Log(DEBUG,'Creating scans table');
+        OvoLogger.Log(DEBUG, 'Creating scans table');
         fDB.ExecuteDirect(CREATESCANTABLE1);
         ftr.CommitRetaining;
       end;
@@ -268,14 +270,14 @@ begin
       ftr.CommitRetaining;
       if TableList.IndexOf('channels') < 0 then
       begin
-        OvoLogger.Log(DEBUG,'Creating channel table');
+        OvoLogger.Log(DEBUG, 'Creating channel table');
         fDB.ExecuteDirect(CREATECHANNELTABLE);
         fDB.ExecuteDirect(CREATECHANNELINDEX1);
         ftr.CommitRetaining;
       end;
       if TableList.IndexOf('programme') < 0 then
       begin
-        OvoLogger.Log(DEBUG,'Creating programme table');
+        OvoLogger.Log(DEBUG, 'Creating programme table');
         fDB.ExecuteDirect(CREATEPROGRAMMETABLE);
         fDB.ExecuteDirect(CREATEPROGRAMMEINDEX1);
         fDB.ExecuteDirect(CREATEPROGRAMMEINDEX2);
@@ -288,7 +290,7 @@ begin
 
   except
     on e: Exception do
-      OvoLogger.Log(ERROR, 'Error initializing EPG Database : %s',[e.Message]);
+      OvoLogger.Log(ERROR, 'Error initializing EPG Database : %s', [e.Message]);
   end;
 
   LoadedDBVersion := GetDbVersion;
@@ -299,13 +301,13 @@ end;
 
 procedure TEpg.UpgradeDBStructure(LoadedDBVersion: integer);
 begin
-//  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, NewVersion));
+  //  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, NewVersion));
 end;
 
 procedure TEpg.EndScan(AObject: TObject);
 begin
   if not TEpgScanner(AObject).Success then
-     OvoLogger.Log(INFO, 'EPG update Not completed');
+    OvoLogger.Log(INFO, 'EPG update Not completed');
   OvoLogger.Log(INFO, 'EPG update thread stopped');
   AfterScan;
 
@@ -328,11 +330,11 @@ end;
 procedure TEpg.Scan;
 begin
   if Assigned(Scanner) then
-    begin
-      Scanner.Stop;
-    end;
+  begin
+    Scanner.Stop;
+  end;
 
-  if LastScan('epg') + 12/24 > now then
+  if LastScan('epg') + 12 / 24 > now then
   begin
     OvoLogger.Log(INFO, 'Skipping EPG update, used cache');
     AfterScan;
@@ -340,7 +342,7 @@ begin
   end;
   RTLEventSetEvent(Scanner.FScanEvent);
 
-  fEpgAvailable := true;
+  fEpgAvailable := True;
   if Assigned(FOnScanStart) then
     FOnScanStart(self);
 
@@ -365,26 +367,24 @@ begin
       Result.Plot := qSearch.FieldByName('sPlot').AsString;
       Result.StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result.EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
-      Result.HaveData := true;
+      Result.HaveData := True;
     end;
   finally
     qSearch.Free;
   end;
 
 end;
+
 function TEpg.GetEpgInfo(const SearchTerm: string): AREpgInfo;
 var
   qSearch: TSQLQuery;
-  i: LongInt;
+  i: longint;
 begin
   qSearch := TSQLQuery.Create(fDB);
   try
     qSearch.Transaction := fTR;
-    qSearch.SQL.Text := 'select c.name as sChannelName, p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p'
-                       +' JOIN channels c on c.ID = p.idChannel'
-                       +' where stitle like :search or sPlot like :search'
-                       +' order by p.dStartTime';
-    qSearch.ParamByName('search').AsString := '%'+SearchTerm+'%';
+    qSearch.SQL.Text := 'select c.name as sChannelName, p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p' + ' JOIN channels c on c.ID = p.idChannel' + ' where stitle like :search or sPlot like :search' + ' order by p.dStartTime';
+    qSearch.ParamByName('search').AsString := '%' + SearchTerm + '%';
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -397,7 +397,7 @@ begin
       Result[i].Plot := qSearch.FieldByName('sPlot').AsString;
       Result[i].StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result[i].EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
-      Result[i].HaveData := true;
+      Result[i].HaveData := True;
       Inc(i);
       qsearch.Next;
     end;
@@ -435,7 +435,7 @@ begin
       Result[i].Plot := qSearch.FieldByName('sPlot').AsString;
       Result[i].StartTime := qSearch.FieldByName('dStartTime').AsDateTime;
       Result[i].EndTime := qSearch.FieldByName('dEndTime').AsDateTime;
-      Result[i].HaveData := true;
+      Result[i].HaveData := True;
       Inc(i);
       qsearch.Next;
     end;
@@ -482,6 +482,12 @@ end;
 
 destructor TEpg.Destroy;
 begin
+  if Assigned(Scanner) then
+  begin
+    Scanner.OnTerminate := nil;
+    Scanner.Terminate;
+    Scanner.Free;
+  end;
   ftr.Commit;
   fDB.Transaction := nil;
   fDB.Connected := False;
@@ -498,9 +504,9 @@ var
   SourceEpg, EpgFile: string;
   Decompress: TGZFileStream;
   FcacheFile: TFileStream;
-  GzHeader: Word;
+  GzHeader: word;
 begin
-  While not Terminated do
+  while not Terminated do
   begin
     RTLEventWaitFor(FScanEvent);
     if StoppedCheck then
@@ -510,7 +516,7 @@ begin
     if StoppedCheck then
       Continue;
     try
-      Success := false;
+      Success := False;
       fOwner.fScanning := True;
       fOwner.fDB.ExecuteDirect('delete from programme');
       OvoLogger.Log(INFO, 'EPG update thread started');
@@ -521,19 +527,19 @@ begin
         DownloadFromUrl(ConfigObj.ListProperties.EPGUrl, SourceEpg, StoppedCheck);
       end
       else
-        begin
-          SourceEpg := ConfigObj.ListProperties.EpgFileName;
-          OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.ListProperties.EpgFileName]);
-        end;
+      begin
+        SourceEpg := ConfigObj.ListProperties.EpgFileName;
+        OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.ListProperties.EpgFileName]);
+      end;
       if StoppedCheck then
         Continue;
       FcacheFile := TFileStream.Create(SourceEpg, fmOpenRead);
-      GzHeader :=FcacheFile.ReadWord;
+      GzHeader := FcacheFile.ReadWord;
       FcacheFile.Free;
       if NtoBe(GzHeader) = $1f8b then
       begin
         EpgFile := CacheDir + TempEPGFileDecompressed;
-        OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s',[EpgFile]);
+        OvoLogger.Log(INFO, 'EPG is GZipped, inflating to %s', [EpgFile]);
         try
           Decompress := TGZFileStream.Create(SourceEpg, gzopenread);
           FcacheFile := TFileStream.Create(EpgFile, fmOpenWrite or fmcreate);
@@ -548,17 +554,17 @@ begin
       end
       else
         EpgFile := SourceEpg;
-      OvoLogger.Log(INFO, 'Scanning EPG XML file %s',[EpgFile]);
+      OvoLogger.Log(INFO, 'Scanning EPG XML file %s', [EpgFile]);
       if StoppedCheck then
         Continue;
       if Load(EpgFile) > 0 then
-        begin
-          fOwner.setlastscan('epg', now);
-          Success := true;
-        end;
+      begin
+        fOwner.setlastscan('epg', now);
+        Success := True;
+      end;
     except
       on e: Exception do
-        OvoLogger.Log(ERROR, 'Error scanning EPG Data : %s',[e.Message]);
+        OvoLogger.Log(ERROR, 'Error scanning EPG Data : %s', [e.Message]);
     end;
     Synchronize(DoEndWork);
   end;
@@ -612,80 +618,97 @@ var
   end;
 
 begin
-  result := 0;
-  if  StoppedCheck then exit;
+  Result := 0;
+  if StoppedCheck then exit;
   ReadXMLFile(XMLDoc, EPGFile);
-
-  if  StoppedCheck then exit;
-  Root := XMLDoc.FindNode('tv');
-  //  writeln(Root.NodeName, '  ', Root.ChildNodes.Count);
-  OldName := '';
-  idChannel := -1;
-  qInsert := TSQLQuery.Create(fOwner.Fdb);
   try
-  qInsert.Transaction := fOwner.fTR;
-  qInsert.SQL.Text := INSERTPROGRAMME;
 
-  for i := 0 to Root.ChildNodes.Count - 1 do
-  begin
-    CurrNode := Root.ChildNodes.Item[i];
-    //      writeln(currnode.NodeName);
-    if CurrNode.NodeName <> 'programme' then
-      Continue;
-    fName := CurrNode.Attributes.GetNamedItem('channel').NodeValue;
-    if fName <> OldName then
+    if StoppedCheck then exit;
+    Root := XMLDoc.FindNode('tv');
+    //  writeln(Root.NodeName, '  ', Root.ChildNodes.Count);
+    OldName := '';
+    idChannel := -1;
+    qInsert := TSQLQuery.Create(fOwner.Fdb);
+    try
+      qInsert.Transaction := fOwner.fTR;
+      qInsert.SQL.Text := INSERTPROGRAMME;
+
+      for i := 0 to Root.ChildNodes.Count - 1 do
       begin
-        idChannel := FindChannelId(fName);
-        OldName := fName;
+        CurrNode := Root.ChildNodes.Item[i];
+        //      writeln(currnode.NodeName);
+        if CurrNode.NodeName <> 'programme' then
+          Continue;
+        fName := CurrNode.Attributes.GetNamedItem('channel').NodeValue;
+        if fName <> OldName then
+        begin
+          idChannel := FindChannelId(fName);
+          OldName := fName;
+        end;
+
+        if idChannel <> -1 then
+        begin
+          if StoppedCheck then
+            exit;
+          qInsert.ParamByName('idchannel').AsInteger := idChannel;
+          qInsert.ParamByName('sTitle').AsString := NodeValue('title');
+          qInsert.ParamByName('sPlot').AsString := NodeValue('desc');
+          s1 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('start').NodeValue);
+          s2 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('stop').NodeValue);
+          qInsert.ParamByName('dStartTime').AsDateTime := s1;
+          qInsert.ParamByName('dEndTime').AsDateTime := s2;
+          qInsert.ExecSQL;
+        end;
       end;
 
-    if idChannel <> -1 then
-    begin
-      if StoppedCheck then
-        exit;
-      qInsert.ParamByName('idchannel').AsInteger := idChannel;
-      qInsert.ParamByName('sTitle').AsString := NodeValue('title');
-      qInsert.ParamByName('sPlot').AsString := NodeValue('desc');
-      s1 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('start').NodeValue);
-      s2 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('stop').NodeValue);
-      qInsert.ParamByName('dStartTime').AsDateTime := s1;
-      qInsert.ParamByName('dEndTime').AsDateTime := s2;
-      qInsert.ExecSQL;
+      Result := 1;
+    finally
+      qInsert.Free;
     end;
-  end;
 
-  Result := 1;
   finally
-     qInsert.free;
+    XMLDoc.Free;
   end;
 
 end;
 
 procedure TEpgScanner.DoEndWork;
 begin
- if Assigned(FOnEndWork) then
-   FOnEndWork(self);
+  if Assigned(FOnEndWork) then
+    FOnEndWork(self);
+end;
+
+procedure TEpgScanner.TerminatedSet;
+begin
+  inherited TerminatedSet;
+  RTLEventSetEvent(FScanEvent);
 end;
 
 function TEpgScanner.StoppedCheck: boolean;
 begin
   Result := Terminated or FStopped;
   if Result then
-    FStopped := false;
+    FStopped := False;
 end;
 
 procedure TEpgScanner.Stop;
 begin
-  FStopped:= true;
+  FStopped := True;
   OvoLogger.Log(INFO, 'Stopping EPG thread');
   RTLEventSetEvent(FScanEvent);
 end;
 
 constructor TEpgScanner.Create(Owner: TEpg);
 begin
-  inherited Create(true);
+  inherited Create(True);
   fOwner := Owner;
   FScanEvent := RTLEventCreate;
+end;
+
+destructor TEpgScanner.Destroy;
+begin
+  RTLEventDestroy(FScanEvent);
+  inherited Destroy;
 end;
 
 

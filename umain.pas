@@ -59,7 +59,7 @@ type
     ToolButton1: TSpeedButton;
     ToolButton2: TSpeedButton;
     ToolButton5: TSpeedButton;
-    procedure actListUpdate(AAction: TBasicAction; var Handled: Boolean);
+    procedure actListUpdate(AAction: TBasicAction; var Handled: boolean);
     procedure actShowEpgExecute(Sender: TObject);
     procedure actShowConfigExecute(Sender: TObject);
     procedure actViewCurrentProgramExecute(Sender: TObject);
@@ -83,7 +83,7 @@ type
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure pnlContainerPaint(Sender: TObject);
-    procedure ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
   private
     FLoading: boolean;
     ChannelSelecting: boolean;
@@ -94,7 +94,7 @@ type
     function CheckConfigAndSystem: boolean;
     procedure ComputeGridCellSize;
     function ComputeTrackTitle(Track: TTrack): string;
-    procedure DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
+    procedure DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
@@ -128,8 +128,9 @@ var
 implementation
 
 uses uconfig, BaseTypes, LoggerUnit, AppConsts, LazUTF8, LazLogger;
+
 var
-  f: text;
+  f: Text;
 
 {$R *.lfm}
 
@@ -142,34 +143,38 @@ begin
   repeat
     Retry := False;
     if not TMPVEngine.CheckMPV then
-      begin
-        OvoLogger.Log(ERROR, 'Cannot initialize libMPV');
-        case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
-            'LibMPV shared library is missing or could not be initialized.' + #10 +
-            'OvoM3U uses this library to decode and play video.' + #10 +
-            'Click the following link to open a wiki page with information on' + #10 +
-            'how to install libMPV on your platform', [mbRetry, mbClose],
-            [WIKI_MPV_LINK]) of
+    begin
+      OvoLogger.Log(ERROR, 'Cannot initialize libMPV');
+      case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
+          'LibMPV shared library is missing or could not be initialized.' + #10 +
+          'OvoM3U uses this library to decode and play video.' + #10 +
+          'Click the following link to open a wiki page with information on' + #10 +
+          'how to install libMPV on your platform', [mbRetry, mbClose],
+          [WIKI_MPV_LINK]) of
 
-          mrClose:
-          begin
-            Result := False;
-            Retry := False;
-            exit;
-          end;
-          mrRetry: Retry := True;
-          100: OpenURL(WIKI_MPV_LINK);
+        mrClose:
+        begin
+          Result := False;
+          Retry := False;
+          exit;
         end;
-
+        mrRetry:
+          Retry := True;
+        100:
+          OpenURL(WIKI_MPV_LINK);
       end;
+
+    end;
   until Retry = False;
 
 
   Result := True;
   Kind := ConfigObj.ListProperties.ChannelsKind;
   case Kind of
-    Local: IPTVList := ConfigObj.ListProperties.ChannelsFileName;
-    URL: IPTVList := ConfigObj.ListProperties.ChannelsUrl;
+    Local:
+      IPTVList := ConfigObj.ListProperties.ChannelsFileName;
+    URL:
+      IPTVList := ConfigObj.ListProperties.ChannelsUrl;
   end;
 
   if IPTVList.IsEmpty then
@@ -182,10 +187,11 @@ begin
         Result := False;
         exit;
       end;
-      100: actShowConfig.Execute;
+      100:
+        actShowConfig.Execute;
     end
   else
-  Loadlist;
+    Loadlist;
 
 end;
 
@@ -201,21 +207,21 @@ begin
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
-    IPTVList:=ConfigObj.ListProperties.ChannelsUrl;
+    IPTVList := ConfigObj.ListProperties.ChannelsUrl;
     try
-      if (epgData.LastScan('channels') + 12/24 < now) or ConfigObj.ListProperties.ListChanged then
-        begin
-          try
-            OvoLogger.Log(INFO, 'Downloding channels list from '+IPTVList);
-            DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
-            epgData.SetLastScan('channels',now);
-          except
-            on e: Exception do
-              OvoLogger.Log(ERROR, 'Can''t download list at: ' +
-                                   IPTVList+ ' error:'+
-                                   E.Message);
-          end;
-        end
+      if (epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListProperties.ListChanged then
+      begin
+        try
+          OvoLogger.Log(INFO, 'Downloding channels list from ' + IPTVList);
+          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
+          epgData.SetLastScan('channels', now);
+        except
+          on e: Exception do
+            OvoLogger.Log(ERROR, 'Can''t download list at: ' +
+              IPTVList + ' error:' +
+              E.Message);
+        end;
+      end
       else
         OvoLogger.Log(INFO, 'Using cached channels list');
 
@@ -224,32 +230,31 @@ begin
     end;
   end
   else
-    IPTVList:=ConfigObj.ListProperties.ChannelsFileName;
+    IPTVList := ConfigObj.ListProperties.ChannelsFileName;
 
   if FileExists(IPTVList) then
-     list.Load(IPTVList);
+    list.Load(IPTVList);
 
-  OvoLogger.Log(INFO, 'Found %d channels',[List.Count]);
+  OvoLogger.Log(INFO, 'Found %d channels', [List.Count]);
 
   if ConfigObj.ListProperties.UseChno then
-    begin
-      List.FixChannelNumbering;
-      OvoLogger.Log(INFO, 'Renumber channels using tvg-chno')
-    end;
+  begin
+    List.FixChannelNumbering;
+    OvoLogger.Log(INFO, 'Renumber channels using tvg-chno');
+  end;
 
   if List.ListMd5 <> epgData.LastChannelMd5 then
-    begin
-      OvoLogger.Log(INFO, 'Channels list changed, reloading EPG');
-      epgData.LoadChannelList(List);
-      epgData.SetLastChannelMd5(List.ListMd5);
-      epgData.SetLastScan('epg',0);
-    end;
+  begin
+    OvoLogger.Log(INFO, 'Channels list changed, reloading EPG');
+    epgData.LoadChannelList(List);
+    epgData.SetLastChannelMd5(List.ListMd5);
+    epgData.SetLastScan('epg', 0);
+  end;
 
   if ConfigObj.ListProperties.ChannelsDownloadLogo then
-     List.UpdateLogo;
+    List.UpdateLogo;
 
-  if not Configobj.ListProperties.EPGUrl.IsEmpty or
-     not Configobj.ListProperties.EpgFileName.IsEmpty then
+  if not Configobj.ListProperties.EPGUrl.IsEmpty or not Configobj.ListProperties.EpgFileName.IsEmpty then
     epgData.Scan
   else
     OvoLogger.Log(INFO, 'No EPG configuration, skipping');
@@ -268,7 +273,7 @@ begin
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
-  ShowingInfo := false;
+  ShowingInfo := False;
   OvoLogger.Log(INFO, 'Create main GUI');
   ComputeGridCellSize;
 
@@ -306,22 +311,22 @@ begin
   if Loading then
     Loading := MpvEngine.IsIdle;
   if not Loading then
-    OsdMessage('',false);
+    OsdMessage('', False);
 end;
 
 procedure TfPlayer.OsdMessage(Message: string; TimeOut: boolean = True);
 begin
 
   if GLRenderer.Visible then
-    begin
-      MpvEngine.OsdMessage(message);
-      OSDTimer.Enabled := TimeOut;
-    end
+  begin
+    MpvEngine.OsdMessage(message);
+    OSDTimer.Enabled := TimeOut;
+  end
   else
-    begin
-       fLastMessage := Message;
-       pnlContainer.Invalidate;
-    end;
+  begin
+    fLastMessage := Message;
+    pnlContainer.Invalidate;
+  end;
 
 end;
 
@@ -329,10 +334,11 @@ procedure TfPlayer.FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftStat
 var
   Pass: boolean;
 begin
-  Pass :=false;
+  Pass := False;
   if flgFullScreen then
     case key of
-      VK_ESCAPE: SetFullScreen;
+      VK_ESCAPE:
+        SetFullScreen;
       VK_DOWN:
       begin
         ChannelList.Row := CurrentChannel + 1;
@@ -343,7 +349,8 @@ begin
         ChannelList.Row := CurrentChannel - 1;
         play(ChannelList.Row);
       end;
-      VK_RETURN: if ChannelSelecting then
+      VK_RETURN:
+        if ChannelSelecting then
         begin
           if ConfigObj.ListProperties.UseChno then
             ChannelSelected := List.ItemByChno(ChannelSelected);
@@ -352,38 +359,45 @@ begin
           key := 0;
         end;
       else
-        Pass:= true;
+        Pass := True;
     end;
   case key of
-    VK_I: ShowEpg;
+    VK_I:
+      ShowEpg;
     VK_S:
     begin
       MpvEngine.Stop;
       OsdMessage('Stop', True);
     end;
-    VK_SPACE: begin
-               if MpvEngine.Pause then
-                 begin
-                   MpvEngine.OsdEpg('',Default(REpgInfo), False);
-                   OsdMessage('Pause', False)
-                 end
-               else
-                  MpvEngine.OsdMessage();
+    VK_SPACE:
+    begin
+      if MpvEngine.Pause then
+      begin
+        MpvEngine.OsdEpg('', Default(REpgInfo), False);
+        OsdMessage('Pause', False);
+      end
+      else
+        MpvEngine.OsdMessage();
     end;
-    VK_F: SetFullScreen;
-    VK_E: begin
-        actShowEpg.Execute;
+    VK_F:
+      SetFullScreen;
+    VK_E:
+    begin
+      actShowEpg.Execute;
     end;
-    VK_B: begin
-        If PreviousChannel <> -1 then
+    VK_B:
+    begin
+      if PreviousChannel <> -1 then
         Play(PreviousChannel);
     end;
 
-    VK_RIGHT: begin
-        MpvEngine.Seek(5);
+    VK_RIGHT:
+    begin
+      MpvEngine.Seek(5);
     end;
-    VK_LEFT: begin
-        MpvEngine.Seek(-5);
+    VK_LEFT:
+    begin
+      MpvEngine.Seek(-5);
     end;
 
     VK_0..VK_9, VK_NUMPAD0..VK_NUMPAD9:
@@ -402,20 +416,20 @@ begin
           ChannelSelected := ChannelSelected - $30;
 
       end;
-      if  GLRenderer.Visible then
-         OsdMessage(IntToStr(ChannelSelected), false)
+      if GLRenderer.Visible then
+        OsdMessage(IntToStr(ChannelSelected), False)
       else
-        begin
-         fLastMessage := IntToStr(ChannelSelected);
-         pnlContainer.Invalidate;
-        end;
-      ChannelTimer.Enabled := true;
+      begin
+        fLastMessage := IntToStr(ChannelSelected);
+        pnlContainer.Invalidate;
+      end;
+      ChannelTimer.Enabled := True;
     end;
     else
-     Pass:= true;
+      Pass := True;
   end;
   if not pass then
-    key:=0;
+    key := 0;
 end;
 
 procedure TfPlayer.ShowEpg;
@@ -423,16 +437,16 @@ var
   Info: REpgInfo;
 begin
   if not ShowingInfo then
-    begin
-      Info := epgData.GetEpgInfo(CurrentChannel + 1, now);
-      MpvEngine.OsdEpg(Format('%3.3d: %s', [List[CurrentChannel].Number, List[CurrentChannel].title]),info, True);
-      ShowingInfo := true;
-      OSDTimer.Enabled := True;
-    end
+  begin
+    Info := epgData.GetEpgInfo(CurrentChannel + 1, now);
+    MpvEngine.OsdEpg(Format('%3.3d: %s', [List[CurrentChannel].Number, List[CurrentChannel].title]), info, True);
+    ShowingInfo := True;
+    OSDTimer.Enabled := True;
+  end
   else
-    begin
-     OSDTimerTimer(self);
-    end;
+  begin
+    OSDTimerTimer(self);
+  end;
 
 end;
 
@@ -462,44 +476,44 @@ end;
 procedure TfPlayer.ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
 var
   cv: TCanvas;
-  Element : TM3UItem;
+  Element: TM3UItem;
   bmp: TPicture;
   r: Trect;
-  Scale:double;
-  H:integer;
+  Scale: double;
+  H: integer;
   Spacing: integer;
   epgInfo: REpgInfo;
 begin
   Element := List[arow];
-  h:= 0;
+  h := 0;
   cv := ChannelList.Canvas;
   if ConfigObj.GuiProperties.ViewLogo then
   begin
-    h:= ChannelList.RowHeights[aRow];
+    h := ChannelList.RowHeights[aRow];
     if Element.IconAvailable then
+    begin
+      bmp := TPicture.Create;
+      bmp.LoadFromFile(element.IconLocal);
+      if bmp.Height > bmp.Width then
       begin
-        bmp:= TPicture.Create;
-        bmp.LoadFromFile(element.IconLocal);
-        if bmp.Height > bmp.Width then
-          begin
-            scale := bmp.Width / bmp.Height ;
-            r:= rect(arect.left,arect.Top, arect.Left+round(h*scale), aRect.Top+round(h)) ;
-         end
-        else
-        BEGIN
-          scale :=  bmp.Height / bmp.Width;
-          r:= rect(arect.left,arect.Top, arect.Left+round(h), aRect.Top+round(h*scale)) ;
-        end;
-        cv.StretchDraw(r, bmp.Graphic);
-        bmp.free
+        scale := bmp.Width / bmp.Height;
+        r := rect(arect.left, arect.Top, arect.Left + round(h * scale), aRect.Top + round(h));
       end
-    else
+      else
       begin
-        bmp:= TPicture.Create;
-        bmp.LoadFromFile('no-logo.png');
-        cv.StretchDraw(rect(arect.left,arect.Top, arect.Left+h, aRect.Top+h), bmp.Graphic);
-        bmp.free;
+        scale := bmp.Height / bmp.Width;
+        r := rect(arect.left, arect.Top, arect.Left + round(h), aRect.Top + round(h * scale));
       end;
+      cv.StretchDraw(r, bmp.Graphic);
+      bmp.Free;
+    end
+    else
+    begin
+      bmp := TPicture.Create;
+      bmp.LoadFromFile('no-logo.png');
+      cv.StretchDraw(rect(arect.left, arect.Top, arect.Left + h, aRect.Top + h), bmp.Graphic);
+      bmp.Free;
+    end;
 
   end;
 
@@ -514,21 +528,21 @@ begin
   else
     cv.Font.Style := [fsBold];
 
-  Spacing:= Scale96ToScreen(2);
-  cv.TextRect(aRect, h+Spacing, aRect.top + Spacing* 2, Format('%3.3d: %s', [Element.Number, Element.title]));
+  Spacing := Scale96ToScreen(2);
+  cv.TextRect(aRect, h + Spacing, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
   if ConfigObj.GuiProperties.ViewCurrentProgram then
+  begin
+    epgInfo := epgdata.GetEpgInfo(arow + 1, now);
+    if epgInfo.HaveData then
     begin
-      epgInfo := epgdata.GetEpgInfo(arow+1, now);
-      if epgInfo.HaveData then
-        begin
-          cv.Font.Size := 9;
-          cv.Font.Style := [];
-          Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime,EpgInfo.EndTime, True);
-          cv.TextRect(aRect, h+Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
-          cv.TextRect(aRect, h+spacing, aRect.top + scale96toscreen(37), EpgInfo.Title);
+      cv.Font.Size := 9;
+      cv.Font.Style := [];
+      Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
+      cv.TextRect(aRect, h + Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
+      cv.TextRect(aRect, h + spacing, aRect.top + scale96toscreen(37), EpgInfo.Title);
 
-        end;
     end;
+  end;
 end;
 
 procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -547,17 +561,17 @@ begin
       ChannelSelected := ChannelSelected - 1;
 
     ChannelSelecting := False;
-    OsdMessage('',false);
+    OsdMessage('', False);
     Play(ChannelSelected);
 
   end;
-  ChannelTimer.Enabled := false;
+  ChannelTimer.Enabled := False;
 end;
 
 procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   if Assigned(MpvEngine) then
-     MpvEngine.isRenderActive := False;
+    MpvEngine.isRenderActive := False;
   CloseAction := caFree;
 end;
 
@@ -568,62 +582,62 @@ end;
 
 procedure TfPlayer.AppPropertiesException(Sender: TObject; E: Exception);
 begin
-   OvoLogger.Log(ERROR, 'EXCEPTION : %s'+LineEnding+
-                                '%s',[e.message, BackTraceStrFunc(ExceptAddr)]) ;
+  OvoLogger.Log(ERROR, 'EXCEPTION : %s' + LineEnding +
+    '%s', [e.message, BackTraceStrFunc(ExceptAddr)]);
 end;
 
 procedure TfPlayer.actShowEpgExecute(Sender: TObject);
 begin
-  if Not Assigned (EPGForm) then
-      Application.CreateForm(TEPGForm, EPGForm);
+  if not Assigned(EPGForm) then
+    Application.CreateForm(TEPGForm, EPGForm);
   EPGForm.Show;
   EpgForm.EpgData := epgData;
   EPGForm.Show;
 end;
 
-procedure TfPlayer.actListUpdate(AAction: TBasicAction; var Handled: Boolean);
+procedure TfPlayer.actListUpdate(AAction: TBasicAction; var Handled: boolean);
 begin
- actViewLogo.Checked := ConfigObj.GuiProperties.ViewLogo;
- actViewCurrentProgram.Checked := ConfigObj.GuiProperties.ViewCurrentProgram;
+  actViewLogo.Checked := ConfigObj.GuiProperties.ViewLogo;
+  actViewCurrentProgram.Checked := ConfigObj.GuiProperties.ViewCurrentProgram;
 end;
 
 procedure TfPlayer.actShowConfigExecute(Sender: TObject);
 begin
-  if ShowConfig = mrOK then
+  if ShowConfig = mrOk then
+  begin
+    if ConfigObj.ListProperties.ListChanged then
     begin
-      if ConfigObj.ListProperties.ListChanged then
-        begin
-          OvoLogger.Log(INFO, 'List configuration changed, reloading');
-          EpgData.SetLastScan('Channels', 0);
-          LoadList;
-        end;
-      if ConfigObj.ListProperties.EPGChanged then
-        begin
-          OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
-          EpgData.SetLastScan('epg', 0);
-          EpgData.Scan;
-        end;
-
+      OvoLogger.Log(INFO, 'List configuration changed, reloading');
+      EpgData.SetLastScan('Channels', 0);
+      LoadList;
     end;
+    if ConfigObj.ListProperties.EPGChanged then
+    begin
+      OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
+      EpgData.SetLastScan('epg', 0);
+      EpgData.Scan;
+    end;
+
+  end;
 end;
 
 procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
 begin
-  actViewCurrentProgram.Checked :=  not actViewCurrentProgram.Checked;
+  actViewCurrentProgram.Checked := not actViewCurrentProgram.Checked;
   ConfigObj.GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
   ComputeGridCellSize;
 end;
 
 procedure TfPlayer.actViewLogoExecute(Sender: TObject);
 begin
-  actViewLogo.Checked :=  not actViewLogo.Checked;
+  actViewLogo.Checked := not actViewLogo.Checked;
   ConfigObj.GuiProperties.ViewLogo := actViewLogo.Checked;
   ComputeGridCellSize;
   if actViewLogo.Checked then
-      list.UpdateLogo;
+    list.UpdateLogo;
 end;
 
-Procedure TfPlayer.ComputeGridCellSize;
+procedure TfPlayer.ComputeGridCellSize;
 begin
   if ConfigObj.GuiProperties.ViewLogo or ConfigObj.GuiProperties.ViewCurrentProgram then
     ChannelList.DefaultRowHeight := Scale96ToScreen(64)
@@ -633,9 +647,9 @@ begin
 
 end;
 
-procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
+procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
 begin
- if (TextRec(f).mode <> fmClosed) and (IOResult = 0) then
+  if (TextRec(f).mode <> fmClosed) and (IOResult = 0) then
     WriteLn(f, S);
 
 end;
@@ -676,10 +690,10 @@ end;
 procedure TfPlayer.GLRendererMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
 begin
   if flgFullScreen then
-    begin
-      Screen.Cursor := crdefault;
-      HideMouse.Enabled := flgFullScreen;
-    end;
+  begin
+    Screen.Cursor := crdefault;
+    HideMouse.Enabled := flgFullScreen;
+  end;
 end;
 
 procedure TfPlayer.HideMouseTimer(Sender: TObject);
@@ -690,21 +704,21 @@ end;
 procedure TfPlayer.OSDTimerTimer(Sender: TObject);
 begin
 
-  ShowingInfo := false;
+  ShowingInfo := False;
   if GLRenderer.Visible then
   begin
-    MpvEngine.OsdEpg('',Default(REpgInfo), False);
+    MpvEngine.OsdEpg('', Default(REpgInfo), False);
     MpvEngine.OsdMessage();
-  end ;
+  end;
   OSDTimer.Enabled := False;
 end;
 
 procedure TfPlayer.pmPlayerClose(Sender: TObject);
 begin
-    if flgFullScreen then
-    begin
-      HideMouse.Enabled := true;
-    end;
+  if flgFullScreen then
+  begin
+    HideMouse.Enabled := True;
+  end;
 end;
 
 procedure TfPlayer.pmPlayerPopup(Sender: TObject);
@@ -716,9 +730,9 @@ begin
   if mnuSub.Count = 0 then
     mnuSub.Enabled := False;
   if flgFullScreen then
-    begin
-      HideMouse.Enabled := false;
-    end;
+  begin
+    HideMouse.Enabled := False;
+  end;
 end;
 
 procedure TfPlayer.pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
@@ -750,7 +764,7 @@ begin
     end
     else
     begin
-      A := (progress - 720) * 16 +10;
+      A := (progress - 720) * 16 + 10;
       b := -360 * 16;
     end;
     p.X := pnlcontainer.Width div 2;
@@ -766,12 +780,12 @@ begin
 
 end;
 
-procedure TfPlayer.ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfPlayer.ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
 var
-  p:Tpoint;
+  p: Tpoint;
 begin
-  p:= ToolButton5.ClientToScreen(Point(x,y));
-  pmuView.PopUp(p.x,p.y);
+  p := ToolButton5.ClientToScreen(Point(x, y));
+  pmuView.PopUp(p.x, p.y);
 end;
 
 procedure TfPlayer.SetLoading(AValue: boolean);
@@ -781,57 +795,60 @@ begin
   LoadingTimer.Enabled := FLoading;
   GLRenderer.Visible := not FLoading;
   if not loading then
-    begin
-      fLastMessage := '';
-      MpvEngine.LoadTracks;
-      LoadTracks;
-    end;
+  begin
+    fLastMessage := '';
+    MpvEngine.LoadTracks;
+    LoadTracks;
+  end;
 end;
 
-Function TfPlayer.ComputeTrackTitle(Track: TTrack): string;
+function TfPlayer.ComputeTrackTitle(Track: TTrack): string;
 begin
   Result := '';
   if not trim(Track.Title).IsEmpty then
-    Result := QuotedStr(Track.Title) +' ';
-  Case track.Kind of
-    trkVideo: begin
-      Result := Result+'('+Track.Codec +' ';
+    Result := QuotedStr(Track.Title) + ' ';
+  case track.Kind of
+    trkVideo:
+    begin
+      Result := Result + '(' + Track.Codec + ' ';
       if (Track.w <> 0) or (Track.h <> 0) then
-        Result := result + format('%dx%d ', [Track.W, track.h]);
+        Result := Result + format('%dx%d ', [Track.W, track.h]);
       if track.Fps <> 0 then
-         Result := result + format('%2.3ffps ', [Track.Fps]);
-      Result := trim(result) +') ';
+        Result := Result + format('%2.3ffps ', [Track.Fps]);
+      Result := trim(Result) + ') ';
       if track.BitRate <> 0 then
-         Result := result + format('(%d kbps) ', [trunc(Track.BitRate/ 1024)]);
-     end;
-    trkAudio: begin
-      if not trim(Track.Title).IsEmpty then
-        Result := QuotedStr(Track.Title) +' ';
-      if not trim(Track.Lang).IsEmpty then
-        Result := Track.Lang +' ';
-
-      Result := Result+'('+Track.Codec +' ';
-
-      if (Track.Channels <> 0)  then
-        Result := result + format('%dch ', [Track.Channels]);
-      if track.SampleRate <> 0 then
-        Result := result + format('%dHz ', [Track.SampleRate]);
-      Result := trim(result) +') ';
-      if track.BitRate <> 0 then
-        Result := result + format('(%d kbps) ', [trunc(Track.BitRate/ 1024)]);
+        Result := Result + format('(%d kbps) ', [trunc(Track.BitRate / 1024)]);
     end;
-    trkSub: begin
-       if not trim(Track.Title).IsEmpty then
-         Result := QuotedStr(Track.Title) +' ';
-       if not trim(Track.Lang).IsEmpty then
-         Result := Track.Lang +' ';
+    trkAudio:
+    begin
+      if not trim(Track.Title).IsEmpty then
+        Result := QuotedStr(Track.Title) + ' ';
+      if not trim(Track.Lang).IsEmpty then
+        Result := Track.Lang + ' ';
 
-       Result := Result+'('+Track.Codec+')';
+      Result := Result + '(' + Track.Codec + ' ';
 
-      end;
+      if (Track.Channels <> 0) then
+        Result := Result + format('%dch ', [Track.Channels]);
+      if track.SampleRate <> 0 then
+        Result := Result + format('%dHz ', [Track.SampleRate]);
+      Result := trim(Result) + ') ';
+      if track.BitRate <> 0 then
+        Result := Result + format('(%d kbps) ', [trunc(Track.BitRate / 1024)]);
+    end;
+    trkSub:
+    begin
+      if not trim(Track.Title).IsEmpty then
+        Result := QuotedStr(Track.Title) + ' ';
+      if not trim(Track.Lang).IsEmpty then
+        Result := Track.Lang + ' ';
+
+      Result := Result + '(' + Track.Codec + ')';
+
+    end;
 
   end;
-  Result := trim(result);
+  Result := trim(Result);
 end;
 
 procedure TfPlayer.LoadTracks;
@@ -840,7 +857,7 @@ var
   mnu: TMenuItem;
   i: integer;
 begin
-  OvoLogger.Log(DEBUG,'Loading tracks');
+  OvoLogger.Log(DEBUG, 'Loading tracks');
   mnuAudio.Clear;
   mnuVideo.Clear;
   mnuAudio.Clear;
@@ -903,11 +920,11 @@ begin
   flgFullScreen := not flgFullScreen;
   if flgFullScreen then
     try
-      OvoLogger.Log(DEBUG,'Going fullscreen');
+      OvoLogger.Log(DEBUG, 'Going fullscreen');
       isRenderActive := False;
       Application.ProcessMessages;
       pnlChannel.Visible := False;
-      Splitter1.Visible:= False;
+      Splitter1.Visible := False;
       RestoredBorderStyle := BorderStyle;
       RestoredWindowState := WindowState;
         {$IFDEF WINDOWS}
@@ -920,11 +937,11 @@ begin
     end
   else
   begin
-    OvoLogger.Log(DEBUG,'Going windowed');
+    OvoLogger.Log(DEBUG, 'Going windowed');
     isRenderActive := False;
     Application.ProcessMessages;
     pnlChannel.Visible := True;
-    Splitter1.Visible:= True;
+    Splitter1.Visible := True;
     WindowState := wsNormal;
     WindowState := RestoredWindowState;
     BorderStyle := RestoredBorderStyle;

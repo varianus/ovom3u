@@ -135,6 +135,7 @@ begin
       end;
     end;
   finally
+    DS.FHTTPClient.free;
     DS.Free
   end;
 end;

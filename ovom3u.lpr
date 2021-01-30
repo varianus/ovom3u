@@ -35,6 +35,7 @@ uses {$IFDEF UNIX}
 {$R *.res}
 
 begin
+//  setHeapTraceOutput('trace.log');
   OvoLogger.LogName := ConfigObj.ConfigDir+LogFileName;
   OvoLogger.SaveOldLog;
   OvoLogger.Level := TRACE;
