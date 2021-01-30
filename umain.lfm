@@ -151,6 +151,9 @@ object fPlayer: TfPlayer
     object mnuVideo: TMenuItem
       Caption = 'Video tracks'
     end
+    object mnuSub: TMenuItem
+      Caption = 'Subtitle'
+    end
   end
   object LoadingTimer: TTimer
     Enabled = False

@@ -203,7 +203,7 @@ begin
     CacheDir := ConfigObj.CacheDir;
     IPTVList:=ConfigObj.ListProperties.ChannelsUrl;
     try
-      if epgData.LastScan('channels') + 12/24 < now then
+      if (epgData.LastScan('channels') + 12/24 < now) or ConfigObj.ListProperties.ListChanged then
         begin
           try
             OvoLogger.Log(INFO, 'Downloding channels list from '+IPTVList);
@@ -713,8 +713,8 @@ begin
     mnuVideo.Enabled := False;
   if mnuAudio.Count = 0 then
     mnuAudio.Enabled := False;
-  //if mnuSub.Count = 0 then
-  //  mnuSub.Enabled := False;
+  if mnuSub.Count = 0 then
+    mnuSub.Enabled := False;
   if flgFullScreen then
     begin
       HideMouse.Enabled := false;

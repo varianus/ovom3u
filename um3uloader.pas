@@ -194,7 +194,6 @@ begin
     end;
 
     readln(f, s);
-    MD5Update(Context, s[1], Length(s));
     s := trim(s);
     if uppercase(copy(s, 1, 7)) <> '#EXTM3U' then
     begin
@@ -207,6 +206,8 @@ begin
       readln(f, s);
       s := trim(s);
       if (s <> EmptyStr) then
+        begin
+        MD5Update(Context, s[1], Length(s));
         if (uppercase(copy(s, 1, 7)) = '#EXTINF') then
         begin
           item := TM3UItem.Create;
@@ -241,6 +242,8 @@ begin
             item.Mrl := s;
             fData := False;
           end;
+
+        end;
     end;
     MD5Final(Context, Digest);
     ListMd5 := MD5Print(Digest);
