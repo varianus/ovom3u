@@ -92,6 +92,7 @@ type
     IPTVList: string;
     Kind: TProviderKind;
     function CheckConfigAndSystem: boolean;
+    procedure ComputeGridCellSize;
     function ComputeTrackTitle(Track: TTrack): string;
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
     procedure OnListChanged(Sender: TObject);
@@ -269,6 +270,8 @@ begin
   flgFullScreen := False;
   ShowingInfo := false;
   OvoLogger.Log(INFO, 'Create main GUI');
+  ComputeGridCellSize;
+
   List := TM3ULoader.Create;
   list.OnListChanged := OnListChanged;
   epgData := TEpg.Create;
@@ -464,6 +467,7 @@ var
   r: Trect;
   Scale:double;
   H:integer;
+  Spacing: integer;
   epgInfo: REpgInfo;
 begin
   Element := List[arow];
@@ -492,7 +496,7 @@ begin
     else
       begin
         bmp:= TPicture.Create;
-        bmp.LoadFromFile('PROVA.png');
+        bmp.LoadFromFile('no-logo.png');
         cv.StretchDraw(rect(arect.left,arect.Top, arect.Left+h, aRect.Top+h), bmp.Graphic);
         bmp.free;
       end;
@@ -510,17 +514,18 @@ begin
   else
     cv.Font.Style := [fsBold];
 
-  cv.TextRect(aRect, h+2, aRect.top + 5, Format('%3.3d: %s', [Element.Number, Element.title]));
+  Spacing:= Scale96ToScreen(2);
+  cv.TextRect(aRect, h+Spacing, aRect.top + Spacing* 2, Format('%3.3d: %s', [Element.Number, Element.title]));
   if ConfigObj.GuiProperties.ViewCurrentProgram then
     begin
-      epgInfo := epgdata.GetEpgInfo(aRow, now);
+      epgInfo := epgdata.GetEpgInfo(arow+1, now);
       if epgInfo.HaveData then
         begin
           cv.Font.Size := 9;
           cv.Font.Style := [];
           Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime,EpgInfo.EndTime, True);
-          cv.TextRect(aRect, h+2, aRect.top + 25, Element.CurrProgram);
-          cv.TextRect(aRect, h+2, aRect.top + 37, EpgInfo.Title);
+          cv.TextRect(aRect, h+Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
+          cv.TextRect(aRect, h+spacing, aRect.top + scale96toscreen(37), EpgInfo.Title);
 
         end;
     end;
@@ -606,32 +611,26 @@ procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
 begin
   actViewCurrentProgram.Checked :=  not actViewCurrentProgram.Checked;
   ConfigObj.GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
-  if actViewLogo.Checked then
-    begin
-      ChannelList.DefaultRowHeight := 64;
-      list.UpdateLogo;
-    end
-  else
-    begin
-      ChannelList.DefaultRowHeight := 32;
-    end;
-  ChannelList.Invalidate;
+  ComputeGridCellSize;
 end;
 
 procedure TfPlayer.actViewLogoExecute(Sender: TObject);
 begin
   actViewLogo.Checked :=  not actViewLogo.Checked;
   ConfigObj.GuiProperties.ViewLogo := actViewLogo.Checked;
+  ComputeGridCellSize;
   if actViewLogo.Checked then
-    begin
-      ChannelList.DefaultRowHeight := 64;
       list.UpdateLogo;
-    end
+end;
+
+Procedure TfPlayer.ComputeGridCellSize;
+begin
+  if ConfigObj.GuiProperties.ViewLogo or ConfigObj.GuiProperties.ViewCurrentProgram then
+    ChannelList.DefaultRowHeight := Scale96ToScreen(64)
   else
-    begin
-      ChannelList.DefaultRowHeight := 32;
-    end;
+    ChannelList.DefaultRowHeight := Scale96ToScreen(32);
   ChannelList.Invalidate;
+
 end;
 
 procedure TfPlayer.DebugLnHook(Sender: TObject; S: string; var Handled: Boolean);
