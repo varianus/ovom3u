@@ -275,7 +275,6 @@ begin
   flgFullScreen := False;
   ShowingInfo := False;
   OvoLogger.Log(INFO, 'Create main GUI');
-  ComputeGridCellSize;
 
   List := TM3ULoader.Create;
   list.OnListChanged := OnListChanged;
@@ -286,6 +285,7 @@ begin
   ChannelSelecting := False;
   fLoading := False;
   ChannelSelected := 0;
+  ComputeGridCellSize;
 
   if CheckConfigAndSystem then
   begin
@@ -335,10 +335,15 @@ var
   Pass: boolean;
 begin
   Pass := False;
+  Application.ProcessMessages;
   if flgFullScreen then
     case key of
       VK_ESCAPE:
         SetFullScreen;
+      VK_C:
+        begin
+          pnlChannel.Visible:= not pnlChannel.visible;
+        end;
       VK_DOWN:
       begin
         ChannelList.Row := CurrentChannel + 1;

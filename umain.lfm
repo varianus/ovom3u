@@ -113,13 +113,13 @@ object fPlayer: TfPlayer
         ParentFont = False
       end
       object ToolButton5: TSpeedButton
-        Left = 123
+        Left = 118
         Height = 31
         Top = 1
-        Width = 60
+        Width = 65
         Align = alRight
         AutoSize = True
-        Caption = 'View▼'
+        Caption = 'View ▼'
         Font.Height = -19
         OnMouseDown = ToolButton5MouseDown
         ParentFont = False
