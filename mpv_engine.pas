@@ -58,6 +58,7 @@ type
     fIsRenderActive: boolean;
     Context: pmpv_render_context;
     FOnLoadingState: TNotifyEvent;
+    fOnTrackChange: TNotifyEvent;
     fTrackList: TTrackList;
     EngineState: TEngineState;
     Loading: boolean;
@@ -79,6 +80,7 @@ type
     property isRenderActive: boolean read fIsRenderActive write fIsRenderActive;
     property isGlEnabled: boolean read fisGlEnabled write fisGlEnabled;
     property OnLoadingState: TNotifyEvent read FOnLoadingState write SetOnLoadingState;
+    property OnTrackChange: TNotifyEvent read fOnTrackChange write fOnTrackChange;
     property TrackList: TTrackList read fTrackList;
     property Volume: integer read GetMainVolume write SetMainVolume;
     function Initialize(Renderer: TOpenGLControl): boolean;
@@ -267,6 +269,10 @@ var
   RenderParams[2]._type := MPV_RENDER_PARAM_INVALID;
   RenderParams[3].Data := nil;
 
+  mpv_observe_property(fHandle^, 0, 'aid', MPV_FORMAT_INT64);
+  mpv_observe_property(fHandle^, 0, 'sid', MPV_FORMAT_INT64);
+  mpv_observe_property(fHandle^, 0, 'core-idle', MPV_FORMAT_FLAG);
+
   mpv_render_context_set_update_callback(Context^, @update_gl, self);
   isRenderActive := True;
 end;
@@ -300,11 +306,11 @@ begin
         MPV_EVENT_PLAYBACK_RESTART:
         begin
           Loading := False;
-          LoadTracks;
           if Assigned(FOnLoadingState) then
             FOnLoadingState(self);
         end;
         MPV_EVENT_PROPERTY_CHANGE:
+          begin
           if Pmpv_event_property(Event^.Data)^.Name = 'core-idle' then
             if Loading then
             begin
@@ -317,6 +323,12 @@ begin
                 LoadTracks;
               end;
             end;
+          if ((Pmpv_event_property(Event^.Data)^.Name = 'aid') or
+             (Pmpv_event_property(Event^.Data)^.Name = 'aid')) and
+             (Pmpv_event_property(Event^.Data)^.format = MPV_FORMAT_INT64) then
+             LoadTracks;
+
+          end;
       end;
       Event := mpv_wait_event(fhandle^, 0);
     end;
@@ -401,7 +413,8 @@ begin
     mpv_free_node_contents(node);
   except
   end;
-
+  if Assigned(fOnTrackChange) then
+    fOnTrackChange(self);
 end;
 
 procedure TMPVEngine.GLRenderControlPaint(Sender: TObject);

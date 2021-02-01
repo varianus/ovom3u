@@ -97,6 +97,7 @@ type
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
+    procedure OnTrackChange(Sender: TObject);
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure Play(Row: integer);
     procedure SetLoading(AValue: boolean);
@@ -291,6 +292,9 @@ begin
   begin
     MpvEngine := TMPVEngine.Create;
     MpvEngine.Initialize(GLRenderer);
+    MpvEngine.OnLoadingState := OnLoadingState;
+    MpvEngine.OnTrackChange := OnTrackChange;
+
   end
   else
     OvoLogger.Log(WARN, 'Invalid config');
@@ -312,6 +316,11 @@ begin
     Loading := MpvEngine.IsIdle;
   if not Loading then
     OsdMessage('', False);
+end;
+
+procedure TfPlayer.OnTrackChange(Sender: TObject);
+begin
+  LoadTracks;
 end;
 
 procedure TfPlayer.OsdMessage(Message: string; TimeOut: boolean = True);
