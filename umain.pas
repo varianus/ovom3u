@@ -495,6 +495,16 @@ begin
   if ConfigObj.GuiProperties.ViewLogo then
   begin
     h := ChannelList.RowHeights[aRow];
+    cv.Font.Size := 9;
+    if CurrentChannel = aRow then
+    begin
+      cv.Font.Style := [fsBold, fsUnderline];
+      cv.Font.color := clHighlightText;
+      cv.Brush.color := clHighlight;
+      cv.Rectangle(aRect);
+    end
+    else
+      cv.Font.Style := [fsBold];
     if Element.IconAvailable then
     begin
       bmp := TPicture.Create;
@@ -515,23 +525,12 @@ begin
     else
     begin
       bmp := TPicture.Create;
-      bmp.LoadFromFile('no-logo.png');
+      bmp.LoadFromFile(ConfigObj.GetResourcesPath+ 'no-logo.png');
       cv.StretchDraw(rect(arect.left, arect.Top, arect.Left + h, aRect.Top + h), bmp.Graphic);
       bmp.Free;
     end;
 
   end;
-
-  cv.Font.Size := 9;
-  if CurrentChannel = aRow then
-  begin
-    cv.Font.Style := [fsBold, fsUnderline];
-    cv.Font.color := clHighlightText;
-    cv.Brush.color := clHighlight;
-    cv.Rectangle(aRect);
-  end
-  else
-    cv.Font.Style := [fsBold];
 
   Spacing := Scale96ToScreen(2);
   cv.TextRect(aRect, h + Spacing, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));

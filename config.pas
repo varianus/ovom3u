@@ -351,6 +351,7 @@ end;
 
 procedure TConfig.SaveConfig;
 begin
+  WriteString(SectionUnix+'/'+IdentResourcesPath, ResourcesPath);
   WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fListsProperties.ChannelsKind));
   WriteString('m3u/FileName',fListsProperties.ChannelsFileName);
   WriteString('m3u/Url',fListsProperties.ChannelsUrl);
