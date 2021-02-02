@@ -92,7 +92,7 @@ type
     IPTVList: string;
     Kind: TProviderKind;
     function CheckConfigAndSystem: boolean;
-    procedure ComputeGridCellSize;
+    procedure ComputeGridCellSize(data: ptrint);
     function ComputeTrackTitle(Track: TTrack): string;
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
     procedure OnListChanged(Sender: TObject);
@@ -286,7 +286,7 @@ begin
   ChannelSelecting := False;
   fLoading := False;
   ChannelSelected := 0;
-  ComputeGridCellSize;
+  Application.QueueAsyncCall(ComputeGridCellSize, 0);
 
   if CheckConfigAndSystem then
   begin
@@ -638,19 +638,19 @@ procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
 begin
   actViewCurrentProgram.Checked := not actViewCurrentProgram.Checked;
   ConfigObj.GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
-  ComputeGridCellSize;
+  ComputeGridCellSize(0);
 end;
 
 procedure TfPlayer.actViewLogoExecute(Sender: TObject);
 begin
   actViewLogo.Checked := not actViewLogo.Checked;
   ConfigObj.GuiProperties.ViewLogo := actViewLogo.Checked;
-  ComputeGridCellSize;
+  ComputeGridCellSize(0);
   if actViewLogo.Checked then
     list.UpdateLogo;
 end;
 
-procedure TfPlayer.ComputeGridCellSize;
+procedure TfPlayer.ComputeGridCellSize(data: ptrint);
 begin
   if ConfigObj.GuiProperties.ViewLogo or ConfigObj.GuiProperties.ViewCurrentProgram then
     ChannelList.DefaultRowHeight := Scale96ToScreen(64)
