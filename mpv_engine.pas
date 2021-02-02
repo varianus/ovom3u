@@ -320,14 +320,12 @@ begin
               begin
                 if Assigned(FOnLoadingState) then
                   FOnLoadingState(self);
-                LoadTracks;
               end;
             end;
           if ((Pmpv_event_property(Event^.Data)^.Name = 'aid') or
-             (Pmpv_event_property(Event^.Data)^.Name = 'aid')) and
+             (Pmpv_event_property(Event^.Data)^.Name = 'vid')) and
              (Pmpv_event_property(Event^.Data)^.format = MPV_FORMAT_INT64) then
              LoadTracks;
-
           end;
       end;
       Event := mpv_wait_event(fhandle^, 0);
