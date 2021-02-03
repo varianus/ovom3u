@@ -179,6 +179,8 @@ begin
 end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
+var
+  ServerVersion:Pchar;
 begin
   Result := True;
   try
@@ -191,13 +193,19 @@ begin
     mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
+
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
+    ServerVersion := mpv_get_property_string(fHandle^, 'mpv-version');
+    OvoLogger.Log(FORCED, StrPas(ServerVersion));
+
+    mpv_observe_property(fHandle^, 0, 'aid', MPV_FORMAT_INT64);
+    mpv_observe_property(fHandle^, 0, 'sid', MPV_FORMAT_INT64);
+    mpv_observe_property(fHandle^, 0, 'core-idle', MPV_FORMAT_FLAG);
     mpv_set_wakeup_callback(fhandle^, @LibMPVEvent, self);
 
     GLRenderControl := Renderer;
 
-    GLRenderControl.OnPaint := GLRenderControlPaint;
     Application.QueueAsyncCall(InitRenderer, 0);
 
   except
@@ -242,7 +250,7 @@ var
   glParams: mpv_opengl_init_params;
   i: integer;
  begin
-
+  GLRenderControl.DoubleBuffered := true;
   Load_GL_version_1_3();
   Load_GL_VERSION_2_1();
   GLRenderControl.MakeCurrent();
@@ -269,11 +277,8 @@ var
   RenderParams[2]._type := MPV_RENDER_PARAM_INVALID;
   RenderParams[3].Data := nil;
 
-  mpv_observe_property(fHandle^, 0, 'aid', MPV_FORMAT_INT64);
-  mpv_observe_property(fHandle^, 0, 'sid', MPV_FORMAT_INT64);
-  mpv_observe_property(fHandle^, 0, 'core-idle', MPV_FORMAT_FLAG);
-
   mpv_render_context_set_update_callback(Context^, @update_gl, self);
+  GLRenderControl.OnPaint := GLRenderControlPaint;
   isRenderActive := True;
 end;
 
