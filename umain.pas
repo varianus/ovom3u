@@ -67,6 +67,7 @@ type
     procedure AppPropertiesException(Sender: TObject; E: Exception);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
+    procedure ChannelListGetCellHint(Sender: TObject; ACol, ARow: Integer; var HintText: String);
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure ChannelTimerTimer(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -556,6 +557,21 @@ begin
 
     end;
   end;
+end;
+
+procedure TfPlayer.ChannelListGetCellHint(Sender: TObject; ACol, ARow: Integer; var HintText: String);
+
+var
+  Element: TM3UItem;
+  epgInfo: REpgInfo;
+begin
+  Element := List[arow];
+  epgInfo := epgdata.GetEpgInfo(arow + 1, now);
+
+  HintText := Format('%3.3d: %s', [Element.Number, Element.title])+ sLineBreak+
+              FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True) + sLineBreak+
+              EpgInfo.Title;
+
 end;
 
 procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);

@@ -1,7 +1,7 @@
 object fPlayer: TfPlayer
-  Left = 755
+  Left = 973
   Height = 436
-  Top = 306
+  Top = 225
   Width = 618
   Caption = 'OvoM3U'
   ClientHeight = 436
@@ -68,14 +68,17 @@ object fPlayer: TfPlayer
       FixedRows = 0
       Font.Height = 9
       MouseWheelOption = mwGrid
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellEllipsis]
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellHints, goCellEllipsis]
       ParentFont = False
+      ParentShowHint = False
       ScrollBars = ssVertical
+      ShowHint = True
       TabAdvance = aaDown
       TabOrder = 0
       UseXORFeatures = True
       OnDblClick = ChannelListDblClick
       OnDrawCell = ChannelListDrawCell
+      OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
         163
