@@ -106,7 +106,6 @@ type
   private
     MpvEngine: TMPVEngine;
     epgData: TEpg;
-    isRenderActive: boolean;
     flgFullScreen: boolean;
     ShowingInfo: boolean;
     CurrentChannel: integer;
@@ -700,6 +699,9 @@ begin
     exit;
   end;
 
+  OvoLogger.Log(INFO, 'Tuning to %s',[list[row].Title]);
+
+
   ChannelList.Invalidate;
   PreviousChannel := CurrentChannel;
   CurrentChannel := Row;
@@ -950,7 +952,7 @@ begin
   if flgFullScreen then
     try
       OvoLogger.Log(DEBUG, 'Going fullscreen');
-      isRenderActive := False;
+      MpvEngine.isRenderActive := False;
       Application.ProcessMessages;
       pnlChannel.Visible := False;
       Splitter1.Visible := False;
@@ -962,12 +964,12 @@ begin
       WindowState := wsFullScreen;
       HideMouse.Enabled := True;
     finally
-      isRenderActive := True;
+      MpvEngine.isRenderActive := True;
     end
   else
   begin
     OvoLogger.Log(DEBUG, 'Going windowed');
-    isRenderActive := False;
+    MpvEngine.isRenderActive := False;
     Application.ProcessMessages;
     pnlChannel.Visible := True;
     Splitter1.Visible := True;
@@ -976,7 +978,7 @@ begin
     BorderStyle := RestoredBorderStyle;
     screen.cursor := crdefauLt;
     HideMouse.Enabled := False;
-    isRenderActive := True;
+    MpvEngine.isRenderActive := True;
   end;
 
 end;
