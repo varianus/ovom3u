@@ -100,6 +100,7 @@ begin
 
 
   cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
+  cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
 
 end;
 
@@ -116,6 +117,7 @@ begin
   ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
   ListProperties.ChannelsFileName := edtChannelsFileName.Text;
   ListProperties.ChannelsUrl := edtChannelsUrl.Text;
+  ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
 
   ListProperties.EPGChanged := (TProviderKind(cbEpgKind.ItemIndex) <> ConfigObj.ListProperties.EpgKind) or
      (ConfigObj.ListProperties.EpgFileName <> edtEpgFileName.Text) or
