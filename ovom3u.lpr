@@ -36,6 +36,9 @@ uses {$IFDEF UNIX}
 
 begin
 //  setHeapTraceOutput('trace.log');
+  // needed to output exception to a file
+  Application.Flags := Application.Flags + [appNoExceptionMessages];
+
   OvoLogger.LogName := ConfigObj.ConfigDir+LogFileName;
   OvoLogger.SaveOldLog;
   OvoLogger.Level := TRACE;

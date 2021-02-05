@@ -504,16 +504,6 @@ begin
   if ConfigObj.GuiProperties.ViewLogo then
   begin
     h := ChannelList.RowHeights[aRow];
-    cv.Font.Size := 9;
-    if CurrentChannel = aRow then
-    begin
-      cv.Font.Style := [fsBold, fsUnderline];
-      cv.Font.color := clHighlightText;
-      cv.Brush.color := clHighlight;
-      cv.Rectangle(aRect);
-    end
-    else
-      cv.Font.Style := [fsBold];
     if Element.IconAvailable then
     begin
       bmp := TPicture.Create;
@@ -541,6 +531,17 @@ begin
 
   end;
 
+  cv.Font.Height := Scale96ToFont(-16);
+  if CurrentChannel = aRow then
+  begin
+    cv.Font.Style := [fsBold, fsUnderline];
+    cv.Font.color := clHighlightText;
+    cv.Brush.color := clHighlight;
+    cv.Rectangle(aRect);
+  end
+  else
+    cv.Font.Style := [fsBold];
+
   Spacing := Scale96ToScreen(2);
   cv.TextRect(aRect, h + Spacing, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
   if ConfigObj.GuiProperties.ViewCurrentProgram then
@@ -548,7 +549,7 @@ begin
     epgInfo := epgdata.GetEpgInfo(arow + 1, now);
     if epgInfo.HaveData then
     begin
-      cv.Font.Size := 9;
+      cv.Font.Size := Scale96ToFont(-12);
       cv.Font.Style := [];
       Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
       cv.TextRect(aRect, h + Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
@@ -610,8 +611,14 @@ end;
 
 procedure TfPlayer.AppPropertiesException(Sender: TObject; E: Exception);
 begin
+  TRY
   OvoLogger.Log(ERROR, 'EXCEPTION : %s' + LineEnding +
     '%s', [e.message, BackTraceStrFunc(ExceptAddr)]);
+
+  except
+     Halt(999);
+     // avoid exception on exception
+  end;
 end;
 
 procedure TfPlayer.actShowEpgExecute(Sender: TObject);

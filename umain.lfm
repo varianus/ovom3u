@@ -66,7 +66,7 @@ object fPlayer: TfPlayer
       ExtendedSelect = False
       FixedCols = 0
       FixedRows = 0
-      Font.Height = 9
+      Font.Height = -16
       MouseWheelOption = mwGrid
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellHints, goCellEllipsis]
       ParentFont = False
