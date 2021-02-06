@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Config;
+  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config;
 
 type
 
@@ -41,17 +41,27 @@ type
     edtEpgFileName: TFileNameEdit;
     edtChannelsUrl: TEdit;
     edtEpgUrl: TEdit;
+    GroupBox1: TGroupBox;
     Label5: TLabel;
     lb: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
     lb1: TLabel;
+    pcSettings: TPageControl;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    SpinEdit1: TSpinEdit;
+    tsMpv: TTabSheet;
+    tsChannels: TTabSheet;
+    ValueListEditor1: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
     procedure cbChannelsKindChange(Sender: TObject);
     procedure cbEpgKindChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure OKButtonClick(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
   private
 
   public
@@ -98,7 +108,7 @@ begin
   edtEpgFileName.Text := ConfigObj.ListProperties.EpgFileName;
   edtEpgUrl.Text := ConfigObj.ListProperties.EpgUrl;
 
-
+  ConfigObj.ReadStrings('mpv/CustomOptions', ValueListEditor1.Strings);
   cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
   cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
 
@@ -129,8 +139,19 @@ begin
 
   ListProperties.UseChno := cbUseChno.Checked;
   ConfigObj.ListProperties := ListProperties;
+  ConfigObj.WriteStrings('mpv/CustomOptions', ValueListEditor1.Strings);
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
+end;
+
+procedure TfConfig.SpeedButton1Click(Sender: TObject);
+begin
+  pcSettings.ActivePage:= tsChannels;
+end;
+
+procedure TfConfig.SpeedButton2Click(Sender: TObject);
+begin
+  pcSettings.ActivePage:= tsMpv;
 end;
 
 procedure TfConfig.cbChannelsKindChange(Sender: TObject);
