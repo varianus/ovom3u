@@ -531,7 +531,7 @@ begin
 
   end;
 
-  cv.Font.Height := Scale96ToFont(-16);
+  cv.Font.Height := Scale96Toscreen(-16);
   if CurrentChannel = aRow then
   begin
     cv.Font.Style := [fsBold, fsUnderline];
@@ -549,7 +549,7 @@ begin
     epgInfo := epgdata.GetEpgInfo(arow + 1, now);
     if epgInfo.HaveData then
     begin
-      cv.Font.Size := Scale96ToFont(-12);
+      cv.Font.Height := Scale96ToScreen(-12);
       cv.Font.Style := [];
       Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
       cv.TextRect(aRect, h + Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
