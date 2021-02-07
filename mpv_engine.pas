@@ -427,6 +427,9 @@ begin
   if isGlEnabled and isRenderActive then
   begin
     GLRenderControl.MakeCurrent();
+    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity;
+
     mpfbo.fbo := 0;
     mpfbo.h := GLRenderControl.Height;
     mpfbo.w := GLRenderControl.Width;
