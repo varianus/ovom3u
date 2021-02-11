@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, EditBtn, StdCtrls, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -363,19 +363,19 @@ begin
         ChannelList.Row := CurrentChannel - 1;
         play(ChannelList.Row);
       end;
-      VK_RETURN:
-        if ChannelSelecting then
-        begin
-          if ConfigObj.ListProperties.UseChno then
-            ChannelSelected := List.ItemByChno(ChannelSelected);
-          play(ChannelSelected);
-          ChannelSelecting := False;
-          key := 0;
-        end;
       else
         Pass := True;
     end;
   case key of
+    VK_RETURN:
+      if ChannelSelecting then
+      begin
+        if ConfigObj.ListProperties.UseChno then
+          ChannelSelected := List.ItemByChno(ChannelSelected);
+        play(ChannelSelected);
+        ChannelSelecting := False;
+        key := 0;
+      end;
     VK_I:
       ShowEpg;
     VK_S:
@@ -966,7 +966,9 @@ begin
       RestoredBorderStyle := BorderStyle;
       RestoredWindowState := WindowState;
         {$IFDEF WINDOWS}
-      BorderStyle := bsNone;
+     // On windows this is required to go fullscreen
+     // but there is a bug in LCL and I get only a black screen!!
+     // BorderStyle := bsNone;
         {$ENDIF}
       WindowState := wsFullScreen;
       HideMouse.Enabled := True;
