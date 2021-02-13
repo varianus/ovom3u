@@ -37,6 +37,7 @@ type
     cbEpgKind: TComboBox;
     cbUseChno: TCheckBox;
     cbDownloadLogo: TCheckBox;
+    cbHardwareAcceleration: TCheckBox;
     edtChannelsFileName: TFileNameEdit;
     edtEpgFileName: TFileNameEdit;
     edtChannelsUrl: TEdit;
@@ -51,10 +52,10 @@ type
     pcSettings: TPageControl;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
-    SpinEdit1: TSpinEdit;
+    lbWarning: TLabel;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
-    ValueListEditor1: TValueListEditor;
+    vleCustomOptions: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
     procedure cbChannelsKindChange(Sender: TObject);
     procedure cbEpgKindChange(Sender: TObject);
@@ -108,38 +109,32 @@ begin
   edtEpgFileName.Text := ConfigObj.ListProperties.EpgFileName;
   edtEpgUrl.Text := ConfigObj.ListProperties.EpgUrl;
 
-  ConfigObj.ReadStrings('mpv/CustomOptions', ValueListEditor1.Strings);
   cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
   cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
+
+  cbHardwareAcceleration.Checked := ConfigObj.MPVProperties.HardwareAcceleration;
+  ConfigObj.ReadStrings('mpv/CustomOptions', vleCustomOptions.Strings);
 
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
-  ListProperties: TListsProperties;
+  ListProperties: TListProperties;
 begin
 
-  ListProperties.ListChanged := (TProviderKind(cbChannelsKind.ItemIndex) <> ConfigObj.ListProperties.ChannelsKind) or
-     (ConfigObj.ListProperties.ChannelsFileName <> edtChannelsFileName.Text) or
-     (ConfigObj.ListProperties.ChannelsUrl <> edtChannelsUrl.Text) or
-     (ConfigObj.ListProperties.UseChno <> cbUseChno.Checked) or
-     (ConfigObj.ListProperties.ChannelsDownloadLogo <> cbDownloadLogo.Checked);
   ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
   ListProperties.ChannelsFileName := edtChannelsFileName.Text;
   ListProperties.ChannelsUrl := edtChannelsUrl.Text;
   ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
 
-  ListProperties.EPGChanged := (TProviderKind(cbEpgKind.ItemIndex) <> ConfigObj.ListProperties.EpgKind) or
-     (ConfigObj.ListProperties.EpgFileName <> edtEpgFileName.Text) or
-     (ConfigObj.ListProperties.EpgUrl <> edtEpgUrl.Text) or
-     (ConfigObj.ListProperties.UseChno <> cbUseChno.Checked);
   ListProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
   ListProperties.EpgFileName := edtEpgFileName.Text;
   ListProperties.EpgUrl := edtEpgUrl.Text;
-
   ListProperties.UseChno := cbUseChno.Checked;
   ConfigObj.ListProperties := ListProperties;
-  ConfigObj.WriteStrings('mpv/CustomOptions', ValueListEditor1.Strings);
+
+  ConfigObj.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
+  ConfigObj.WriteStrings('mpv/CustomOptions', vleCustomOptions.Strings);
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
 end;

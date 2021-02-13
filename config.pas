@@ -35,18 +35,20 @@ type
   end;
 
 { TConfig }
-  TListsProperties = record
-    ChannelsKind: TProviderKind;
-    ChannelsFileName: string;
-    ChannelsUrl: string;
+
+  { TListProperties }
+
+  TListProperties = record
     ChannelsDownloadLogo: boolean;
+    ChannelsFileName: string;
+    ChannelsKind: TProviderKind;
+    ChannelsUrl: string;
+
     UseChno: boolean;
-    EpgKind: TProviderKind;
+
     EpgFileName: string;
+    EpgKind: TProviderKind;
     EPGUrl: string;
-    // Used to signal changes, not saved
-    ListChanged: boolean;
-    EPGChanged: boolean;
   end;
 
   TGuiProperties = record
@@ -57,25 +59,45 @@ type
     property ViewCurrentProgram: boolean read fViewCurrentProgram write fViewCurrentProgram;
   end;
 
+  { TMPVProperties }
+
+  TMPVProperties = record
+  private
+    fHardwareAcceleration: boolean;
+  public
+    Property HardwareAcceleration: boolean read fHardwareAcceleration write fHardwareAcceleration;
+  end;
+
   TConfig = class
   private
     fCacheDir: string;
     FConfigFile: string;
     fConfigDir: string;
+    FEPGChanged: boolean;
     FGuiProperties: TGuiProperties;
-    fListsProperties: TListsProperties;
+    FListChanged: boolean;
+    fListProperties: TListProperties;
+    FMPVProperties: TMPVProperties;
     FPortableMode: boolean;
     ResourcesPath: string;
     fConfigHolder: TJsonNode;
     fExecutableDir: string;
     function GetCacheDir: string;
     function GetConfigDir: string;
+    procedure SetEPGChanged(AValue: boolean);
     procedure SetGuiProperties(AValue: TGuiProperties);
-    procedure SetListProperties(AValue: TListsProperties);
+    procedure SetListChanged(AValue: boolean);
+    procedure SetListProperties(AValue: TListProperties);
+    procedure SetMPVProperties(AValue: TMPVProperties);
   public
-    property ListProperties: TListsProperties read fListsProperties write SetListProperties;
+    property ListProperties: TListProperties read fListProperties write SetListProperties;
     property GuiProperties: TGuiProperties read FGuiProperties write SetGuiProperties;
+    property MPVProperties: TMPVProperties read FMPVProperties write SetMPVProperties;
     property PortableMode: boolean read FPortableMode;
+
+    // Used to signal changes, not saved
+    Property ListChanged: boolean read FListChanged write SetListChanged;
+    property EPGChanged: boolean read FEPGChanged write SetEPGChanged;
     constructor Create;
     procedure ReadConfig;
     procedure SaveConfig;
@@ -252,14 +274,33 @@ begin
   Config.WriteStrings(APath, IntList);
 end;
 
-procedure TConfig.SetListProperties(AValue: TListsProperties);
+procedure TConfig.SetListProperties(AValue: TListProperties);
 begin
-  fListsProperties:=AValue;
+   fListChanged :=
+     (fListProperties.ChannelsKind <> AValue.ChannelsKind) or
+     (fListProperties.ChannelsFileName <> AValue.ChannelsFileName) or
+     (fListProperties.ChannelsUrl <> AValue.ChannelsUrl) or
+     (fListProperties.UseChno <> AValue.UseChno) or
+     (fListProperties.ChannelsDownloadLogo <> AValue.ChannelsDownloadLogo);
+
+   fEPGChanged :=
+      (fListProperties.EpgKind <> AValue.EpgKind) or
+      (fListProperties.EpgFileName <> AValue.EpgFileName) or
+      (fListProperties.EpgUrl <> AValue.EpgUrl) or
+      (fListProperties.UseChno <> AValue.UseChno);
+
+  fListProperties:=AValue;
+end;
+
+procedure TConfig.SetMPVProperties(AValue: TMPVProperties);
+begin
+  FMPVProperties := AValue;
 end;
 
 constructor TConfig.Create;
 begin
-   fExecutableDir:= IncludeTrailingPathDelimiter(ProgramDirectory);
+
+  fExecutableDir:= IncludeTrailingPathDelimiter(ProgramDirectory);
 
    if FileExists(fExecutableDir+'portable.txt') then
     fPortableMode := True;
@@ -292,7 +333,7 @@ destructor TConfig.Destroy;
 begin
   SaveConfig;
   fConfigHolder.Free;
-  Finalize(fListsProperties);
+  Finalize(fListProperties);
   inherited Destroy;
 end;
 
@@ -310,10 +351,22 @@ begin
 
 end;
 
+procedure TConfig.SetEPGChanged(AValue: boolean);
+begin
+  if FEPGChanged = AValue then Exit;
+  FEPGChanged := AValue;
+end;
+
 procedure TConfig.SetGuiProperties(AValue: TGuiProperties);
 begin
 
   FGuiProperties := AValue;
+end;
+
+procedure TConfig.SetListChanged(AValue: boolean);
+begin
+  if FListChanged = AValue then Exit;
+  FListChanged := AValue;
 end;
 
 function TConfig.GetCacheDir: string;
@@ -352,19 +405,22 @@ end;
 procedure TConfig.SaveConfig;
 begin
   WriteString(SectionUnix+'/'+IdentResourcesPath, ResourcesPath);
-  WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fListsProperties.ChannelsKind));
-  WriteString('m3u/FileName',fListsProperties.ChannelsFileName);
-  WriteString('m3u/Url',fListsProperties.ChannelsUrl);
+  WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(fListProperties.ChannelsKind));
+  WriteString('m3u/FileName',fListProperties.ChannelsFileName);
+  WriteString('m3u/Url',fListProperties.ChannelsUrl);
 
-  WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(fListsProperties.EPGKind));
-  WriteString('EPG/FileName',fListsProperties.EPGFileName);
-  WriteString('EPG/Url',fListsProperties.EPGUrl);
+  WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(fListProperties.EPGKind));
+  WriteString('EPG/FileName',fListProperties.EPGFileName);
+  WriteString('EPG/Url',fListProperties.EPGUrl);
 
-  WriteBoolean('m3u/UseChno', fListsProperties.UseChno);
-  WriteBoolean('m3u/DownloadLogo', fListsProperties.ChannelsDownloadLogo);
+  WriteBoolean('m3u/UseChno', fListProperties.UseChno);
+  WriteBoolean('m3u/DownloadLogo', fListProperties.ChannelsDownloadLogo);
 
   WriteBoolean('gui/ViewLogo', FGuiProperties.ViewLogo);
   WriteBoolean('gui/ViewCurrentProgram', FGuiProperties.ViewCurrentProgram);
+
+  WriteBoolean('MPV/HardwareAcceleration', FMPVProperties.HardwareAcceleration);
+
 
   fConfigHolder.SaveToFile(FConfigFile, true);
 end;
@@ -382,22 +438,25 @@ begin
   {$endif}
 {$endif}
 
-  fListsProperties.ChannelsKind:= TEnum<TProviderKind>.FromString(ReadString('m3u/ProviderKind',''), Local);
-  fListsProperties.ChannelsFileName:= ReadString('m3u/FileName','');
-  fListsProperties.ChannelsUrl:= ReadString('m3u/Url','');
+  fListProperties.ChannelsKind:= TEnum<TProviderKind>.FromString(ReadString('m3u/ProviderKind',''), Local);
+  fListProperties.ChannelsFileName:= ReadString('m3u/FileName','');
+  fListProperties.ChannelsUrl:= ReadString('m3u/Url','');
 
-  fListsProperties.EpgKind:= TEnum<TProviderKind>.FromString(ReadString('EPG/ProviderKind',''), Local);
-  fListsProperties.EpgFileName:= ReadString('EPG/FileName','');
-  fListsProperties.EpgUrl:= ReadString('EPG/Url','');
+  fListProperties.EpgKind:= TEnum<TProviderKind>.FromString(ReadString('EPG/ProviderKind',''), Local);
+  fListProperties.EpgFileName:= ReadString('EPG/FileName','');
+  fListProperties.EpgUrl:= ReadString('EPG/Url','');
 
 
-  fListsProperties.UseChno := ReadBoolean('m3u/UseChno', false);
-  fListsProperties.ChannelsDownloadLogo := ReadBoolean('m3u/DownloadLogo', false);
+  fListProperties.UseChno := ReadBoolean('m3u/UseChno', false);
+  fListProperties.ChannelsDownloadLogo := ReadBoolean('m3u/DownloadLogo', false);
 
   FGuiProperties.ViewLogo := ReadBoolean('gui/ViewLogo', false);
   FGuiProperties.ViewCurrentProgram := ReadBoolean('gui/ViewCurrentProgram', false);
 
+  FMPVProperties.HardwareAcceleration := ReadBoolean('MPV/HardwareAcceleration', true);
 
+  FListChanged := False;
+  FEPGChanged := False;
 end;
 
 procedure TConfig.WriteStrings(const APath: string; Values: TStrings);

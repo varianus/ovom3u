@@ -104,7 +104,7 @@ type
 implementation
 
 uses
-  gl, GLext, GeneralFunc, LoggerUnit, LCLIntf
+  gl, GLext, GeneralFunc, LoggerUnit, Config, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -185,8 +185,9 @@ begin
   Result := True;
   try
     fhandle := mpv_create();
-    mpv_set_option_string(fHandle^, 'hwdec', 'auto');
-//    mpv_set_option_string(fHandle^, 'hwdec-codecs', 'all');
+    if ConfigObj.MPVProperties.HardwareAcceleration then;
+       mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_request_log_messages(fhandle^, 'error');
@@ -429,7 +430,6 @@ begin
     GLRenderControl.MakeCurrent();
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
     glLoadIdentity;
-
     mpfbo.fbo := 0;
     mpfbo.h := GLRenderControl.Height;
     mpfbo.w := GLRenderControl.Width;

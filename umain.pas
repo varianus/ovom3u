@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -201,8 +201,6 @@ var
   CacheDir: string;
 begin
 
-  ConfigObj.ReadConfig;
-
   Kind := ConfigObj.ListProperties.ChannelsKind;
 
   if Kind = URL then
@@ -210,7 +208,7 @@ begin
     CacheDir := ConfigObj.CacheDir;
     IPTVList := ConfigObj.ListProperties.ChannelsUrl;
     try
-      if (epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListProperties.ListChanged then
+      if (epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListChanged then
       begin
         try
           OvoLogger.Log(INFO, 'Downloding channels list from ' + IPTVList);
@@ -236,6 +234,7 @@ begin
   if FileExists(IPTVList) then
     list.Load(IPTVList);
 
+  ConfigObj.ListChanged := False;
   OvoLogger.Log(INFO, 'Found %d channels', [List.Count]);
 
   if ConfigObj.ListProperties.UseChno then
@@ -271,6 +270,8 @@ end;
 
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
+  OvoLogger.Log(INFO, 'Load configuration from %s',[ConfigObj.ConfigFile]);
+  ConfigObj.ReadConfig;
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
@@ -601,6 +602,7 @@ procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   if Assigned(MpvEngine) then
     MpvEngine.isRenderActive := False;
+  Application.ProcessMessages;
   CloseAction := caFree;
 end;
 
@@ -640,13 +642,13 @@ procedure TfPlayer.actShowConfigExecute(Sender: TObject);
 begin
   if ShowConfig = mrOk then
   begin
-    if ConfigObj.ListProperties.ListChanged then
+    if ConfigObj.ListChanged then
     begin
       OvoLogger.Log(INFO, 'List configuration changed, reloading');
       EpgData.SetLastScan('Channels', 0);
       LoadList;
     end;
-    if ConfigObj.ListProperties.EPGChanged then
+    if ConfigObj.EPGChanged then
     begin
       OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
       EpgData.SetLastScan('epg', 0);

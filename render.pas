@@ -49,7 +49,7 @@ Type
 
 type
   Pmpv_render_param = ^mpv_render_param;
-  mpv_render_param = record
+  mpv_render_param = packed record
       _type : mpv_render_param_type;
       data : pointer;
     end;
@@ -72,7 +72,7 @@ type
 
 type
   Pmpv_render_frame_info = ^mpv_render_frame_info;
-  mpv_render_frame_info = record
+  mpv_render_frame_info = packed record
       flags : uint64;
       target_time : int64;
     end;
