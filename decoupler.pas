@@ -74,7 +74,7 @@ begin
     begin
     RtlEventWaitFor(WaitEvent);
     if assigned(Owner.FOnCommand) and not Terminated then
-      Synchronize(@RunEvent);
+      Queue(@RunEvent);
 
     RTLeventResetEvent(WaitEvent);
     end;
