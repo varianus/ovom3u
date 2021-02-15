@@ -437,6 +437,7 @@ begin
     RenderParams[0].Data := @mpfbo;
     mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
     GLRenderControl.SwapBuffers();
+    mpv_render_context_report_swap(Context^);
   end;
 
 end;
