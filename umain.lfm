@@ -11,6 +11,7 @@ object fPlayer: TfPlayer
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  LCLVersion = '2.1.0.0'
   object pnlContainer: TPanel
     Left = 191
     Height = 512
@@ -21,7 +22,7 @@ object fPlayer: TfPlayer
     ClientHeight = 512
     ClientWidth = 619
     Color = clBlack
-    DoubleBuffered = True
+    DoubleBuffered = False
     FullRepaint = False
     ParentColor = False
     ParentDoubleBuffered = False
@@ -83,7 +84,7 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        163
+        184
       )
     end
     object Panel1: TPanel

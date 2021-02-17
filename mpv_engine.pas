@@ -60,6 +60,8 @@ type
     FOnLoadingState: TNotifyEvent;
     fOnTrackChange: TNotifyEvent;
     fTrackList: TTrackList;
+    fMuted: boolean;
+    fOldVolume: integer;
     EngineState: TEngineState;
     Loading: boolean;
     ClientVersion: DWORD;
@@ -94,6 +96,7 @@ type
     procedure Stop;
     procedure Seek(Seconds: integer);
     function Pause: boolean;
+    Procedure Mute;
     constructor Create;
     destructor Destroy; override;
     procedure Test;
@@ -224,6 +227,7 @@ begin
   Loadrender(libmpv.External_library);
   EngineState := ENGINE_IDLE;
   fHandle := nil;
+  fMuted := false;
 end;
 
 destructor TMPVEngine.Destroy;
@@ -309,6 +313,8 @@ begin
       case (Event^.event_id) of
         MPV_EVENT_LOG_MESSAGE:
           OvoLogger.Log(INFO, Pmpv_event_log_message(Event^.Data)^.Text);
+        MPV_EVENT_QUEUE_OVERFLOW:
+          OvoLogger.Log(ERROR, 'Event owerflow');
         MPV_EVENT_PLAYBACK_RESTART:
         begin
           Loading := False;
@@ -625,6 +631,22 @@ begin
     EngineState := ENGINE_Pause;
   end;
 
+end;
+
+procedure TMPVEngine.Mute;
+begin
+  if fMuted then
+    begin
+      Volume := fOldVolume;
+      fMuted := false;
+
+    end
+  else
+    begin
+      fOldVolume:=Volume;
+      Volume := 0;
+      fMuted := true;
+    end;
 end;
 
 procedure TMPVEngine.Test;

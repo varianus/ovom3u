@@ -396,6 +396,10 @@ begin
     end;
     VK_F:
       SetFullScreen;
+    VK_M:
+      begin
+        MpvEngine.Mute;
+      end;
     VK_E:
     begin
       actShowEpg.Execute;
