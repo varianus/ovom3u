@@ -184,6 +184,7 @@ end;
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
 var
   ServerVersion:Pchar;
+  i: Integer;
 begin
   Result := True;
   try
@@ -197,6 +198,12 @@ begin
     mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
+    for i:= 0 to ConfigObj.MPVProperties.CustomOptions.Count -1 do
+      begin
+        mpv_set_option_string(fHandle^, pchar(ConfigObj.MPVProperties.CustomOptions.Names[i]),
+                                        pchar(ConfigObj.MPVProperties.CustomOptions.ValueFromIndex[i]));
+
+      end;
 
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
