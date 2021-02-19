@@ -113,7 +113,8 @@ begin
   cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
 
   cbHardwareAcceleration.Checked := ConfigObj.MPVProperties.HardwareAcceleration;
-  ConfigObj.ReadStrings('mpv/CustomOptions', vleCustomOptions.Strings);
+  vleCustomOptions.Strings.Assign(ConfigObj.MPVProperties.CustomOptions);
+
 
 end;
 
@@ -134,7 +135,7 @@ begin
   ConfigObj.ListProperties := ListProperties;
 
   ConfigObj.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
-  ConfigObj.WriteStrings('mpv/CustomOptions', vleCustomOptions.Strings);
+  ConfigObj.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
 end;

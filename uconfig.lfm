@@ -256,7 +256,7 @@ object fConfig: TfConfig
         AnchorSideBottom.Control = tsMpv
         AnchorSideBottom.Side = asrBottom
         Left = 12
-        Height = 246
+        Height = 266
         Top = 107
         Width = 550
         AlternateColor = clBtnFace
@@ -266,7 +266,6 @@ object fConfig: TfConfig
         FixedCols = 0
         RowCount = 2
         TabOrder = 0
-        Visible = False
         KeyOptions = [keyEdit, keyAdd, keyUnique]
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
         ColWidths = (
@@ -293,7 +292,6 @@ object fConfig: TfConfig
         BorderSpacing.Top = 20
         Caption = 'WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options.'
         ParentColor = False
-        Visible = False
         WordWrap = True
       end
     end

@@ -63,9 +63,13 @@ type
 
   TMPVProperties = record
   private
+    fCustomOptions: TStrings;
     fHardwareAcceleration: boolean;
   public
     Property HardwareAcceleration: boolean read fHardwareAcceleration write fHardwareAcceleration;
+    Property CustomOptions: TStrings read  fCustomOptions write fCustomOptions;
+    class operator Initialize(var hdl: TMPVProperties);
+    class operator Finalize(var hdl: TMPVProperties);
   end;
 
   TConfig = class
@@ -213,6 +217,18 @@ begin
     Result := aDefault
   else
     Result := T(OrdValue);
+end;
+
+{ TMPVProperties }
+
+class operator TMPVProperties.Initialize(var hdl: TMPVProperties);
+begin
+  hdl.fCustomOptions := TStringList.Create;
+end;
+
+class operator TMPVProperties.Finalize(var hdl: TMPVProperties);
+begin
+  FreeAndNil(hdl.fCustomOptions);
 end;
 
 { TSimpleHistory }
@@ -420,6 +436,7 @@ begin
   WriteBoolean('gui/ViewCurrentProgram', FGuiProperties.ViewCurrentProgram);
 
   WriteBoolean('MPV/HardwareAcceleration', FMPVProperties.HardwareAcceleration);
+  WriteStrings('MPV/CustomOptions', FMPVProperties.CustomOptions);
 
 
   fConfigHolder.SaveToFile(FConfigFile, true);
@@ -454,6 +471,7 @@ begin
   FGuiProperties.ViewCurrentProgram := ReadBoolean('gui/ViewCurrentProgram', false);
 
   FMPVProperties.HardwareAcceleration := ReadBoolean('MPV/HardwareAcceleration', true);
+  ReadStrings('MPV/CustomOptions', FMPVProperties.fCustomOptions);
 
   FListChanged := False;
   FEPGChanged := False;
