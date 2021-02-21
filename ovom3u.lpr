@@ -30,7 +30,7 @@ uses {$IFDEF UNIX}
   umain,
   sysutils,
   uEPGFOrm,
-  LoggerUnit, appconsts;
+  LoggerUnit, appconsts, Renderer;
 
 {$R *.res}
 

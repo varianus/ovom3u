@@ -11,7 +11,6 @@ object fPlayer: TfPlayer
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  LCLVersion = '2.1.0.0'
   object pnlContainer: TPanel
     Left = 191
     Height = 512
@@ -36,10 +35,8 @@ object fPlayer: TfPlayer
       Top = 0
       Width = 619
       Align = alClient
-      AutoResizeViewport = True
       OpenGLMajorVersion = 2
       OpenGLMinorVersion = 1
-      MultiSampling = 0
       OnDblClick = GLRendererDblClick
       OnMouseMove = GLRendererMouseMove
       PopupMenu = pmPlayer
@@ -84,7 +81,7 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        184
+        163
       )
     end
     object Panel1: TPanel
