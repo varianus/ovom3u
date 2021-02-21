@@ -837,9 +837,9 @@ begin
 
   FLoading := AValue;
   LoadingTimer.Enabled := FLoading;
+  GLRenderer.Visible := not FLoading;
   if not loading then
   begin
-    GLRenderer.Visible := true;
     fLastMessage := '';
     MpvEngine.LoadTracks;
     LoadTracks;
