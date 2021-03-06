@@ -139,8 +139,7 @@ begin
     RtlEventWaitFor(WaitEvent);
     begin
       begin
-        res := mpv_render_context_update(Context^);
-        if (res and MPV_RENDER_UPDATE_FRAME) <> 0 then
+        while (mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0 do
           begin
             fControl.MakeCurrent();
             mpfbo.fbo := 0;
