@@ -227,9 +227,12 @@ end;
 // initialize OpenGL rendering
 procedure TMPVEngine.InitRenderer(Data: PtrInt);
  begin
-  RenderObj := TRender.Create(FGLRenderControl, fHandle);
   isRenderActive := True;
   GLRenderControl.Visible := false;
+  GLRenderControl.ReleaseContext;
+  Application.ProcessMessages;
+  RenderObj := TRender.Create(FGLRenderControl, fHandle);
+
 end;
 
 // Handle player messages to avoid threading issues
