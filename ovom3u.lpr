@@ -21,8 +21,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 program ovom3u;
 
 uses {$IFDEF UNIX}
-  cthreads, {$ENDIF} {$IFDEF HASAMIGA}
+  cthreads,
+  {$ENDIF} {$IFDEF HASAMIGA}
   athreads, {$ENDIF}
+  {$IF defined(LCLGTK2) or defined(LCLGTK3)}
+    {$IF defined(Linux) or defined(FreeBSD)}
+     unix_init_xlib,
+    {$ENDIF}
+  {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms,
   LazLogger,
