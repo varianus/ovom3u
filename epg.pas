@@ -330,15 +330,19 @@ procedure TEpg.UpgradeDBStructure(LoadedDBVersion: integer);
 const
    ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
    UPDATESTATUS = 'UPDATE confid SET Version = %d;';
+var
+  MustUpdate: Boolean;
 begin
-  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, NewVersion));
+  MustUpdate := false;
+  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, CURRENTDBVERSION]);
   if LoadedDBVersion < 2 then
      begin
        Fdb.ExecuteDirect(ToV2_1) ;
        MustUpdate := true;
      end;
 
-  fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+  if MustUpdate then
+    fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
 
 end;
 

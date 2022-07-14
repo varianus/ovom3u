@@ -111,13 +111,10 @@ begin
 
   cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
   cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
-<<<<<<< HEAD
-=======
 
   cbHardwareAcceleration.Checked := ConfigObj.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(ConfigObj.MPVProperties.CustomOptions);
 
->>>>>>> experiment-threadedrender
 
 end;
 
