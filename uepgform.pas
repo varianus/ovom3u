@@ -191,7 +191,7 @@ end;
 procedure TEPGForm.actNowExecute(Sender: TObject);
 begin
   StartTime := trunc(now) + Floor(frac(now - OneHour) * 24) / 24;
-  EndTime := StartTime + OneHour*3;
+  EndTime := StartTime + OneHour*4;
   UpdateTimeRange;
   TimeGrid.Invalidate;
 end;
