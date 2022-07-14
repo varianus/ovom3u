@@ -23,8 +23,8 @@ unit MPV_Engine;
 interface
 
 uses
-  Classes, SysUtils, libmpv, decoupler, BaseTypes, render, render_gl,
-  OpenGLContext, Forms, LCLType;
+  Classes, SysUtils, libmpv, decoupler, BaseTypes, render,
+  OpenGLContext, Forms, LCLType, Renderer;
 
 type
   TTrackType = (trkAudio, trkVideo, trkSub, trkUnknown);
@@ -56,18 +56,18 @@ type
     fdecoupler: TDecoupler;
     fisGlEnabled: boolean;
     fIsRenderActive: boolean;
-    Context: pmpv_render_context;
     FOnLoadingState: TNotifyEvent;
     fOnTrackChange: TNotifyEvent;
     fTrackList: TTrackList;
+    fMuted: boolean;
+    fOldVolume: integer;
     EngineState: TEngineState;
     Loading: boolean;
     ClientVersion: DWORD;
-    RenderParams: array of mpv_render_param;
+    RenderObj : TRender;
 
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetMainVolume: integer;
-    procedure GLRenderControlPaint(Sender: TObject);
     procedure InitRenderer(Data: PtrInt);
     procedure PostCommand(Command: TEngineCommand; Param: integer);
     procedure ReceivedCommand(Sender: TObject; Command: TEngineCommand; Param: integer);
@@ -94,6 +94,7 @@ type
     procedure Stop;
     procedure Seek(Seconds: integer);
     function Pause: boolean;
+    Procedure Mute;
     constructor Create;
     destructor Destroy; override;
     procedure Test;
@@ -104,31 +105,14 @@ type
 implementation
 
 uses
-  gl, GLext, GeneralFunc, LoggerUnit, LCLIntf
+  GeneralFunc, LoggerUnit, Config, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
 
-const
-  Flip: longint = 1;
-  Skip: longint = 0;
-
 {$ifdef LINUX}
 function setlocale(category: cint; locale: PChar): PChar; cdecl; external 'c' Name 'setlocale';
 {$endif}
-
-
-
-
-// Used by libmpv to load OpenGL functions
-function get_proc_address(ctx: pointer; Name: PChar): pointer; cdecl;
-begin
-  Result := GetProcAddress(LibGL, Name);
-
-  if Result = nil then
-    Result := wglGetProcAddress(Name);
-
-end;
 
 // Callbacks
 procedure LibMPVEvent(Data: Pointer); cdecl;
@@ -136,15 +120,6 @@ begin
   if (Data = nil) then
     exit;
   TMPVEngine(Data).PostCommand(ecEvent, 1);
-end;
-
-
-procedure Update_gl(cb_ctx: pointer); cdecl;
-begin
-  if (cb_ctx = nil) then
-    exit;
-
-  TMPVEngine(cb_ctx).PostCommand(ecPaint, 1);
 end;
 
 { TTrack }
@@ -181,18 +156,26 @@ end;
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
 var
   ServerVersion:Pchar;
+  i: Integer;
 begin
   Result := True;
   try
     fhandle := mpv_create();
-    mpv_set_option_string(fHandle^, 'hwdec', 'auto');
-//    mpv_set_option_string(fHandle^, 'hwdec-codecs', 'all');
+    if ConfigObj.MPVProperties.HardwareAcceleration then;
+       mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_request_log_messages(fhandle^, 'error');
     mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
+    for i:= 0 to ConfigObj.MPVProperties.CustomOptions.Count -1 do
+      begin
+        mpv_set_option_string(fHandle^, pchar(ConfigObj.MPVProperties.CustomOptions.Names[i]),
+                                        pchar(ConfigObj.MPVProperties.CustomOptions.ValueFromIndex[i]));
+
+      end;
 
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
@@ -223,16 +206,14 @@ begin
   Loadrender(libmpv.External_library);
   EngineState := ENGINE_IDLE;
   fHandle := nil;
+  fMuted := false;
 end;
 
 destructor TMPVEngine.Destroy;
 begin
   if Assigned(fHandle) then
   begin
-    mpv_render_context_set_update_callback(Context^,nil,nil);
-    // Clear all paint events before destroying context
-    Application.ProcessMessages;
-    mpv_render_context_free(Context^);
+    RenderObj.Free;
     mpv_set_wakeup_callback(fhandle^, nil, self);
     mpv_terminate_destroy(fhandle^);
   end;
@@ -245,41 +226,13 @@ end;
 
 // initialize OpenGL rendering
 procedure TMPVEngine.InitRenderer(Data: PtrInt);
-var
-  Params: array of mpv_render_param;
-  glParams: mpv_opengl_init_params;
-  i: integer;
  begin
-  GLRenderControl.DoubleBuffered := true;
-  Load_GL_version_1_3();
-  Load_GL_VERSION_2_1();
-  GLRenderControl.MakeCurrent();
-  Params := nil;
-  SetLength(Params, 3);
-  Params[0]._type := MPV_RENDER_PARAM_API_TYPE;
-  Params[0].Data := PChar(MPV_RENDER_API_TYPE_OPENGL);
-  Params[1]._type := MPV_RENDER_PARAM_OPENGL_INIT_PARAMS;
-  glParams.get_proc_address := @get_proc_address;
-  glParams.extra_exts := nil;
-  Params[1].Data := @glParams;
-  Params[2]._type := MPV_RENDER_PARAM_INVALID;
-  Params[2].Data := nil;
-
-  i := mpv_render_context_create(Context, fHandle^, Pmpv_render_param(@Params[0]));
-  if (i < 0) then
-    raise Exception.Create('failed to initialize mpv GL context');
-
-  SetLength(RenderParams, 3);
-  RenderParams[0]._type := MPV_RENDER_PARAM_OPENGL_FBO;
-  RenderParams[0].Data := nil;
-  RenderParams[1]._type := MPV_RENDER_PARAM_FLIP_Y;
-  RenderParams[1].Data := @Flip;
-  RenderParams[2]._type := MPV_RENDER_PARAM_INVALID;
-  RenderParams[3].Data := nil;
-
-  mpv_render_context_set_update_callback(Context^, @update_gl, self);
-  GLRenderControl.OnPaint := GLRenderControlPaint;
   isRenderActive := True;
+  GLRenderControl.Visible := false;
+  GLRenderControl.ReleaseContext;
+  Application.ProcessMessages;
+  RenderObj := TRender.Create(FGLRenderControl, fHandle);
+
 end;
 
 // Handle player messages to avoid threading issues
@@ -293,12 +246,6 @@ var
   Event: Pmpv_event;
   p: integer;
 begin
-  if (Command = ecPaint) and (param = 1)  and isRenderActive then
-  begin
-    isGlEnabled := True;
-    gLRenderControl.invalidate; //  PostMessage(GLRenderControl.Handle, LM_PAINT,0,0);// GLRenderControl.Repaint;
-    exit;
-  end;
 
   if (Command = ecEvent) and (param = 1) then
   begin
@@ -308,6 +255,8 @@ begin
       case (Event^.event_id) of
         MPV_EVENT_LOG_MESSAGE:
           OvoLogger.Log(INFO, Pmpv_event_log_message(Event^.Data)^.Text);
+        MPV_EVENT_QUEUE_OVERFLOW:
+          OvoLogger.Log(ERROR, 'Event owerflow');
         MPV_EVENT_PLAYBACK_RESTART:
         begin
           Loading := False;
@@ -418,24 +367,6 @@ begin
   end;
   if Assigned(fOnTrackChange) then
     fOnTrackChange(self);
-end;
-
-procedure TMPVEngine.GLRenderControlPaint(Sender: TObject);
-var
-  mpfbo: mpv_opengl_fbo;
-begin
-  if isGlEnabled and isRenderActive then
-  begin
-    GLRenderControl.MakeCurrent();
-    mpfbo.fbo := 0;
-    mpfbo.h := GLRenderControl.Height;
-    mpfbo.w := GLRenderControl.Width;
-    mpfbo.internal_format := 0;
-    RenderParams[0].Data := @mpfbo;
-    mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
-    GLRenderControl.SwapBuffers();
-  end;
-
 end;
 
 function TMPVEngine.GetBoolProperty(const PropertyName: string): boolean;
@@ -621,6 +552,21 @@ begin
     EngineState := ENGINE_Pause;
   end;
 
+end;
+
+procedure TMPVEngine.Mute;
+begin
+  if fMuted then
+    begin
+      Volume := fOldVolume;
+      fMuted := false;
+    end
+  else
+    begin
+      fOldVolume:=Volume;
+      Volume := 0;
+      fMuted := true;
+    end;
 end;
 
 procedure TMPVEngine.Test;

@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Config;
+  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config;
 
 type
 
@@ -37,21 +37,32 @@ type
     cbEpgKind: TComboBox;
     cbUseChno: TCheckBox;
     cbDownloadLogo: TCheckBox;
+    cbHardwareAcceleration: TCheckBox;
     edtChannelsFileName: TFileNameEdit;
     edtEpgFileName: TFileNameEdit;
     edtChannelsUrl: TEdit;
     edtEpgUrl: TEdit;
+    GroupBox1: TGroupBox;
     Label5: TLabel;
     lb: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
     lb1: TLabel;
+    pcSettings: TPageControl;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    lbWarning: TLabel;
+    tsMpv: TTabSheet;
+    tsChannels: TTabSheet;
+    vleCustomOptions: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
     procedure cbChannelsKindChange(Sender: TObject);
     procedure cbEpgKindChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure OKButtonClick(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
   private
 
   public
@@ -98,39 +109,48 @@ begin
   edtEpgFileName.Text := ConfigObj.ListProperties.EpgFileName;
   edtEpgUrl.Text := ConfigObj.ListProperties.EpgUrl;
 
-
   cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
   cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
+<<<<<<< HEAD
+=======
+
+  cbHardwareAcceleration.Checked := ConfigObj.MPVProperties.HardwareAcceleration;
+  vleCustomOptions.Strings.Assign(ConfigObj.MPVProperties.CustomOptions);
+
+>>>>>>> experiment-threadedrender
 
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
-  ListProperties: TListsProperties;
+  ListProperties: TListProperties;
 begin
 
-  ListProperties.ListChanged := (TProviderKind(cbChannelsKind.ItemIndex) <> ConfigObj.ListProperties.ChannelsKind) or
-     (ConfigObj.ListProperties.ChannelsFileName <> edtChannelsFileName.Text) or
-     (ConfigObj.ListProperties.ChannelsUrl <> edtChannelsUrl.Text) or
-     (ConfigObj.ListProperties.UseChno <> cbUseChno.Checked) or
-     (ConfigObj.ListProperties.ChannelsDownloadLogo <> cbDownloadLogo.Checked);
   ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
   ListProperties.ChannelsFileName := edtChannelsFileName.Text;
   ListProperties.ChannelsUrl := edtChannelsUrl.Text;
   ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
 
-  ListProperties.EPGChanged := (TProviderKind(cbEpgKind.ItemIndex) <> ConfigObj.ListProperties.EpgKind) or
-     (ConfigObj.ListProperties.EpgFileName <> edtEpgFileName.Text) or
-     (ConfigObj.ListProperties.EpgUrl <> edtEpgUrl.Text) or
-     (ConfigObj.ListProperties.UseChno <> cbUseChno.Checked);
   ListProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
   ListProperties.EpgFileName := edtEpgFileName.Text;
   ListProperties.EpgUrl := edtEpgUrl.Text;
-
   ListProperties.UseChno := cbUseChno.Checked;
   ConfigObj.ListProperties := ListProperties;
+
+  ConfigObj.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
+  ConfigObj.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
+end;
+
+procedure TfConfig.SpeedButton1Click(Sender: TObject);
+begin
+  pcSettings.ActivePage:= tsChannels;
+end;
+
+procedure TfConfig.SpeedButton2Click(Sender: TObject);
+begin
+  pcSettings.ActivePage:= tsMpv;
 end;
 
 procedure TfConfig.cbChannelsKindChange(Sender: TObject);

@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, EditBtn, StdCtrls, um3uloader,
+  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, um3uloader,
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, UITypes, epg, uMyDialog, uEPGFOrm;
 
@@ -201,8 +201,6 @@ var
   CacheDir: string;
 begin
 
-  ConfigObj.ReadConfig;
-
   Kind := ConfigObj.ListProperties.ChannelsKind;
 
   if Kind = URL then
@@ -210,7 +208,7 @@ begin
     CacheDir := ConfigObj.CacheDir;
     IPTVList := ConfigObj.ListProperties.ChannelsUrl;
     try
-      if (epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListProperties.ListChanged then
+      if (epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListChanged then
       begin
         try
           OvoLogger.Log(INFO, 'Downloding channels list from ' + IPTVList);
@@ -236,6 +234,7 @@ begin
   if FileExists(IPTVList) then
     list.Load(IPTVList);
 
+  ConfigObj.ListChanged := False;
   OvoLogger.Log(INFO, 'Found %d channels', [List.Count]);
 
   if ConfigObj.ListProperties.UseChno then
@@ -271,6 +270,8 @@ end;
 
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
+  OvoLogger.Log(INFO, 'Load configuration from %s',[ConfigObj.ConfigFile]);
+  ConfigObj.ReadConfig;
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
@@ -363,19 +364,19 @@ begin
         ChannelList.Row := CurrentChannel - 1;
         play(ChannelList.Row);
       end;
-      VK_RETURN:
-        if ChannelSelecting then
-        begin
-          if ConfigObj.ListProperties.UseChno then
-            ChannelSelected := List.ItemByChno(ChannelSelected);
-          play(ChannelSelected);
-          ChannelSelecting := False;
-          key := 0;
-        end;
       else
         Pass := True;
     end;
   case key of
+    VK_RETURN:
+      if ChannelSelecting then
+      begin
+        if ConfigObj.ListProperties.UseChno then
+          ChannelSelected := List.ItemByChno(ChannelSelected);
+        play(ChannelSelected);
+        ChannelSelecting := False;
+        key := 0;
+      end;
     VK_I:
       ShowEpg;
     VK_S:
@@ -395,6 +396,10 @@ begin
     end;
     VK_F:
       SetFullScreen;
+    VK_M:
+      begin
+        MpvEngine.Mute;
+      end;
     VK_E:
     begin
       actShowEpg.Execute;
@@ -504,16 +509,6 @@ begin
   if ConfigObj.GuiProperties.ViewLogo then
   begin
     h := ChannelList.RowHeights[aRow];
-    cv.Font.Size := 9;
-    if CurrentChannel = aRow then
-    begin
-      cv.Font.Style := [fsBold, fsUnderline];
-      cv.Font.color := clHighlightText;
-      cv.Brush.color := clHighlight;
-      cv.Rectangle(aRect);
-    end
-    else
-      cv.Font.Style := [fsBold];
     if Element.IconAvailable then
     begin
       bmp := TPicture.Create;
@@ -541,6 +536,17 @@ begin
 
   end;
 
+  cv.Font.Height := Scale96Toscreen(-16);
+  if CurrentChannel = aRow then
+  begin
+    cv.Font.Style := [fsBold, fsUnderline];
+    cv.Font.color := clHighlightText;
+    cv.Brush.color := clHighlight;
+    cv.Rectangle(aRect);
+  end
+  else
+    cv.Font.Style := [fsBold];
+
   Spacing := Scale96ToScreen(2);
   cv.TextRect(aRect, h + Spacing, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
   if ConfigObj.GuiProperties.ViewCurrentProgram then
@@ -548,7 +554,7 @@ begin
     epgInfo := epgdata.GetEpgInfo(arow + 1, now);
     if epgInfo.HaveData then
     begin
-      cv.Font.Size := 9;
+      cv.Font.Height := Scale96ToScreen(-12);
       cv.Font.Style := [];
       Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
       cv.TextRect(aRect, h + Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
@@ -600,6 +606,7 @@ procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   if Assigned(MpvEngine) then
     MpvEngine.isRenderActive := False;
+  Application.ProcessMessages;
   CloseAction := caFree;
 end;
 
@@ -610,8 +617,14 @@ end;
 
 procedure TfPlayer.AppPropertiesException(Sender: TObject; E: Exception);
 begin
+  TRY
   OvoLogger.Log(ERROR, 'EXCEPTION : %s' + LineEnding +
     '%s', [e.message, BackTraceStrFunc(ExceptAddr)]);
+
+  except
+     Halt(999);
+     // avoid exception on exception
+  end;
 end;
 
 procedure TfPlayer.actShowEpgExecute(Sender: TObject);
@@ -633,13 +646,13 @@ procedure TfPlayer.actShowConfigExecute(Sender: TObject);
 begin
   if ShowConfig = mrOk then
   begin
-    if ConfigObj.ListProperties.ListChanged then
+    if ConfigObj.ListChanged then
     begin
       OvoLogger.Log(INFO, 'List configuration changed, reloading');
       EpgData.SetLastScan('Channels', 0);
       LoadList;
     end;
-    if ConfigObj.ListProperties.EPGChanged then
+    if ConfigObj.EPGChanged then
     begin
       OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
       EpgData.SetLastScan('epg', 0);
@@ -824,9 +837,9 @@ begin
 
   FLoading := AValue;
   LoadingTimer.Enabled := FLoading;
-  GLRenderer.Visible := not FLoading;
   if not loading then
   begin
+    GLRenderer.Visible := true;
     fLastMessage := '';
     MpvEngine.LoadTracks;
     LoadTracks;
@@ -959,7 +972,9 @@ begin
       RestoredBorderStyle := BorderStyle;
       RestoredWindowState := WindowState;
         {$IFDEF WINDOWS}
-      BorderStyle := bsNone;
+     // On windows this is required to go fullscreen
+     // but there is a bug in LCL and I get only a black screen!!
+     // BorderStyle := bsNone;
         {$ENDIF}
       WindowState := wsFullScreen;
       HideMouse.Enabled := True;

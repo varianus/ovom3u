@@ -23,10 +23,16 @@ unit epg;
 interface
 
 uses
-  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes, AppConsts;
+  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes, AppConsts, Generics.Collections;
 
 type
   TEpg = class;
+
+  TChannelData = class
+    EpgId: string;
+    Id: integer;
+  end;
+
   { TEpgScanner }
 
   TEpgScanner = class(TThread)
@@ -38,7 +44,8 @@ type
     fOwner: TEpg;
     Success: boolean;
     FStopped: boolean;
-    function FindChannelId(Channel: string): integer;
+    function FindChannelIdByEPGName(Channel: string): integer;
+    function FindChannelIdByName(Channel: string): integer;
     procedure SetOnEndWork(AValue: TNotifyEvent);
 
   protected
@@ -104,24 +111,43 @@ const
     'PRAGMA count_changes = 0;',
     'PRAGMA encoding = "UTF-8";'
     );
-  CURRENTDBVERSION = 1;
+  CURRENTDBVERSION = 2;
 
-  CREATECONFIGTABLE1 = 'CREATE TABLE config (' + '"Version" INTEGER COLLATE NOCASE' + ');';
+  CREATECONFIGTABLE1 = 'CREATE TABLE config ('
+                     + '"Version" INTEGER COLLATE NOCASE'
+                     + ');';
 
   CREATECONFIGTABLE2 = ' INSERT INTO config (Version) VALUES(1);';
   UPDATECONFIG = 'UPDATE config SET Version = %d;';
 
-  CREATESCANTABLE1 = 'CREATE TABLE scans (' + ' "Epg" DATETIME' + ' ,"Channels" DATETIME' + ',ChannelsMd5 VARCHAR );';
+  CREATESCANTABLE1 = 'CREATE TABLE scans ('
+                   + ' "Epg" DATETIME'
+                   + ' ,"Channels" DATETIME'
+                   + ',ChannelsMd5 VARCHAR );';
   CREATESCANTABLE2 = 'insert into  scans select 0,0,null where not EXISTS (select * from scans);';
 
-  CREATECHANNELTABLE = 'CREATE TABLE channels (' + ' "ID" INTEGER primary key' + ',"Name" VARCHAR COLLATE NOCASE' + ',"ChannelNo" VARCHAR COLLATE NOCASE' + ')';
+  CREATECHANNELTABLE = 'CREATE TABLE channels ('
+                     + ' "ID" INTEGER primary key'
+                     + ',"Name" VARCHAR COLLATE NOCASE'
+                     + ',"ChannelNo" VARCHAR COLLATE NOCASE'
+                     + ',"EpgName" VARCHAR COLLATE NOCASE'
+                     + ')';
   CREATECHANNELINDEX1 = 'CREATE INDEX "idx_Channels_Name" on channels (Name ASC);';
+  CREATECHANNELINDEX2 = 'CREATE INDEX "idx_Channels_EpgName" on channels (EpgName ASC);';
 
-  CREATEPROGRAMMETABLE = 'CREATE TABLE programme (' + ' idProgram    integer primary key' + ',idChannel    integer' + ',sTitle       VARCHAR(128)' + ',sPlot        VARCHAR' + ',dStartTime   DATETIME' + ',dEndTime     DATETIME' + ');';
+  CREATEPROGRAMMETABLE = 'CREATE TABLE programme ('
+                       + ' idProgram    integer primary key'
+                       + ',idChannel    integer'
+                       + ',sTitle       VARCHAR(128)'
+                       + ',sPlot        VARCHAR'
+                       + ',dStartTime   DATETIME'
+                       + ',dEndTime     DATETIME'
+                       + ');';
   CREATEPROGRAMMEINDEX1 = 'CREATE INDEX "idx_programme_Channel" on programme (idChannel, dStartTime ASC);';
   CREATEPROGRAMMEINDEX2 = 'CREATE INDEX "idx_programme_iStartTime" on programme (dStartTime ASC);';
 
-  INSERTPROGRAMME = 'INSERT INTO "programme"("idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")' + ' values  (NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
+  INSERTPROGRAMME = 'INSERT INTO "programme"("idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")'
+                 + ' values  (NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
 
 procedure TEpg.SetupDBConnection;
 var
@@ -273,6 +299,7 @@ begin
         OvoLogger.Log(DEBUG, 'Creating channel table');
         fDB.ExecuteDirect(CREATECHANNELTABLE);
         fDB.ExecuteDirect(CREATECHANNELINDEX1);
+        fDB.ExecuteDirect(CREATECHANNELINDEX2);
         ftr.CommitRetaining;
       end;
       if TableList.IndexOf('programme') < 0 then
@@ -300,8 +327,19 @@ begin
 end;
 
 procedure TEpg.UpgradeDBStructure(LoadedDBVersion: integer);
+const
+   ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
+   UPDATESTATUS = 'UPDATE confid SET Version = %d;';
 begin
-  //  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, NewVersion));
+  OvoLogger.Log(INFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, NewVersion));
+  if LoadedDBVersion < 2 then
+     begin
+       Fdb.ExecuteDirect(ToV2_1) ;
+       MustUpdate := true;
+     end;
+
+  fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+
 end;
 
 procedure TEpg.EndScan(AObject: TObject);
@@ -466,10 +504,11 @@ begin
   try
     fdb.ExecuteDirect('delete from channels;');
     qinsert.Transaction := fTR;
-    qinsert.SQL.Text := 'insert into channels values (null, :name, :ChannelNo);';
+    qinsert.SQL.Text := 'insert into channels values (null, :name, :ChannelNo, :EpgName);';
     for item in List do
     begin
       qinsert.ParamByName('name').AsString := item.Title;
+      qinsert.ParamByName('EpgName').AsString := item.tvg_name;
       qinsert.ParamByName('ChannelNo').AsInteger := item.Number;
       qinsert.ExecSQL;
     end;
@@ -570,7 +609,7 @@ begin
   end;
 end;
 
-function TEpgScanner.FindChannelId(Channel: string): integer;
+function TEpgScanner.FindChannelIdByName(Channel: string): integer;
 var
   qFind: TSQLQuery;
 begin
@@ -590,6 +629,27 @@ begin
   end;
 end;
 
+function TEpgScanner.FindChannelIdByEPGName(Channel: string): integer;
+var
+  qFind: TSQLQuery;
+begin
+  qFind := TSQLQuery.Create(fOwner.fDB);
+  try
+    qFind.Transaction := fOwner.fTR;
+    qFind.SQL.Text := 'select id from Channels where epgname = :name;';
+    qFind.ParamByName('name').AsString := Channel;
+    qFind.Open;
+    if qFind.EOF then
+      Result := -1
+    else
+      Result := qFind.Fields[0].AsInteger;
+
+  finally
+    qFind.Free;
+  end;
+end;
+
+
 procedure TEpgScanner.SetOnEndWork(AValue: TNotifyEvent);
 begin
   FOnEndWork := AValue;
@@ -605,6 +665,7 @@ var
   s1, s2: TDateTime;
   idChannel: integer;
   qInsert: TSQLQuery;
+  ChannelList: TObjectList<TChannelData>;
 
   function NodeValue(const ValueName: string): string; inline;
   var
@@ -617,9 +678,53 @@ var
       Result := EmptyStr;
   end;
 
+  procedure AddChannel(const Node: TDOMNode); inline;
+  var
+    Channel: TChannelData;
+    Child: TDomNode;
+    j, k: integer;
+
+  begin
+    Channel := TChannelData.Create;
+    Channel.EpgId := Node.Attributes.GetNamedItem('id').NodeValue;
+    Channel.Id := FindChannelIdByEPGName(Channel.EpgId);
+    if Channel.Id = -1 then
+      for j := 0 to Node.ChildNodes.Count - 1 do
+      begin
+        Child := Node.ChildNodes[j];
+        if Child.NodeName = 'display-name' then
+        begin
+          k := FindChannelIdByName(Child.TextContent);
+          if k <> -1 then
+          begin
+            Channel.Id := k;
+            Break;
+          end;
+        end;
+      end;
+
+    if Channel.Id <> -1 then
+      ChannelList.Add(Channel)
+    else
+      Channel.Free;
+  end;
+
+  function FindChannelIdInList(ChannelEpgId: string): integer;
+  var
+   Channel: TChannelData;
+  begin
+    Result := -1;
+    for channel in ChannelList do
+    begin
+      if Channel.EpgId = ChannelEpgId then
+        Result := Channel.Id;
+    end;
+  end;
+
 begin
   Result := 0;
   if StoppedCheck then exit;
+  ChannelList := TObjectList<TChannelData>.Create;
   ReadXMLFile(XMLDoc, EPGFile);
   try
 
@@ -637,12 +742,15 @@ begin
       begin
         CurrNode := Root.ChildNodes.Item[i];
         //      writeln(currnode.NodeName);
+        if CurrNode.NodeName = 'channel' then
+          AddChannel(CurrNode);
+
         if CurrNode.NodeName <> 'programme' then
           Continue;
         fName := CurrNode.Attributes.GetNamedItem('channel').NodeValue;
         if fName <> OldName then
         begin
-          idChannel := FindChannelId(fName);
+          idChannel := FindChannelIdInList(fName);
           OldName := fName;
         end;
 
@@ -668,6 +776,7 @@ begin
 
   finally
     XMLDoc.Free;
+    ChannelList.Free;
   end;
 
 end;

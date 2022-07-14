@@ -1,42 +1,42 @@
 object fPlayer: TfPlayer
   Left = 973
-  Height = 436
+  Height = 512
   Top = 225
-  Width = 618
+  Width = 810
   Caption = 'OvoM3U'
-  ClientHeight = 436
-  ClientWidth = 618
+  ClientHeight = 512
+  ClientWidth = 810
   KeyPreview = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  LCLVersion = '2.1.0.0'
   object pnlContainer: TPanel
     Left = 191
-    Height = 436
+    Height = 512
     Top = 0
-    Width = 427
+    Width = 619
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 436
-    ClientWidth = 427
+    ClientHeight = 512
+    ClientWidth = 619
     Color = clBlack
+    DoubleBuffered = False
+    FullRepaint = False
     ParentColor = False
+    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 0
     OnMouseMove = pnlContainerMouseMove
     OnPaint = pnlContainerPaint
     object GLRenderer: TOpenGLControl
       Left = 0
-      Height = 436
+      Height = 512
       Top = 0
-      Width = 427
+      Width = 619
       Align = alClient
-      AutoResizeViewport = True
       OpenGLMajorVersion = 2
       OpenGLMinorVersion = 1
-      MultiSampling = 0
       OnDblClick = GLRendererDblClick
       OnMouseMove = GLRendererMouseMove
       PopupMenu = pmPlayer
@@ -45,18 +45,18 @@ object fPlayer: TfPlayer
   end
   object pnlChannel: TPanel
     Left = 0
-    Height = 436
+    Height = 512
     Top = 0
     Width = 186
     Align = alLeft
     Caption = 'pnlChannel'
-    ClientHeight = 436
+    ClientHeight = 512
     ClientWidth = 186
     ParentFont = False
     TabOrder = 1
     object ChannelList: TDrawGrid
       Left = 1
-      Height = 403
+      Height = 479
       Top = 32
       Width = 184
       Align = alClient
@@ -66,7 +66,7 @@ object fPlayer: TfPlayer
       ExtendedSelect = False
       FixedCols = 0
       FixedRows = 0
-      Font.Height = 9
+      Font.Height = -16
       MouseWheelOption = mwGrid
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellHints, goCellEllipsis]
       ParentFont = False
@@ -132,7 +132,7 @@ object fPlayer: TfPlayer
   end
   object Splitter1: TSplitter
     Left = 186
-    Height = 436
+    Height = 512
     Top = 0
     Width = 5
   end

@@ -1,49 +1,335 @@
 object fConfig: TfConfig
-  Left = 604
-  Height = 327
-  Top = 228
-  Width = 638
+  Left = 585
+  Height = 439
+  Top = 213
+  Width = 767
   Caption = 'Config'
-  ClientHeight = 327
-  ClientWidth = 638
+  ClientHeight = 439
+  ClientWidth = 767
   OnShow = FormShow
-  LCLVersion = '2.1.0.0'
-  object cbChannelsKind: TComboBox
-    AnchorSideLeft.Side = asrBottom
-    AnchorSideTop.Side = asrCenter
-    Left = 129
-    Height = 23
-    Top = 16
-    Width = 240
-    BorderSpacing.Around = 12
-    ItemHeight = 15
-    Items.Strings = (
-      'Local File'
-      'URL'
-    )
-    OnChange = cbChannelsKindChange
+  object pcSettings: TPageControl
+    Left = 185
+    Height = 393
+    Top = 0
+    Width = 582
+    ActivePage = tsChannels
+    Align = alClient
+    ShowTabs = False
+    TabIndex = 0
     TabOrder = 0
-    Text = 'cbChannelsKind'
+    object tsChannels: TTabSheet
+      Caption = 'tsChannels'
+      ClientHeight = 385
+      ClientWidth = 574
+      object cbChannelsKind: TComboBox
+        AnchorSideLeft.Control = lb
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = lb
+        AnchorSideTop.Side = asrBottom
+        Left = 120
+        Height = 23
+        Top = 16
+        Width = 240
+        BorderSpacing.Around = 12
+        ItemHeight = 15
+        Items.Strings = (
+          'Local File'
+          'URL'
+        )
+        OnChange = cbChannelsKindChange
+        TabOrder = 0
+        Text = 'cbChannelsKind'
+      end
+      object lb: TLabel
+        AnchorSideLeft.Control = tsChannels
+        AnchorSideTop.Control = cbChannelsKind
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = cbChannelsKind
+        Left = 0
+        Height = 15
+        Top = 20
+        Width = 108
+        BorderSpacing.Right = 12
+        Caption = 'Channel list location'
+        FocusControl = cbChannelsKind
+        ParentColor = False
+      end
+      object cbUseChno: TCheckBox
+        AnchorSideLeft.Control = edtChannelsUrl
+        AnchorSideTop.Control = edtChannelsUrl
+        AnchorSideTop.Side = asrBottom
+        Left = 120
+        Height = 19
+        Top = 115
+        Width = 185
+        BorderSpacing.Top = 9
+        Caption = 'Use channel number from m3u'
+        TabOrder = 1
+      end
+      object Label4: TLabel
+        AnchorSideTop.Control = edtEpgUrl
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = edtEpgUrl
+        Left = 87
+        Height = 15
+        Top = 228
+        Width = 21
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'EPG'
+        ParentColor = False
+      end
+      object edtEpgUrl: TEdit
+        AnchorSideLeft.Control = edtEpgFileName
+        AnchorSideTop.Control = edtEpgFileName
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChannels
+        AnchorSideRight.Side = asrBottom
+        Left = 120
+        Height = 23
+        Top = 224
+        Width = 442
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 9
+        BorderSpacing.Right = 12
+        TabOrder = 2
+      end
+      object Label2: TLabel
+        AnchorSideTop.Control = edtChannelsFileName
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = edtChannelsFileName
+        Left = 55
+        Height = 15
+        Top = 55
+        Width = 53
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'File Name'
+        FocusControl = edtChannelsFileName
+        ParentColor = False
+      end
+      object edtChannelsFileName: TFileNameEdit
+        AnchorSideLeft.Control = cbChannelsKind
+        AnchorSideTop.Control = cbChannelsKind
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChannels
+        AnchorSideRight.Side = asrBottom
+        Left = 120
+        Height = 23
+        Top = 51
+        Width = 442
+        DialogTitle = 'Choose M3U file'
+        Filter = 'M3U Files (*.m3u)|*.m3u|M3U8 Files (*.m3u8)|*.m3u8'
+        FilterIndex = 0
+        DefaultExt = '.m3u'
+        HideDirectories = False
+        ButtonWidth = 23
+        NumGlyphs = 1
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 9
+        BorderSpacing.Right = 12
+        MaxLength = 0
+        TabOrder = 3
+      end
+      object edtChannelsUrl: TEdit
+        AnchorSideLeft.Control = cbChannelsKind
+        AnchorSideTop.Control = edtChannelsFileName
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChannels
+        AnchorSideRight.Side = asrBottom
+        Left = 120
+        Height = 23
+        Top = 83
+        Width = 442
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 9
+        BorderSpacing.Right = 12
+        TabOrder = 4
+      end
+      object Label3: TLabel
+        AnchorSideTop.Control = edtChannelsUrl
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = edtChannelsUrl
+        Left = 87
+        Height = 15
+        Top = 87
+        Width = 21
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'URL'
+        FocusControl = edtChannelsUrl
+        ParentColor = False
+      end
+      object lb1: TLabel
+        AnchorSideTop.Control = cbEpgKind
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = cbEpgKind
+        Left = 41
+        Height = 15
+        Top = 164
+        Width = 67
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'EPG location'
+        FocusControl = cbEpgKind
+        ParentColor = False
+      end
+      object cbEpgKind: TComboBox
+        AnchorSideLeft.Control = cbChannelsKind
+        AnchorSideTop.Side = asrCenter
+        Left = 120
+        Height = 23
+        Top = 160
+        Width = 240
+        BorderSpacing.Top = 9
+        ItemHeight = 15
+        Items.Strings = (
+          'Local File'
+          'URL'
+        )
+        OnChange = cbEpgKindChange
+        TabOrder = 5
+        Text = 'cbEpgKind'
+      end
+      object Label5: TLabel
+        AnchorSideTop.Control = edtEpgFileName
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = edtEpgFileName
+        Left = 55
+        Height = 15
+        Top = 196
+        Width = 53
+        Anchors = [akTop, akRight]
+        BorderSpacing.Right = 12
+        Caption = 'File Name'
+        FocusControl = edtEpgFileName
+        ParentColor = False
+      end
+      object edtEpgFileName: TFileNameEdit
+        AnchorSideLeft.Control = cbEpgKind
+        AnchorSideTop.Control = cbEpgKind
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChannels
+        AnchorSideRight.Side = asrBottom
+        Left = 120
+        Height = 23
+        Top = 192
+        Width = 442
+        DialogTitle = 'Choose EPG file'
+        Filter = 'XML Files (*.xml)|*.xml|Gzipped file (*.gz)|*.gz;*.gzip|All Files (*.*)|*.*'
+        FilterIndex = 0
+        DefaultExt = '.xml'
+        HideDirectories = False
+        ButtonWidth = 23
+        NumGlyphs = 1
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 9
+        BorderSpacing.Right = 12
+        MaxLength = 0
+        TabOrder = 6
+      end
+      object cbDownloadLogo: TCheckBox
+        AnchorSideLeft.Control = cbUseChno
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = edtChannelsUrl
+        AnchorSideTop.Side = asrBottom
+        Left = 314
+        Height = 19
+        Top = 115
+        Width = 151
+        BorderSpacing.Left = 9
+        BorderSpacing.Top = 9
+        Caption = 'Download channels logo'
+        TabOrder = 7
+      end
+    end
+    object tsMpv: TTabSheet
+      Caption = 'tsMpv'
+      ClientHeight = 385
+      ClientWidth = 574
+      object vleCustomOptions: TValueListEditor
+        AnchorSideLeft.Control = tsMpv
+        AnchorSideTop.Control = lbWarning
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsMpv
+        AnchorSideRight.Side = asrBottom
+        AnchorSideBottom.Control = tsMpv
+        AnchorSideBottom.Side = asrBottom
+        Left = 12
+        Height = 266
+        Top = 107
+        Width = 550
+        AlternateColor = clBtnFace
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        BorderSpacing.Around = 12
+        DefaultColWidth = 150
+        FixedCols = 0
+        RowCount = 2
+        TabOrder = 0
+        KeyOptions = [keyEdit, keyAdd, keyUnique]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
+        ColWidths = (
+          150
+          396
+        )
+      end
+      object cbHardwareAcceleration: TCheckBox
+        Left = 12
+        Height = 19
+        Top = 8
+        Width = 174
+        Caption = 'Enable hardware acceleration'
+        TabOrder = 1
+      end
+      object lbWarning: TLabel
+        AnchorSideTop.Control = cbHardwareAcceleration
+        AnchorSideTop.Side = asrBottom
+        Left = 16
+        Height = 48
+        Top = 47
+        Width = 534
+        AutoSize = False
+        BorderSpacing.Top = 20
+        Caption = 'WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options.'
+        ParentColor = False
+        WordWrap = True
+      end
+    end
   end
-  object lb: TLabel
-    AnchorSideTop.Control = cbChannelsKind
-    AnchorSideTop.Side = asrCenter
-    AnchorSideRight.Control = cbChannelsKind
-    Left = 9
-    Height = 15
-    Top = 20
-    Width = 108
-    Anchors = [akTop, akRight]
-    BorderSpacing.Right = 12
-    Caption = 'Channel list location'
-    FocusControl = cbChannelsKind
-    ParentColor = False
+  object GroupBox1: TGroupBox
+    Left = 0
+    Height = 393
+    Top = 0
+    Width = 185
+    Align = alLeft
+    Caption = 'Settings'
+    ClientHeight = 373
+    ClientWidth = 181
+    TabOrder = 1
+    object SpeedButton1: TSpeedButton
+      Left = 0
+      Height = 49
+      Top = 0
+      Width = 181
+      Align = alTop
+      Caption = 'Channels'
+      OnClick = SpeedButton1Click
+    end
+    object SpeedButton2: TSpeedButton
+      Left = 0
+      Height = 49
+      Top = 49
+      Width = 181
+      Align = alTop
+      Caption = 'MPV'
+      OnClick = SpeedButton2Click
+    end
   end
   object bpConfig: TButtonPanel
     Left = 6
     Height = 34
-    Top = 287
-    Width = 626
+    Top = 399
+    Width = 755
     OKButton.Name = 'OKButton'
     OKButton.DefaultCaption = True
     OKButton.OnClick = OKButtonClick
@@ -54,177 +340,7 @@ object fConfig: TfConfig
     CancelButton.Name = 'CancelButton'
     CancelButton.DefaultCaption = True
     CancelButton.OnClick = CancelButtonClick
-    TabOrder = 1
-    ShowButtons = [pbOK, pbCancel]
-  end
-  object cbUseChno: TCheckBox
-    AnchorSideLeft.Control = edtChannelsUrl
-    AnchorSideTop.Control = edtChannelsUrl
-    AnchorSideTop.Side = asrBottom
-    Left = 129
-    Height = 19
-    Top = 115
-    Width = 185
-    BorderSpacing.Top = 9
-    Caption = 'Use channel number from m3u'
     TabOrder = 2
-  end
-  object Label4: TLabel
-    AnchorSideTop.Control = edtEpgUrl
-    AnchorSideTop.Side = asrCenter
-    AnchorSideRight.Control = edtEpgUrl
-    Left = 96
-    Height = 15
-    Top = 228
-    Width = 21
-    Anchors = [akTop, akRight]
-    BorderSpacing.Right = 12
-    Caption = 'EPG'
-    ParentColor = False
-  end
-  object edtEpgUrl: TEdit
-    AnchorSideLeft.Control = edtEpgFileName
-    AnchorSideTop.Control = edtEpgFileName
-    AnchorSideTop.Side = asrBottom
-    Left = 129
-    Height = 23
-    Top = 224
-    Width = 428
-    BorderSpacing.Top = 9
-    TabOrder = 3
-  end
-  object Label2: TLabel
-    AnchorSideTop.Control = edtChannelsFileName
-    AnchorSideTop.Side = asrCenter
-    AnchorSideRight.Control = edtChannelsFileName
-    Left = 64
-    Height = 15
-    Top = 55
-    Width = 53
-    Anchors = [akTop, akRight]
-    BorderSpacing.Right = 12
-    Caption = 'File Name'
-    FocusControl = edtChannelsFileName
-    ParentColor = False
-  end
-  object edtChannelsFileName: TFileNameEdit
-    AnchorSideTop.Control = cbChannelsKind
-    AnchorSideTop.Side = asrBottom
-    Left = 129
-    Height = 23
-    Top = 51
-    Width = 452
-    DialogTitle = 'Choose M3U file'
-    Filter = 'M3U Files (*.m3u)|*.m3u|M3U8 Files (*.m3u8)|*.m3u8'
-    FilterIndex = 0
-    DefaultExt = '.m3u'
-    HideDirectories = False
-    ButtonWidth = 23
-    NumGlyphs = 1
-    BorderSpacing.Top = 9
-    MaxLength = 0
-    TabOrder = 4
-  end
-  object edtChannelsUrl: TEdit
-    AnchorSideTop.Control = edtChannelsFileName
-    AnchorSideTop.Side = asrBottom
-    Left = 129
-    Height = 23
-    Top = 83
-    Width = 452
-    BorderSpacing.Top = 9
-    TabOrder = 5
-  end
-  object Label3: TLabel
-    AnchorSideTop.Control = edtChannelsUrl
-    AnchorSideTop.Side = asrCenter
-    AnchorSideRight.Control = edtChannelsUrl
-    Left = 96
-    Height = 15
-    Top = 87
-    Width = 21
-    Anchors = [akTop, akRight]
-    BorderSpacing.Right = 12
-    Caption = 'URL'
-    FocusControl = edtChannelsUrl
-    ParentColor = False
-  end
-  object lb1: TLabel
-    AnchorSideTop.Control = cbEpgKind
-    AnchorSideTop.Side = asrCenter
-    AnchorSideRight.Control = cbEpgKind
-    Left = 50
-    Height = 15
-    Top = 164
-    Width = 67
-    Anchors = [akTop, akRight]
-    BorderSpacing.Right = 12
-    Caption = 'EPG location'
-    FocusControl = cbEpgKind
-    ParentColor = False
-  end
-  object cbEpgKind: TComboBox
-    AnchorSideLeft.Control = cbChannelsKind
-    AnchorSideTop.Side = asrCenter
-    Left = 129
-    Height = 23
-    Top = 160
-    Width = 240
-    BorderSpacing.Top = 9
-    ItemHeight = 15
-    Items.Strings = (
-      'Local File'
-      'URL'
-    )
-    OnChange = cbEpgKindChange
-    TabOrder = 6
-    Text = 'cbEpgKind'
-  end
-  object Label5: TLabel
-    AnchorSideTop.Control = edtEpgFileName
-    AnchorSideTop.Side = asrCenter
-    AnchorSideRight.Control = edtEpgFileName
-    Left = 64
-    Height = 15
-    Top = 196
-    Width = 53
-    Anchors = [akTop, akRight]
-    BorderSpacing.Right = 12
-    Caption = 'File Name'
-    FocusControl = edtEpgFileName
-    ParentColor = False
-  end
-  object edtEpgFileName: TFileNameEdit
-    AnchorSideLeft.Control = cbEpgKind
-    AnchorSideTop.Control = cbEpgKind
-    AnchorSideTop.Side = asrBottom
-    Left = 129
-    Height = 23
-    Top = 192
-    Width = 452
-    DialogTitle = 'Choose EPG file'
-    Filter = 'XML Files (*.xml)|*.xml|Gzipped file (*.gz)|*.gz;*.gzip|All Files (*.*)|*.*'
-    FilterIndex = 0
-    DefaultExt = '.xml'
-    HideDirectories = False
-    ButtonWidth = 23
-    NumGlyphs = 1
-    BorderSpacing.Top = 9
-    MaxLength = 0
-    TabOrder = 7
-  end
-  object cbDownloadLogo: TCheckBox
-    AnchorSideLeft.Control = cbUseChno
-    AnchorSideLeft.Side = asrBottom
-    AnchorSideTop.Control = edtChannelsUrl
-    AnchorSideTop.Side = asrBottom
-    Left = 323
-    Height = 19
-    Top = 115
-    Width = 151
-    BorderSpacing.Left = 9
-    BorderSpacing.Top = 9
-    Caption = 'Download channels logo'
-    TabOrder = 8
+    ShowButtons = [pbOK, pbCancel]
   end
 end

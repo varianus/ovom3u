@@ -72,7 +72,7 @@ type
 
 type
   Pmpv_render_frame_info = ^mpv_render_frame_info;
-  mpv_render_frame_info = record
+  mpv_render_frame_info =  record
       flags : uint64;
       target_time : int64;
     end;
