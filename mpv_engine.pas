@@ -91,6 +91,7 @@ type
     procedure OsdMessage(msg: string = '');
     procedure OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
+    procedure PlayIMG(mrl: string);
     procedure Stop;
     procedure Seek(Seconds: integer);
     function Pause: boolean;
@@ -232,6 +233,7 @@ procedure TMPVEngine.InitRenderer(Data: PtrInt);
   GLRenderControl.ReleaseContext;
   Application.ProcessMessages;
   RenderObj := TRender.Create(FGLRenderControl, fHandle);
+  PlayIMG(ConfigObj.GetResourcesPath+ 'empty.png' )
 
 end;
 
@@ -270,6 +272,7 @@ begin
             begin
               mpv_get_property(fhandle^, 'core-idle', MPV_FORMAT_FLAG, @p);
               Loading := P = 1;
+
               if not loading then
               begin
                 if Assigned(FOnLoadingState) then
@@ -298,6 +301,23 @@ begin
   args[1] := PChar(mrl);
   args[2] := 'replace';
   args[3] := nil;
+  mpv_command(fhandle^, ppchar(@args[0]));
+  Loading := True;
+
+end;
+procedure TMPVEngine.PlayIMG(mrl: string);
+var
+  Args: array of PChar;
+begin
+
+  args := nil;
+  setlength(args, 5);
+  args[0] := 'loadfile';
+  args[1] := PChar(mrl);
+  args[2] := 'replace';
+  args[3] := 'image-display-duration=inf';
+//  args[3] := 'keep-open=always';
+  args[4] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
 
@@ -468,15 +488,50 @@ end;
 procedure TMPVEngine.OsdMessage(msg: string = '');
 var
   num: int64;
+  Node: mpv_node;
+  List: mpv_node_list;
+  Keys: array of PChar;
+  values: mpv_node_array;
+  res: mpv_node;
 begin
-  num := 1;
-  mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
-  mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
-  num := 55;
-  mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
-  num := 0;
-  mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
-  mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
+  if ClientVersion <= $00010065 then
+  begin
+    num := 1;
+    mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
+    mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
+    num := 55;
+    mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
+    num := 0;
+    mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
+    mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
+  end
+ else
+ begin
+     SetLength(Keys, 4);
+     Keys[0] := 'name';
+     values[0].format := MPV_FORMAT_STRING;
+     values[0].u.string_ := 'osd-overlay';
+     Keys[1] := 'id';
+     values[1].format := MPV_FORMAT_INT64;
+     values[1].u.int64_ := 1;
+     Keys[2] := 'format';
+     values[2].format := MPV_FORMAT_STRING;
+     if true then
+       values[2].u.string_ := 'ass-events'
+     else
+       values[2].u.string_ := 'none';
+     Keys[3] := 'data';
+     values[3].format := MPV_FORMAT_STRING;
+     values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]) );
+     List.num := 4;
+     List.keys := @Keys[0];
+     List.values := @values[0];
+     Node.format := MPV_FORMAT_NODE_MAP;
+     Node.u.list_ := @list;
+
+     mpv_command_node(fHandle^, node, res);
+
+   end;
 end;
 
 procedure TMPVEngine.OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);

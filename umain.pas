@@ -68,7 +68,7 @@ type
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListGetCellHint(Sender: TObject; ACol, ARow: Integer; var HintText: String);
-    procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure ChannelListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ChannelTimerTimer(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -316,7 +316,9 @@ begin
   if Loading then
     Loading := MpvEngine.IsIdle;
   if not Loading then
-    OsdMessage('', False);
+    begin
+      OsdMessage('', False);
+    end;
 end;
 
 procedure TfPlayer.OnTrackChange(Sender: TObject);
@@ -376,7 +378,9 @@ begin
         play(ChannelSelected);
         ChannelSelecting := False;
         key := 0;
-      end;
+      end
+    else
+       pass:= true;
     VK_I:
       ShowEpg;
     VK_S:
@@ -435,13 +439,7 @@ begin
           ChannelSelected := ChannelSelected - $30;
 
       end;
-      if GLRenderer.Visible then
-        OsdMessage(IntToStr(ChannelSelected), False)
-      else
-      begin
-        fLastMessage := IntToStr(ChannelSelected);
-        pnlContainer.Invalidate;
-      end;
+      OsdMessage(IntToStr(ChannelSelected), False) ;
       ChannelTimer.Enabled := True;
     end;
     else
@@ -579,9 +577,9 @@ begin
 
 end;
 
-procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if key = VK_RETURN then
+  if (key) = VK_RETURN then
     Play(ChannelList.Row);
 end;
 
@@ -722,7 +720,8 @@ begin
   MpvEngine.Play(list[CurrentChannel].Mrl);
   Loading := True;
   fLastMessage := 'Loading: ' + list[CurrentChannel].title;
-  pnlContainer.Invalidate;
+  OsdMessage(fLastMessage);
+//  pnlContainer.Invalidate;
 
 end;
 
