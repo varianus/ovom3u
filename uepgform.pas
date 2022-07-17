@@ -275,6 +275,8 @@ begin
   case key of
     VK_LEFT: actBackward.Execute ;
     VK_RIGHT: actForward.Execute ;
+    vk_down: TimeGrid.ScrollBy(0,1);
+    vk_up: TimeGrid.ScrollBy(0,-1);
     VK_N: actNow.Execute;
     VK_E: Self.Close;
   end;
