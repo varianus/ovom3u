@@ -61,6 +61,7 @@ type
     FEpgData: TEpg;
     Details: AREpgInfo;
     procedure SetEpgData(AValue: TEpg);
+    procedure setNow;
     procedure UpdateDetail(const EpgInfo: REpgInfo);
     procedure UpdateTimeRange;
 
@@ -190,9 +191,7 @@ end;
 
 procedure TEPGForm.actNowExecute(Sender: TObject);
 begin
-  StartTime := trunc(now) + Floor(frac(now - OneHour) * 24) / 24;
-  EndTime := StartTime + OneHour*4;
-  UpdateTimeRange;
+  SetNow;
   TimeGrid.Invalidate;
 end;
 
@@ -262,9 +261,7 @@ end;
 procedure TEPGForm.FormCreate(Sender: TObject);
 begin
   pcView.ActivePage := tsFullGuide;
-  StartTime := trunc(now) + Floor(frac(now - OneHour) * 24) / 24;
-  EndTime := StartTime + OneHour*3;
-  UpdateTimeRange;
+  SetNow;
   TimeGrid.RowCount := fPlayer.List.Count + 1;
   Details := nil;
 ;
@@ -321,6 +318,13 @@ begin
     TimerCheck.Enabled := False;
   end;
   TimeGrid.Invalidate;
+end;
+
+Procedure  TEPGForm.setNow;
+begin
+  StartTime := trunc(now) + Floor(frac(now - OneHour/2) * 24) / 24;
+  EndTime := StartTime + OneHour*4;
+  UpdateTimeRange;
 end;
 
 procedure TEPGForm.SetEpgData(AValue: TEpg);
