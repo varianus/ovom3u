@@ -383,6 +383,8 @@ begin
        pass:= true;
     VK_I:
       ShowEpg;
+    VK_O:
+      MpvEngine.ShowStats();
     VK_S:
     begin
       MpvEngine.Stop;

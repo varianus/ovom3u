@@ -37,12 +37,12 @@ type
     Id: int64;
     Title: string;
     Lang: string;
-    Channels: Int64;
+    Channels: int64;
     Codec: string;
-    w, h: Int64;
-    BitRate: Int64;
-    SampleRate: Int64;
-    Fps: Double;
+    w, h: int64;
+    BitRate: int64;
+    SampleRate: int64;
+    Fps: double;
     procedure Init;
   end;
 
@@ -64,7 +64,7 @@ type
     EngineState: TEngineState;
     Loading: boolean;
     ClientVersion: DWORD;
-    RenderObj : TRender;
+    RenderObj: TRender;
 
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetMainVolume: integer;
@@ -89,13 +89,14 @@ type
     procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
     procedure OsdMessage(msg: string = '');
+    procedure ShowStats;
     procedure OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
     procedure PlayIMG(mrl: string);
     procedure Stop;
     procedure Seek(Seconds: integer);
     function Pause: boolean;
-    Procedure Mute;
+    procedure Mute;
     constructor Create;
     destructor Destroy; override;
     procedure Test;
@@ -156,14 +157,14 @@ end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
 var
-  ServerVersion:Pchar;
-  i: Integer;
+  ServerVersion: PChar;
+  i: integer;
 begin
   Result := True;
   try
     fhandle := mpv_create();
     if ConfigObj.MPVProperties.HardwareAcceleration then;
-       mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+    mpv_set_option_string(fHandle^, 'hwdec', 'auto');
 
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
@@ -171,12 +172,9 @@ begin
     mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
-    for i:= 0 to ConfigObj.MPVProperties.CustomOptions.Count -1 do
-      begin
-        mpv_set_option_string(fHandle^, pchar(ConfigObj.MPVProperties.CustomOptions.Names[i]),
-                                        pchar(ConfigObj.MPVProperties.CustomOptions.ValueFromIndex[i]));
-
-      end;
+    for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
+      mpv_set_option_string(fHandle^, PChar(ConfigObj.MPVProperties.CustomOptions.Names[i]),
+        PChar(ConfigObj.MPVProperties.CustomOptions.ValueFromIndex[i]));
 
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
@@ -207,7 +205,7 @@ begin
   Loadrender(libmpv.External_library);
   EngineState := ENGINE_IDLE;
   fHandle := nil;
-  fMuted := false;
+  fMuted := False;
 end;
 
 destructor TMPVEngine.Destroy;
@@ -227,13 +225,13 @@ end;
 
 // initialize OpenGL rendering
 procedure TMPVEngine.InitRenderer(Data: PtrInt);
- begin
+begin
   isRenderActive := True;
-  GLRenderControl.Visible := false;
+  GLRenderControl.Visible := False;
   GLRenderControl.ReleaseContext;
   Application.ProcessMessages;
   RenderObj := TRender.Create(FGLRenderControl, fHandle);
-  PlayIMG(ConfigObj.GetResourcesPath+ 'empty.png' )
+  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
 
 end;
 
@@ -266,7 +264,7 @@ begin
             FOnLoadingState(self);
         end;
         MPV_EVENT_PROPERTY_CHANGE:
-          begin
+        begin
           if Pmpv_event_property(Event^.Data)^.Name = 'core-idle' then
             if Loading then
             begin
@@ -274,16 +272,14 @@ begin
               Loading := P = 1;
 
               if not loading then
-              begin
                 if Assigned(FOnLoadingState) then
                   FOnLoadingState(self);
-              end;
             end;
           if ((Pmpv_event_property(Event^.Data)^.Name = 'aid') or
-             (Pmpv_event_property(Event^.Data)^.Name = 'vid')) and
-             (Pmpv_event_property(Event^.Data)^.format = MPV_FORMAT_INT64) then
-             LoadTracks;
-          end;
+            (Pmpv_event_property(Event^.Data)^.Name = 'vid')) and
+            (Pmpv_event_property(Event^.Data)^.format = MPV_FORMAT_INT64) then
+            LoadTracks;
+        end;
       end;
       Event := mpv_wait_event(fhandle^, 0);
     end;
@@ -305,6 +301,7 @@ begin
   Loading := True;
 
 end;
+
 procedure TMPVEngine.PlayIMG(mrl: string);
 var
   Args: array of PChar;
@@ -316,10 +313,25 @@ begin
   args[1] := PChar(mrl);
   args[2] := 'replace';
   args[3] := 'image-display-duration=inf';
-//  args[3] := 'keep-open=always';
+  //  args[3] := 'keep-open=always';
   args[4] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
+
+end;
+
+procedure TMPVEngine.ShowStats;
+var
+  Args: array of PChar;
+  res: longint;
+begin
+
+  args := nil;
+  setlength(args, 3);
+  args[0] := 'script-binding';
+  args[1] := 'display-stats-toggle';
+  args[2] := nil;
+  res := mpv_command(fhandle^, ppchar(@args[0]));
 
 end;
 
@@ -478,7 +490,7 @@ begin
   args := nil;
   setlength(args, 3);
   args[0] := 'seek';
-  args[1] := pchar(inttostr(seconds));
+  args[1] := PChar(IntToStr(seconds));
   args[2] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
@@ -505,33 +517,33 @@ begin
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
   end
- else
- begin
-     SetLength(Keys, 4);
-     Keys[0] := 'name';
-     values[0].format := MPV_FORMAT_STRING;
-     values[0].u.string_ := 'osd-overlay';
-     Keys[1] := 'id';
-     values[1].format := MPV_FORMAT_INT64;
-     values[1].u.int64_ := 1;
-     Keys[2] := 'format';
-     values[2].format := MPV_FORMAT_STRING;
-     if true then
-       values[2].u.string_ := 'ass-events'
-     else
-       values[2].u.string_ := 'none';
-     Keys[3] := 'data';
-     values[3].format := MPV_FORMAT_STRING;
-     values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]) );
-     List.num := 4;
-     List.keys := @Keys[0];
-     List.values := @values[0];
-     Node.format := MPV_FORMAT_NODE_MAP;
-     Node.u.list_ := @list;
+  else
+  begin
+    SetLength(Keys, 4);
+    Keys[0] := 'name';
+    values[0].format := MPV_FORMAT_STRING;
+    values[0].u.string_ := 'osd-overlay';
+    Keys[1] := 'id';
+    values[1].format := MPV_FORMAT_INT64;
+    values[1].u.int64_ := 1;
+    Keys[2] := 'format';
+    values[2].format := MPV_FORMAT_STRING;
+    if True then
+      values[2].u.string_ := 'ass-events'
+    else
+      values[2].u.string_ := 'none';
+    Keys[3] := 'data';
+    values[3].format := MPV_FORMAT_STRING;
+    values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]));
+    List.num := 4;
+    List.keys := @Keys[0];
+    List.values := @values[0];
+    Node.format := MPV_FORMAT_NODE_MAP;
+    Node.u.list_ := @list;
 
-     mpv_command_node(fHandle^, node, res);
+    mpv_command_node(fHandle^, node, res);
 
-   end;
+  end;
 end;
 
 procedure TMPVEngine.OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
@@ -612,16 +624,16 @@ end;
 procedure TMPVEngine.Mute;
 begin
   if fMuted then
-    begin
-      Volume := fOldVolume;
-      fMuted := false;
-    end
+  begin
+    Volume := fOldVolume;
+    fMuted := False;
+  end
   else
-    begin
-      fOldVolume:=Volume;
-      Volume := 0;
-      fMuted := true;
-    end;
+  begin
+    fOldVolume := Volume;
+    Volume := 0;
+    fMuted := True;
+  end;
 end;
 
 procedure TMPVEngine.Test;
