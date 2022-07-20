@@ -12,10 +12,8 @@ object fConfig: TfConfig
     Height = 393
     Top = 0
     Width = 582
-    ActivePage = tsChannels
     Align = alClient
     ShowTabs = False
-    TabIndex = 0
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
@@ -51,6 +49,7 @@ object fConfig: TfConfig
         Width = 108
         BorderSpacing.Right = 12
         Caption = 'Channel list location'
+        Color = clDefault
         FocusControl = cbChannelsKind
         ParentColor = False
       end
@@ -61,7 +60,7 @@ object fConfig: TfConfig
         Left = 120
         Height = 19
         Top = 115
-        Width = 185
+        Width = 183
         BorderSpacing.Top = 9
         Caption = 'Use channel number from m3u'
         TabOrder = 1
@@ -77,6 +76,7 @@ object fConfig: TfConfig
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
         Caption = 'EPG'
+        Color = clDefault
         ParentColor = False
       end
       object edtEpgUrl: TEdit
@@ -105,6 +105,7 @@ object fConfig: TfConfig
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
         Caption = 'File Name'
+        Color = clDefault
         FocusControl = edtChannelsFileName
         ParentColor = False
       end
@@ -157,6 +158,7 @@ object fConfig: TfConfig
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
         Caption = 'URL'
+        Color = clDefault
         FocusControl = edtChannelsUrl
         ParentColor = False
       end
@@ -171,6 +173,7 @@ object fConfig: TfConfig
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
         Caption = 'EPG location'
+        Color = clDefault
         FocusControl = cbEpgKind
         ParentColor = False
       end
@@ -202,6 +205,7 @@ object fConfig: TfConfig
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
         Caption = 'File Name'
+        Color = clDefault
         FocusControl = edtEpgFileName
         ParentColor = False
       end
@@ -233,10 +237,10 @@ object fConfig: TfConfig
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = edtChannelsUrl
         AnchorSideTop.Side = asrBottom
-        Left = 314
+        Left = 312
         Height = 19
         Top = 115
-        Width = 151
+        Width = 149
         BorderSpacing.Left = 9
         BorderSpacing.Top = 9
         Caption = 'Download channels logo'
@@ -264,20 +268,21 @@ object fConfig: TfConfig
         BorderSpacing.Around = 12
         DefaultColWidth = 150
         FixedCols = 0
+        Flat = True
         RowCount = 2
         TabOrder = 0
-        KeyOptions = [keyEdit, keyAdd, keyUnique]
+        KeyOptions = [keyEdit, keyAdd, keyDelete, keyUnique]
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
         ColWidths = (
           150
-          396
+          399
         )
       end
       object cbHardwareAcceleration: TCheckBox
         Left = 12
         Height = 19
         Top = 8
-        Width = 174
+        Width = 172
         Caption = 'Enable hardware acceleration'
         TabOrder = 1
       end
@@ -291,6 +296,7 @@ object fConfig: TfConfig
         AutoSize = False
         BorderSpacing.Top = 20
         Caption = 'WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options.'
+        Color = clDefault
         ParentColor = False
         WordWrap = True
       end
