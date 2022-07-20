@@ -163,8 +163,8 @@ begin
   Result := True;
   try
     fhandle := mpv_create();
-    if ConfigObj.MPVProperties.HardwareAcceleration then;
-    mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+    if ConfigObj.MPVProperties.HardwareAcceleration then
+      mpv_set_option_string(fHandle^, 'hwdec', 'auto');
 
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
@@ -313,10 +313,8 @@ begin
   args[1] := PChar(mrl);
   args[2] := 'replace';
   args[3] := 'image-display-duration=inf';
-  //  args[3] := 'keep-open=always';
   args[4] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
-  Loading := True;
 
 end;
 
