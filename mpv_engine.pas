@@ -107,7 +107,7 @@ type
 implementation
 
 uses
-  GeneralFunc, LoggerUnit, Config, LCLIntf
+  GeneralFunc, LoggerUnit, Config, Math, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -163,8 +163,7 @@ begin
   Result := True;
   try
     fhandle := mpv_create();
-    if ConfigObj.MPVProperties.HardwareAcceleration then
-      mpv_set_option_string(fHandle^, 'hwdec', 'auto');
+
 
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
@@ -172,9 +171,6 @@ begin
     mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
-    for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
-      mpv_set_option_string(fHandle^, PChar(ConfigObj.MPVProperties.CustomOptions.Names[i]),
-        PChar(ConfigObj.MPVProperties.CustomOptions.ValueFromIndex[i]));
 
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
@@ -289,14 +285,28 @@ end;
 procedure TMPVEngine.Play(mrl: string);
 var
   Args: array of PChar;
+  ArgIdx , i: integer;
 begin
 
   args := nil;
-  setlength(args, 4);
+  setlength(args, 4 + IfThen( ConfigObj.MPVProperties.HardwareAcceleration, 1, 0) +
+    ConfigObj.MPVProperties.CustomOptions.Count);
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
-  args[3] := nil;
+  ArgIdx := 3;
+  if ConfigObj.MPVProperties.HardwareAcceleration then
+  begin
+    Args[ArgIdx]:= 'hwdec=auto';
+    inc(argIdx)
+  end;
+  for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
+    begin
+     Args[ArgIdx]:= pchar(ConfigObj.MPVProperties.CustomOptions[i]);
+     inc(argIdx)
+    end;
+
+  args[ArgIdx] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
 
