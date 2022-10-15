@@ -285,27 +285,32 @@ end;
 procedure TMPVEngine.Play(mrl: string);
 var
   Args: array of PChar;
-  ArgIdx , i: integer;
+  ArgIdx, i: integer;
+  Options: string;
 begin
 
   args := nil;
-  setlength(args, 4 + IfThen( ConfigObj.MPVProperties.HardwareAcceleration, 1, 0) +
-    ConfigObj.MPVProperties.CustomOptions.Count);
+  setlength(args, 4 + IfThen(ConfigObj.MPVProperties.HardwareAcceleration or (ConfigObj.MPVProperties.CustomOptions.Count > 0), 1, 0));
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
-  ArgIdx := 3;
+
+  ArgIdx:=3;
+  Options := EmptyStr;
   if ConfigObj.MPVProperties.HardwareAcceleration then
   begin
-    Args[ArgIdx]:= 'hwdec=auto';
-    inc(argIdx)
+    Options := 'hwdec=auto,';
   end;
   for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
-    begin
-     Args[ArgIdx]:= pchar(ConfigObj.MPVProperties.CustomOptions[i]);
-     inc(argIdx)
+  begin
+    Options := options + ConfigObj.MPVProperties.CustomOptions[i] + ',';
+  end;
+  if Options <> EmptyStr then
+    Begin
+      Delete(Options, Length(Options)-1, 1);
+      Args[3] := PChar(Options);
+      Inc(ArgIdx);
     end;
-
   args[ArgIdx] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
@@ -444,9 +449,12 @@ var
   Num: int64;
 begin
   case TrackType of
-    trkAudio: TrackTypeString := 'aid';
-    trkVideo: TrackTypeString := 'vid';
-    trkSub: TrackTypeString := 'sid';
+    trkAudio:
+      TrackTypeString := 'aid';
+    trkVideo:
+      TrackTypeString := 'vid';
+    trkSub:
+      TrackTypeString := 'sid';
     else
       exit;
   end;
