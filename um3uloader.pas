@@ -47,19 +47,32 @@ type
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
+    FFilterCount: integer;
+    FFiltered: boolean;
     fLastMessage: string;
     FOnListChanged: TNotifyEvent;
+    FFilterArray: array of integer;
+    function GetFilterCount: integer;
+    procedure SetFilterCount(AValue: integer);
+    procedure SetFiltered(AValue: boolean);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(constref Left, Right: TM3UItem): integer;
+
   public
     ListMd5: string;
+    Groups: TStringList;
     procedure DoListChanged;
+    property Filtered:boolean read FFiltered write SetFiltered;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
+    Property FilterCount: integer read GetFilterCount;
     constructor Create;
     destructor Destroy; override;
     function Load(const ListName: string): boolean;
     function ItemByChno(chno: integer): integer;
+    function FilteredToReal(idx: integer): integer;
+    Procedure FilterByGroup(Group:string);
+
     procedure FixChannelNumbering;
     procedure UpdateLogo;
 
@@ -76,6 +89,11 @@ type
     constructor Create(Owner: TM3ULoader); reintroduce;
   end;
 
+resourcestring
+  RSEmpty = 'M3U file is empty';
+  RSMissingHeader = 'Missing #EXTM3U Header';
+  RSAnyGroup = '<all groups>';
+
 implementation
 
 uses Math, LoggerUnit, Config, GeneralFunc, Generics.Defaults, md5;
@@ -85,9 +103,6 @@ const
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
 
-resourcestring
-  RSEmpty = 'M3U file is empty';
-  RSMissingHeader = 'Missing #EXTM3U Header';
 
 { TLogoLoader }
 
@@ -134,10 +149,14 @@ end;
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
+  Groups := TStringList.Create;
+  Groups.Sorted:=true;
+  Groups.Duplicates:=dupIgnore;
 end;
 
 destructor TM3ULoader.Destroy;
 begin
+  Groups.free;
   inherited Destroy;
 end;
 
@@ -153,6 +172,7 @@ var
   Digest: TMD5Digest;
   i: integer;
   Cachedir: string;
+
 
   function FindTag(const tag: string; const st: string): string;
   var
@@ -211,7 +231,8 @@ begin
         begin
           item := TM3UItem.Create;
           Item.Number := index;
-          Item.Group := FindTag('tvg-group', s);
+          Item.Group := FindTag('group-title', s);
+          Groups.Add(Item.Group);
           item.Id := FindTag('tvg-id', s);
           item.IconUrl := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
@@ -247,6 +268,7 @@ begin
     MD5Final(Context, Digest);
     ListMd5 := MD5Print(Digest);
     Result := True;
+    Filtered := false;
     DoListChanged;
   finally
     if not fLastMessage.IsEmpty then
@@ -268,6 +290,30 @@ begin
     end;
 end;
 
+function TM3ULoader.FilteredToReal(idx: integer): integer;
+begin
+  if FFiltered then
+    Result := FFilterArray[idx]
+  else
+    Result := idx;
+end;
+
+procedure TM3ULoader.FilterByGroup(Group: string);
+var i,j:Integer;
+begin
+
+  SetLength(FFilterArray, Count);
+  i:= 0;
+  for j:= 0 to count -1 do
+    if FItems[j].Group = Group then
+      begin
+        FFilterArray[i]:=j;
+        inc(i);
+      end;
+  SetLength(FFilterArray,i);
+
+end;
+
 function TM3ULoader.SortbyNumber(constref Left, Right: TM3UItem): integer;
 begin
   Result := CompareValue(left.Number, Right.Number);
@@ -282,6 +328,25 @@ end;
 procedure TM3ULoader.SetOnListChange(AValue: TNotifyEvent);
 begin
   FOnListChanged := AValue;
+end;
+
+function TM3ULoader.GetFilterCount: integer;
+begin
+  if FFiltered then
+    Result := Length(FFilterArray)
+  else
+    Result := Count;
+end;
+
+procedure TM3ULoader.SetFilterCount(AValue: integer);
+begin
+
+end;
+
+procedure TM3ULoader.SetFiltered(AValue: boolean);
+begin
+  if FFiltered=AValue then Exit;
+  FFiltered:=AValue;
 end;
 
 procedure TM3ULoader.FixChannelNumbering;

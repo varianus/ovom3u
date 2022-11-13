@@ -2,10 +2,10 @@ object fPlayer: TfPlayer
   Left = 973
   Height = 512
   Top = 225
-  Width = 810
+  Width = 1087
   Caption = 'OvoM3U'
   ClientHeight = 512
-  ClientWidth = 810
+  ClientWidth = 1087
   KeyPreview = True
   OnClose = FormClose
   OnCreate = FormCreate
@@ -15,11 +15,11 @@ object fPlayer: TfPlayer
     Left = 191
     Height = 512
     Top = 0
-    Width = 619
+    Width = 896
     Align = alClient
     BevelOuter = bvNone
     ClientHeight = 512
-    ClientWidth = 619
+    ClientWidth = 896
     Color = clBlack
     DoubleBuffered = False
     FullRepaint = False
@@ -33,7 +33,7 @@ object fPlayer: TfPlayer
       Left = 0
       Height = 512
       Top = 0
-      Width = 619
+      Width = 896
       Align = alClient
       OpenGLMajorVersion = 2
       OpenGLMinorVersion = 1
@@ -56,8 +56,8 @@ object fPlayer: TfPlayer
     TabOrder = 1
     object ChannelList: TDrawGrid
       Left = 1
-      Height = 479
-      Top = 32
+      Height = 448
+      Top = 63
       Width = 184
       Align = alClient
       AutoFillColumns = True
@@ -81,22 +81,22 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        163
+        167
       )
     end
     object Panel1: TPanel
       Left = 1
-      Height = 31
+      Height = 33
       Top = 1
       Width = 184
       Align = alTop
       AutoSize = True
-      ClientHeight = 31
+      ClientHeight = 33
       ClientWidth = 184
       TabOrder = 1
       object ToolButton1: TSpeedButton
         Left = 1
-        Height = 29
+        Height = 31
         Top = 1
         Width = 25
         Action = actShowConfig
@@ -106,9 +106,9 @@ object fPlayer: TfPlayer
       end
       object ToolButton2: TSpeedButton
         Left = 26
-        Height = 29
+        Height = 31
         Top = 1
-        Width = 36
+        Width = 39
         Action = actShowEpg
         Align = alLeft
         AutoSize = True
@@ -116,10 +116,10 @@ object fPlayer: TfPlayer
         ParentFont = False
       end
       object ToolButton5: TSpeedButton
-        Left = 117
-        Height = 29
+        Left = 118
+        Height = 31
         Top = 1
-        Width = 66
+        Width = 65
         Align = alRight
         AutoSize = True
         Caption = 'View ▼'
@@ -128,6 +128,18 @@ object fPlayer: TfPlayer
         ParentFont = False
         PopupMenu = pmuView
       end
+    end
+    object cbGroups: TComboBox
+      Left = 1
+      Height = 29
+      Top = 34
+      Width = 184
+      Align = alTop
+      ItemHeight = 0
+      OnChange = cbGroupsChange
+      Style = csDropDownList
+      TabOrder = 2
+      Visible = False
     end
   end
   object Splitter1: TSplitter

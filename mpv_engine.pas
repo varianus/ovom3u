@@ -544,10 +544,10 @@ begin
     values[1].u.int64_ := 1;
     Keys[2] := 'format';
     values[2].format := MPV_FORMAT_STRING;
-    if True then
-      values[2].u.string_ := 'ass-events'
-    else
-      values[2].u.string_ := 'none';
+  //  if True then
+      values[2].u.string_ := 'ass-events' ;
+ //   else
+ //     values[2].u.string_ := 'none';
     Keys[3] := 'data';
     values[3].format := MPV_FORMAT_STRING;
     values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]));

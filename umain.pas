@@ -39,6 +39,7 @@ type
     actList: TActionList;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
+    cbGroups: TComboBox;
     OSDTimer: TTimer;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -65,6 +66,7 @@ type
     procedure actViewCurrentProgramExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
+    procedure cbGroupsChange(Sender: TObject);
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListGetCellHint(Sender: TObject; ACol, ARow: Integer; var HintText: String);
@@ -233,6 +235,17 @@ begin
 
   if FileExists(IPTVList) then
     list.Load(IPTVList);
+
+  if (list.Groups.Count > 1) then
+    begin
+      cbGroups.Items.clear;
+      cbGroups.items.add(um3uloader.RSAnyGroup);
+      cbGroups.Items.AddStrings(List.Groups, false);
+      cbGroups.ItemIndex:=0;
+      cbGroups.Visible:=true;
+    end
+  else
+    cbGroups.Visible:=false;
 
   ConfigObj.ListChanged := False;
   OvoLogger.Log(INFO, 'Found %d channels', [List.Count]);
@@ -503,7 +516,7 @@ var
   Spacing: integer;
   epgInfo: REpgInfo;
 begin
-  Element := List[arow];
+  Element := List[list.FilteredToReal(arow)];
   h := 0;
   cv := ChannelList.Canvas;
   if ConfigObj.GuiProperties.ViewLogo then
@@ -612,7 +625,7 @@ end;
 
 procedure TfPlayer.ChannelListDblClick(Sender: TObject);
 begin
-  Play(ChannelList.Row);
+  Play(List.FilteredToReal(ChannelList.Row));
 end;
 
 procedure TfPlayer.AppPropertiesException(Sender: TObject; E: Exception);
@@ -625,6 +638,20 @@ begin
      Halt(999);
      // avoid exception on exception
   end;
+end;
+
+procedure TfPlayer.cbGroupsChange(Sender: TObject);
+begin
+  if cbGroups.ItemIndex = 0 then
+    List.Filtered:=false
+  else
+    begin
+      List.FilterByGroup(cbGroups.Items[cbGroups.ItemIndex]) ;
+      list.Filtered:=true;
+    end;
+  ChannelList.RowCount := List.FilterCount;
+  ChannelList.Invalidate;
+
 end;
 
 procedure TfPlayer.actShowEpgExecute(Sender: TObject);
