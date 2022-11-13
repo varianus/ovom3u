@@ -564,7 +564,7 @@ begin
   cv.TextRect(aRect, h + Spacing, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
   if ConfigObj.GuiProperties.ViewCurrentProgram then
   begin
-    epgInfo := epgdata.GetEpgInfo(arow + 1, now);
+    epgInfo := epgdata.GetEpgInfo(list.FilteredToReal(arow) + 1, now);
     if epgInfo.HaveData then
     begin
       cv.Font.Height := Scale96ToScreen(-12);
@@ -583,8 +583,8 @@ var
   Element: TM3UItem;
   epgInfo: REpgInfo;
 begin
-  Element := List[arow];
-  epgInfo := epgdata.GetEpgInfo(arow + 1, now);
+  Element := List[list.FilteredToReal(arow)];
+  epgInfo := epgdata.GetEpgInfo(list.FilteredToReal(arow) + 1, now);
 
   HintText := Format('%3.3d: %s', [Element.Number, Element.title])+ sLineBreak+
               FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True) + sLineBreak+
