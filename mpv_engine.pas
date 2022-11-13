@@ -303,11 +303,12 @@ begin
   end;
   for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
   begin
-    Options := options + ConfigObj.MPVProperties.CustomOptions[i] + ',';
+    if ConfigObj.MPVProperties.CustomOptions[i] <> EmptyStr then
+      Options := options + ConfigObj.MPVProperties.CustomOptions[i] + ',';
   end;
   if Options <> EmptyStr then
     Begin
-      Delete(Options, Length(Options)-1, 1);
+      Delete(Options, Length(Options), 1);
       Args[3] := PChar(Options);
       Inc(ArgIdx);
     end;
