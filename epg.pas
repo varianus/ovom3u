@@ -502,15 +502,19 @@ procedure TEpg.LoadChannelList(List: TM3ULoader);
 var
   item: TM3UItem;
   qinsert: TSQLQuery;
+  i:integer;
 begin
   OvoLogger.Log(INFO, 'Updating EPG channels list');
   qinsert := TSQLQuery.Create(fDB);
   try
     fdb.ExecuteDirect('delete from channels;');
     qinsert.Transaction := fTR;
-    qinsert.SQL.Text := 'insert into channels values (null, :name, :ChannelNo, :EpgName);';
-    for item in List do
+    qinsert.SQL.Text := 'insert into channels values (:id, :name, :ChannelNo, :EpgName);';
+    i:=0;
+    for i:= 0 to List.count -1 do
     begin
+      Item := List[i];
+      qinsert.ParamByName('id').AsInteger := i;
       qinsert.ParamByName('name').AsString := item.Title;
       qinsert.ParamByName('EpgName').AsString := item.tvg_name;
       qinsert.ParamByName('ChannelNo').AsInteger := item.Number;
