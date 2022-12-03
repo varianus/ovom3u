@@ -142,11 +142,12 @@ object fPlayer: TfPlayer
       Visible = False
     end
   end
-  object Splitter1: TSplitter
+  object ChannelSplitter: TSplitter
     Left = 186
     Height = 512
     Top = 0
     Width = 5
+    OnMoved = ChannelSplitterMoved
   end
   object HideMouse: TTimer
     Enabled = False
@@ -216,6 +217,10 @@ object fPlayer: TfPlayer
     object actViewCurrentProgram: TAction
       Caption = 'actViewCurrentProgram'
       OnExecute = actViewCurrentProgramExecute
+    end
+    object actShowList: TAction
+      Caption = 'Show List'
+      OnExecute = actShowListExecute
     end
   end
   object pmuView: TPopupMenu

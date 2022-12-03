@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, Buttons, ActnList, ComCtrls,
-  epg, BaseTypes, Types, Math;
+  epg, BaseTypes, uBackEnd, Types, Math;
 
 type
 
@@ -77,10 +77,11 @@ var
 
 implementation
 
-uses umain, GeneralFunc, LCLType;
+uses GeneralFunc, LCLType;
 
 const
   OneHour = 1 / 24;
+  HalfHour = OneHour / 2;
 
 {$R *.lfm}
 
@@ -113,7 +114,7 @@ begin
     fCanvas.Font.Size := 12;
     for i := 1 to Segments - 1 do
     begin
-      st := FormatDateTime('hh:nn', StartTime + i / (2*24));
+      st := FormatDateTime('hh:nn', StartTime + i * HalfHour);
       ws := fCanvas.TextWidth(st);
       fCanvas.TextOut(arect.Left + trunc(Divider * i - (ws div 2)), aRect.Top + 2, st);
       fCanvas.MoveTo(arect.Left + trunc(divider * i), CellHeight div 2);
@@ -128,7 +129,7 @@ begin
     Style.Clipping := True;
     Style.Wordbreak := False;
     fCanvas.Pen.Width := 1;
-    ChannelInfo := EpgData.GetEpgInfo(Arow, StartTime, EndTime);
+    ChannelInfo := EpgData.GetEpgInfo(Arow-1, StartTime, EndTime);
     Divider := (TimeGrid.Columns[1].Width) / (endTime - StartTime);
     for i := 0 to Length(ChannelInfo) - 1 do
     begin
@@ -151,7 +152,7 @@ begin
     end;
   end;
   if (aRow > 0) and (Acol = 0) then
-    fCanvas.TextRect(aRect, 0, aRect.top + 5, Format('%3.3d: %s', [fPlayer.LIST[aRow - 1].Number, fPlayer.List[aRow - 1].title]));
+    fCanvas.TextRect(aRect, 0, aRect.top + 5, Format('%3.3d: %s', [BackEnd.LIST[aRow - 1].Number, BackEnd.List[aRow - 1].title]));
   CurrTime := now;
   if (CurrTime >= StartTime) and (CurrTime <= endtime) then
     begin
@@ -262,7 +263,7 @@ procedure TEPGForm.FormCreate(Sender: TObject);
 begin
   pcView.ActivePage := tsFullGuide;
   SetNow;
-  TimeGrid.RowCount := fPlayer.List.Count + 1;
+  TimeGrid.RowCount := BackEnd.List.Count + 1;
   Details := nil;
 ;
 end;
@@ -292,7 +293,7 @@ begin
 
   ClickTime := StartTime + (x - TimeGrid.Columns[0].Width) / (TimeGrid.Columns[1].Width / (endTime - StartTime));
   EpgInfo := FEpgData.GetEpgInfo(Coord.Y, ClickTime);
-  EpgInfo.Channel := fPlayer.List[Coord.y-1].title;
+  EpgInfo.Channel := BackEnd.List[Coord.y-1].title;
   UpdateDetail(EpgInfo);
 
 end;
@@ -322,7 +323,7 @@ end;
 
 Procedure  TEPGForm.setNow;
 begin
-  StartTime := trunc(now) + Floor(frac(now - OneHour/2) * 24) / 24;
+  StartTime := trunc(now) + Floor(frac(now - HalfHour) * 24) / 24;
   EndTime := StartTime + OneHour*4;
   UpdateTimeRange;
 end;

@@ -7,6 +7,7 @@ object EPGForm: TEPGForm
   ClientHeight = 690
   ClientWidth = 867
   OnCreate = FormCreate
+  LCLVersion = '2.3.0.0'
   object Panel1: TPanel
     Left = 0
     Height = 157
@@ -15,8 +16,8 @@ object EPGForm: TEPGForm
     Align = alBottom
     BevelInner = bvLowered
     BorderStyle = bsSingle
-    ClientHeight = 153
-    ClientWidth = 863
+    ClientHeight = 157
+    ClientWidth = 867
     TabOrder = 0
     object stChannel: TStaticText
       Left = 14
@@ -91,8 +92,8 @@ object EPGForm: TEPGForm
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
       Caption = 'FullGuide'
-      ClientHeight = 525
-      ClientWidth = 859
+      ClientHeight = 498
+      ClientWidth = 861
       object TimeGrid: TDrawGrid
         Left = 0
         Height = 475
@@ -179,8 +180,8 @@ object EPGForm: TEPGForm
           Caption = 'lbMessage'
           Color = clDefault
           Font.Height = -16
-          ParentColor = False
           ParentFont = False
+          Transparent = False
         end
         object bNow: TBitBtn
           AnchorSideLeft.Control = arForward
@@ -218,8 +219,8 @@ object EPGForm: TEPGForm
     end
     object tsDetail: TTabSheet
       Caption = 'Detail'
-      ClientHeight = 525
-      ClientWidth = 859
+      ClientHeight = 498
+      ClientWidth = 861
       object DetailGrid: TDrawGrid
         AnchorSideLeft.Control = tsDetail
         AnchorSideTop.Control = bBack1
@@ -252,13 +253,13 @@ object EPGForm: TEPGForm
           item
             Tag = 3
             Title.Caption = 'Title'
-            Width = 362
+            Width = 370
           end        
           item
             SizePriority = 2
             Tag = 4
             Title.Caption = 'Plot'
-            Width = 361
+            Width = 370
           end>
         DefaultRowHeight = 30
         ExtendedSelect = False
@@ -272,8 +273,8 @@ object EPGForm: TEPGForm
         ColWidths = (
           100
           100
-          362
-          361
+          370
+          370
         )
       end
       object bBack1: TButton
@@ -293,8 +294,8 @@ object EPGForm: TEPGForm
     end
     object tsSearch: TTabSheet
       Caption = 'Search'
-      ClientHeight = 525
-      ClientWidth = 859
+      ClientHeight = 498
+      ClientWidth = 861
       object lbeSearch: TLabeledEdit
         Left = 88
         Height = 23
@@ -304,7 +305,6 @@ object EPGForm: TEPGForm
         EditLabel.Width = 63
         EditLabel.Caption = 'Search term'
         EditLabel.Color = clDefault
-        EditLabel.ParentColor = False
         LabelPosition = lpLeft
         TabOrder = 0
       end

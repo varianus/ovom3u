@@ -122,6 +122,19 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="Renderer"/>
       </Unit>
+      <Unit>
+        <Filename Value="uchannels.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="fChannels"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uChannels"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ubackend.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uBackEnd"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

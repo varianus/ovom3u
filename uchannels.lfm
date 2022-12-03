@@ -1,0 +1,89 @@
+object fChannels: TfChannels
+  Left = 319
+  Height = 452
+  Top = 33
+  Width = 894
+  Caption = 'fChannels'
+  ClientHeight = 452
+  ClientWidth = 894
+  OnCreate = FormCreate
+  object Panel1: TPanel
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 0
+    Height = 72
+    Top = 0
+    Width = 894
+    Anchors = [akTop, akLeft, akRight]
+    ClientHeight = 72
+    ClientWidth = 894
+    TabOrder = 0
+    object Edit1: TEdit
+      Left = 104
+      Height = 27
+      Top = 30
+      Width = 80
+      OnChange = Edit1Change
+      TabOrder = 0
+    end
+    object cbViewLogo: TCheckBox
+      Left = 561
+      Height = 21
+      Top = 28
+      Width = 50
+      Caption = 'Logo'
+      OnChange = cbViewLogoChange
+      TabOrder = 1
+    end
+    object cbViewEPG: TCheckBox
+      Left = 704
+      Height = 21
+      Top = 28
+      Width = 118
+      Caption = 'Current program'
+      OnChange = cbViewLogoChange
+      TabOrder = 2
+    end
+  end
+  object ChannelList: TDrawGrid
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Panel1
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 380
+    Top = 72
+    Width = 894
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    AutoFillColumns = True
+    ColCount = 4
+    DefaultRowHeight = 32
+    ExtendedSelect = False
+    FixedCols = 0
+    FixedRows = 0
+    Font.Height = -16
+    MouseWheelOption = mwGrid
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goSmoothScroll, goCellHints, goCellEllipsis]
+    ParentFont = False
+    ParentShowHint = False
+    ScrollBars = ssVertical
+    ShowHint = True
+    TabAdvance = aaDown
+    TabOrder = 1
+    UseXORFeatures = True
+    OnDblClick = ChannelListDblClick
+    OnDrawCell = ChannelListDrawCell
+    OnSelectCell = ChannelListSelectCell
+    ColWidths = (
+      220
+      219
+      219
+      219
+    )
+  end
+end

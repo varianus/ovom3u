@@ -36,7 +36,7 @@ uses {$IFDEF UNIX}
   umain,
   sysutils,
   uEPGFOrm,
-  LoggerUnit, appconsts, Renderer;
+  LoggerUnit, appconsts, Renderer, uChannels, uBackEnd;
 
 {$R *.res}
 
@@ -57,5 +57,6 @@ begin
   Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
+  Application.CreateForm(TfChannels, fChannels);
   Application.Run;
 end.

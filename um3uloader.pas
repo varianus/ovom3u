@@ -23,7 +23,7 @@ unit um3uloader;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections, StrUtils;
+  Classes, SysUtils, Generics.Collections, StrUtils, Nullable;
 
 type
   TProviderKind = (Local, URL);
@@ -43,18 +43,31 @@ type
     CurrProgram: string;
   end;
 
+  TM3ULoader = class;
+  { TFilteredList }
+
+  TFilterParam = record
+    Group: TNullable<string>;
+    Title: TNullable<string>;
+  end;
+
+  TFilteredList = record
+  private
+    OriginalList: TM3uLoader;
+    FFilterArray: array of integer;
+    function GetItem(idx: integer): TM3UItem;
+  public
+    property Item[idx:integer]:TM3UItem read GetItem; default;
+    Function Count: integer;
+    function Map(idx:integer):integer;
+  end;
+
   { TM3ULoader }
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
-    FFilterCount: integer;
-    FFiltered: boolean;
     fLastMessage: string;
     FOnListChanged: TNotifyEvent;
-    FFilterArray: array of integer;
-    function GetFilterCount: integer;
-    procedure SetFilterCount(AValue: integer);
-    procedure SetFiltered(AValue: boolean);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(constref Left, Right: TM3UItem): integer;
 
@@ -62,16 +75,13 @@ type
     ListMd5: string;
     Groups: TStringList;
     procedure DoListChanged;
-    property Filtered:boolean read FFiltered write SetFiltered;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
-    Property FilterCount: integer read GetFilterCount;
     constructor Create;
     destructor Destroy; override;
     function Load(const ListName: string): boolean;
     function ItemByChno(chno: integer): integer;
-    function FilteredToReal(idx: integer): integer;
-    Procedure FilterByGroup(Group:string);
+    Function Filter(aFilter:TFilterParam): TFilteredList;
 
     procedure FixChannelNumbering;
     procedure UpdateLogo;
@@ -102,6 +112,23 @@ const
   CountExt = 4;
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
+
+{ TFilteredList }
+
+function TFilteredList.Map(idx: integer): integer;
+begin
+  Result := FFilterArray[idx];
+end;
+
+function TFilteredList.GetItem(idx: integer): TM3UItem;
+begin
+  Result := OriginalList[Map(idx)];
+end;
+
+function TFilteredList.Count: integer;
+begin
+  Result := Length(FFilterArray);
+end;
 
 
 { TLogoLoader }
@@ -268,7 +295,6 @@ begin
     MD5Final(Context, Digest);
     ListMd5 := MD5Print(Digest);
     Result := True;
-    Filtered := false;
     DoListChanged;
   finally
     if not fLastMessage.IsEmpty then
@@ -290,27 +316,25 @@ begin
     end;
 end;
 
-function TM3ULoader.FilteredToReal(idx: integer): integer;
-begin
-  if FFiltered then
-    Result := FFilterArray[idx]
-  else
-    Result := idx;
-end;
-
-procedure TM3ULoader.FilterByGroup(Group: string);
+function TM3ULoader.Filter(aFilter: TFilterParam): TFilteredList;
 var i,j:Integer;
+    Item: TM3UItem;
 begin
-
-  SetLength(FFilterArray, Count);
+  Result.OriginalList := self;
+  SetLength(Result.FFilterArray, Count);
   i:= 0;
   for j:= 0 to count -1 do
-    if FItems[j].Group = Group then
-      begin
-        FFilterArray[i]:=j;
-        inc(i);
-      end;
-  SetLength(FFilterArray,i);
+    begin
+      Item := FItems[j];
+      if ((not aFilter.Group.HasValue) or (Item.Group = Afilter.Group.Value)) and
+         ((not aFilter.Title.HasValue) or (AnsiContainsText(Item.Title, AFilter.Title.value))) then
+        begin
+          Result.FFilterArray[i]:=j;
+          inc(i);
+        end;
+
+    end;
+  SetLength(Result.FFilterArray,i);
 
 end;
 
@@ -328,25 +352,6 @@ end;
 procedure TM3ULoader.SetOnListChange(AValue: TNotifyEvent);
 begin
   FOnListChanged := AValue;
-end;
-
-function TM3ULoader.GetFilterCount: integer;
-begin
-  if FFiltered then
-    Result := Length(FFilterArray)
-  else
-    Result := Count;
-end;
-
-procedure TM3ULoader.SetFilterCount(AValue: integer);
-begin
-
-end;
-
-procedure TM3ULoader.SetFiltered(AValue: boolean);
-begin
-  if FFiltered=AValue then Exit;
-  FFiltered:=AValue;
 end;
 
 procedure TM3ULoader.FixChannelNumbering;
