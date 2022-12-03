@@ -179,13 +179,6 @@ object fPlayer: TfPlayer
     Left = 40
     Top = 275
   end
-  object OSDTimer: TTimer
-    Enabled = False
-    Interval = 8000
-    OnTimer = OSDTimerTimer
-    Left = 40
-    Top = 344
-  end
   object AppProperties: TApplicationProperties
     OnException = AppPropertiesException
     Left = 112

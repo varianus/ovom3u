@@ -151,7 +151,7 @@ begin
   idx := ChannelList.Selection.Top*4 + ChannelList.Selection.Left;
   if idx >= fFilter.Count then
     exit;
- BackEnd.MpvEngine.Play(fFilter[idx].mrl);
+ BackEnd.Play(fFilter.Map(idx));
 end;
 
 procedure TfChannels.Edit1Change(Sender: TObject);

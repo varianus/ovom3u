@@ -41,7 +41,6 @@ type
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
     cbGroups: TComboBox;
-    OSDTimer: TTimer;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     N1: TMenuItem;
@@ -84,7 +83,6 @@ type
     procedure GLRendererDblClick(Sender: TObject);
     procedure GLRendererMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure HideMouseTimer(Sender: TObject);
-    procedure OSDTimerTimer(Sender: TObject);
     procedure pmPlayerClose(Sender: TObject);
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
@@ -105,15 +103,10 @@ type
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
     procedure OnTrackChange(Sender: TObject);
-    procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure Play(Row: integer);
     procedure SetLoading(AValue: boolean);
-    procedure ShowEpg;
   private
     flgFullScreen: boolean;
-    ShowingInfo: boolean;
-    CurrentChannel: integer;
-    PreviousChannel: integer;
     RestoredBorderStyle: TBorderStyle;
     RestoredWindowState: TWindowState;
     Progress: integer;
@@ -204,39 +197,7 @@ var
   CacheDir: string;
 begin
 
-  Kind := ConfigObj.ListProperties.ChannelsKind;
-
-  if Kind = URL then
-  begin
-    CacheDir := ConfigObj.CacheDir;
-    IPTVList := ConfigObj.ListProperties.ChannelsUrl;
-    try
-      if (BackEnd.epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListChanged then
-      begin
-        try
-          OvoLogger.Log(INFO, 'Downloding channels list from ' + IPTVList);
-          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
-          BackEnd.epgData.SetLastScan('channels', now);
-        except
-          on e: Exception do
-            OvoLogger.Log(ERROR, 'Can''t download list at: ' +
-              IPTVList + ' error:' +
-              E.Message);
-        end;
-      end
-      else
-        OvoLogger.Log(INFO, 'Using cached channels list');
-
-      IPTVList := CacheDir + 'current-iptv.m3u';
-    finally
-    end;
-  end
-  else
-    IPTVList := ConfigObj.ListProperties.ChannelsFileName;
-
-  if FileExists(IPTVList) then
-    BackEnd.list.Load(IPTVList);
-
+  BackEnd.LoadList;
   fFilteredList:= BackEnd.List.Filter(Default(TFilterParam));
 
   if (BackEnd.list.Groups.Count > 1) then
@@ -249,31 +210,6 @@ begin
     end
   else
     cbGroups.Visible:=false;
-
-  ConfigObj.ListChanged := False;
-  OvoLogger.Log(INFO, 'Found %d channels', [BackEnd.List.Count]);
-
-  if ConfigObj.ListProperties.UseChno then
-  begin
-    BackEnd.List.FixChannelNumbering;
-    OvoLogger.Log(INFO, 'Renumber channels using tvg-chno');
-  end;
-
-  if BackEnd.List.ListMd5 <> BackEnd.epgData.LastChannelMd5 then
-  begin
-    OvoLogger.Log(INFO, 'Channels list changed, reloading EPG');
-    BackEnd.epgData.LoadChannelList(BackEnd.List);
-    BackEnd.epgData.SetLastChannelMd5(BackEnd.List.ListMd5);
-    BackEnd.epgData.SetLastScan('epg', 0);
-  end;
-
-  if ConfigObj.ListProperties.ChannelsDownloadLogo then
-    BackEnd.List.UpdateLogo;
-
-  if not Configobj.ListProperties.EPGUrl.IsEmpty or not Configobj.ListProperties.EpgFileName.IsEmpty then
-    BackEnd.epgData.Scan
-  else
-    OvoLogger.Log(INFO, 'No EPG configuration, skipping');
 
   ChannelList.RowCount := BackEnd.List.Count;
 
@@ -291,14 +227,12 @@ begin
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
-  ShowingInfo := False;
   OvoLogger.Log(INFO, 'Create main GUI');
 
   BackEnd.list.OnListChanged := OnListChanged;
   BackEnd.epgData := TEpg.Create;
   ChannelList.RowCount := 0;
-  CurrentChannel := -1;
-  PreviousChannel := -1;
+
   ChannelSelecting := False;
   fLoading := False;
   ChannelSelected := 0;
@@ -327,7 +261,7 @@ begin
     Loading := backend.mpvengine.IsIdle;
   if not Loading then
     begin
-      OsdMessage('', False);
+      Backend.OsdMessage('', False);
     end;
 end;
 
@@ -336,21 +270,6 @@ begin
   LoadTracks;
 end;
 
-procedure TfPlayer.OsdMessage(Message: string; TimeOut: boolean = True);
-begin
-
-  if GLRenderer.Visible then
-  begin
-    backend.mpvengine.OsdMessage(message);
-    OSDTimer.Enabled := TimeOut;
-  end
-  else
-  begin
-    fLastMessage := Message;
-    pnlContainer.Invalidate;
-  end;
-
-end;
 
 procedure TfPlayer.FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
 var
@@ -368,13 +287,11 @@ begin
         end;
       VK_DOWN:
       begin
-        ChannelList.Row := CurrentChannel + 1;
-        play(ChannelList.Row);
+        play(fFilteredList.Map(ChannelList.Row+1));
       end;
       VK_UP:
       begin
-        ChannelList.Row := CurrentChannel - 1;
-        play(ChannelList.Row);
+        play(fFilteredList.Map(ChannelList.Row-1));
       end;
       else
         Pass := True;
@@ -384,7 +301,9 @@ begin
       if ChannelSelecting then
       begin
         if ConfigObj.ListProperties.UseChno then
-          ChannelSelected := BackEnd.List.ItemByChno(ChannelSelected);
+          ChannelSelected := BackEnd.List.ItemByChno(ChannelSelected)
+        else
+          ChannelSelected:= ChannelSelected -1;
         play(ChannelSelected);
         ChannelSelecting := False;
         key := 0;
@@ -392,20 +311,20 @@ begin
     else
        pass:= true;
     VK_I:
-      ShowEpg;
+      Backend.ShowEpg;
     VK_O:
       backend.mpvengine.ShowStats();
     VK_S:
     begin
       backend.mpvengine.Stop;
-      OsdMessage('Stop', True);
+      Backend.OsdMessage('Stop', True);
     end;
     VK_SPACE:
     begin
       if backend.mpvengine.Pause then
       begin
         backend.mpvengine.OsdEpg('', Default(REpgInfo), False);
-        OsdMessage('Pause', False);
+        Backend.OsdMessage('Pause', False);
       end
       else
         backend.mpvengine.OsdMessage();
@@ -424,8 +343,7 @@ begin
     end;
     VK_B:
     begin
-      if PreviousChannel <> -1 then
-        Play(PreviousChannel);
+      BackEnd.SwapChannel;
     end;
 
     VK_RIGHT:
@@ -453,7 +371,7 @@ begin
           ChannelSelected := ChannelSelected - $30;
 
       end;
-      OsdMessage(IntToStr(ChannelSelected), False) ;
+      Backend.OsdMessage(IntToStr(ChannelSelected), False) ;
       ChannelTimer.Enabled := True;
     end;
     else
@@ -461,24 +379,6 @@ begin
   end;
   if not pass then
     key := 0;
-end;
-
-procedure TfPlayer.ShowEpg;
-var
-  Info: REpgInfo;
-begin
-  if not ShowingInfo then
-  begin
-    Info := BackEnd.epgData.GetEpgInfo(CurrentChannel + 1, now);
-    backend.mpvengine.OsdEpg(Format('%3.3d: %s', [BackEnd.List[CurrentChannel].Number, BackEnd.List[CurrentChannel].title]), info, True);
-    ShowingInfo := True;
-    OSDTimer.Enabled := True;
-  end
-  else
-  begin
-    OSDTimerTimer(self);
-  end;
-
 end;
 
 procedure TfPlayer.LoadingTimerStartTimer(Sender: TObject);
@@ -494,7 +394,7 @@ begin
     Loading := backend.mpvengine.isIdle;
     if not loading then
     begin
-      OsdMessage('');
+      Backend.OsdMessage('');
       LoadingTimer.Enabled := False;
     end;
   end;
@@ -549,7 +449,7 @@ begin
   end;
 
   cv.Font.Height := Scale96Toscreen(-16);
-  if CurrentChannel = aRow then
+  if Backend.CurrentIndex = fFilteredList.Map(aRow) then
   begin
     cv.Font.Style := [fsBold, fsUnderline];
     cv.Font.color := clHighlightText;
@@ -612,7 +512,7 @@ begin
       ChannelSelected := ChannelSelected - 1;
 
     ChannelSelecting := False;
-    OsdMessage('', False);
+    Backend.OsdMessage('', False);
     Play(ChannelSelected);
 
   end;
@@ -622,7 +522,11 @@ end;
 procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   if Assigned(backend.mpvengine) then
+  begin
     backend.mpvengine.isRenderActive := False;
+    BackEnd.MpvEngine.Stop;
+  end;
+
   Application.ProcessMessages;
   CloseAction := caFree;
 end;
@@ -737,33 +641,10 @@ end;
 
 procedure TfPlayer.Play(Row: integer);
 begin
-  if (row > BackEnd.List.Count) or (row < 0) then
-  begin
-    OsdMessage('No Channel', True);
-    exit;
-  end;
-
-  if (CurrentChannel = Row) and not backend.mpvengine.IsIdle then
-    exit;
-
-  if BackEnd.list[Row].Mrl.IsEmpty then
-  begin
-    OsdMessage('Missing Channel Address', True);
-    exit;
-  end;
-
-  OvoLogger.Log(INFO, 'Tuning to %s',[BackEnd.list[row].Title]);
-
-
+  BackEnd.Play(Row);
   ChannelList.Invalidate;
-  PreviousChannel := CurrentChannel;
-  CurrentChannel := Row;
-  Caption := BackEnd.list[CurrentChannel].title;
-  backend.mpvengine.Play(BackEnd.list[CurrentChannel].Mrl);
+  Caption := BackEnd.list[Backend.CurrentIndex].title;
   Loading := True;
-  fLastMessage := 'Loading: ' + BackEnd.list[CurrentChannel].title;
-  OsdMessage(fLastMessage);
-//  pnlContainer.Invalidate;
 
 end;
 
@@ -784,18 +665,6 @@ end;
 procedure TfPlayer.HideMouseTimer(Sender: TObject);
 begin
   screen.cursor := crNone;
-end;
-
-procedure TfPlayer.OSDTimerTimer(Sender: TObject);
-begin
-
-  ShowingInfo := False;
-  if GLRenderer.Visible then
-  begin
-    backend.mpvengine.OsdEpg('', Default(REpgInfo), False);
-    backend.mpvengine.OsdMessage();
-  end;
-  OSDTimer.Enabled := False;
 end;
 
 procedure TfPlayer.pmPlayerClose(Sender: TObject);
