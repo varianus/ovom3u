@@ -292,7 +292,7 @@ begin
     exit;
 
   ClickTime := StartTime + (x - TimeGrid.Columns[0].Width) / (TimeGrid.Columns[1].Width / (endTime - StartTime));
-  EpgInfo := FEpgData.GetEpgInfo(Coord.Y, ClickTime);
+  EpgInfo := FEpgData.GetEpgInfo(Coord.Y-1, ClickTime);
   EpgInfo.Channel := BackEnd.List[Coord.y-1].title;
   UpdateDetail(EpgInfo);
 
