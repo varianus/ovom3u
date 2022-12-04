@@ -73,11 +73,12 @@ type
     procedure ReceivedCommand(Sender: TObject; Command: TEngineCommand; Param: integer);
     procedure SetBoolProperty(const PropertyName: string; AValue: boolean);
     procedure SetGLRenderControl(AValue: TOpenGlControl);
+    procedure SetIsRenderActive(AValue: boolean);
     procedure SetMainVolume(const AValue: integer);
     procedure SetOnLoadingState(AValue: TNotifyEvent);
   public
     property GLRenderControl: TOpenGlControl read FGLRenderControl write SetGLRenderControl;
-    property isRenderActive: boolean read fIsRenderActive write fIsRenderActive;
+    property isRenderActive: boolean read fIsRenderActive write SetIsRenderActive;
     property isGlEnabled: boolean read fisGlEnabled write fisGlEnabled;
     property OnLoadingState: TNotifyEvent read FOnLoadingState write SetOnLoadingState;
     property OnTrackChange: TNotifyEvent read fOnTrackChange write fOnTrackChange;
@@ -148,6 +149,14 @@ begin
   if FGLRenderControl = AValue then
     Exit;
   FGLRenderControl := AValue;
+end;
+
+procedure TMPVEngine.SetIsRenderActive(AValue: boolean);
+begin
+  if fIsRenderActive=AValue then Exit;
+  fIsRenderActive:=AValue;
+  if Assigned(RenderObj) then
+    RenderObj.IsRenderActive:=AValue;
 end;
 
 procedure TMPVEngine.SetOnLoadingState(AValue: TNotifyEvent);

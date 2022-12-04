@@ -39,8 +39,11 @@ type
     glParams: mpv_opengl_init_params;
     RenderParams: array of mpv_render_param;
     procedure InitRendering;
+ Protected
+    Procedure TerminatedSet; override;
   public
     fOwner:     TRender;
+    IsRenderActive:boolean;
     WaitEvent: PRtlEvent;
     constructor Create;
     procedure Init(Owner: TRender; AControl: TOpenGlControl; AHandle: Pmpv_handle);
@@ -51,7 +54,10 @@ type
   TRender = class
   private
     RenderThread: TRenderThread;
+    function GetIsRenderActive: boolean;
+    procedure SetIsRenderActive(AValue: boolean);
   public
+    Property IsRenderActive: boolean read GetIsRenderActive write SetIsRenderActive;
     constructor Create(AControl:TOpenGlControl; AHandle: pmpv_handle);
     destructor Destroy; override;
     procedure Render;
@@ -92,6 +98,7 @@ begin
   fControl:= AControl;
   fHandle := AHandle;
   fControl.Visible := true;
+  IsRenderActive:= true;
 end;
 
 procedure TRenderThread.InitRendering;
@@ -128,6 +135,12 @@ begin
   mpv_render_context_update(Context^);
 end;
 
+procedure TRenderThread.TerminatedSet;
+begin
+  RTLeventSetEvent(WaitEvent);
+  Inherited TerminatedSet;
+end;
+
 procedure TRenderThread.Execute;
 var
   mpfbo: mpv_opengl_fbo;
@@ -138,20 +151,18 @@ begin
     begin
     RtlEventWaitFor(WaitEvent);
     begin
-      begin
-        while (mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0 do
-          begin
-            fControl.MakeCurrent();
-            mpfbo.fbo := 0;
-            mpfbo.h := FControl.Height;
-            mpfbo.w := FControl.Width;
-            mpfbo.internal_format := 0;
-            RenderParams[0].Data := @mpfbo;
-            mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
+      while ((mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0) do
+        begin
+          fControl.MakeCurrent();
+          mpfbo.fbo := 0;
+          mpfbo.h := FControl.Height;
+          mpfbo.w := FControl.Width;
+          mpfbo.internal_format := 0;
+          RenderParams[0].Data := @mpfbo;
+          mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
+          if IsRenderActive then
             fControl.SwapBuffers();
-            mpv_render_context_report_swap(Context^);
-
-          end;
+          mpv_render_context_report_swap(Context^);
       end;
 
     end;
@@ -170,6 +181,23 @@ end;
 
 { TRender }
 
+procedure TRender.SetIsRenderActive(AValue: boolean);
+begin
+  if not Assigned(RenderThread) or
+     (RenderThread.IsRenderActive = AValue) then Exit;
+  RenderThread.IsRenderActive:=AValue;
+
+end;
+
+function TRender.GetIsRenderActive: boolean;
+begin
+  if Assigned(RenderThread) then
+    Result := RenderThread.IsRenderActive
+  else
+    Result := false;
+
+end;
+
 constructor TRender.Create(AControl: TOpenGlControl; AHandle: pmpv_handle);
 begin
   RenderThread := TRenderThread.Create;
@@ -182,7 +210,6 @@ end;
 destructor TRender.Destroy;
 begin
   RenderThread.Terminate;
-  RTLeventSetEvent(RenderThread.WaitEvent);
   inherited Destroy;
 end;
 
