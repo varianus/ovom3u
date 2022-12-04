@@ -602,7 +602,7 @@ procedure TfPlayer.actShowListExecute(Sender: TObject);
 begin
   if not Assigned(fChannels) then
     Application.CreateForm(TfChannels, fChannels);
-  fChannels.ChannelList.RowCount:=ceil(BackEnd.List.Count / 4 );
+  fChannels.Init;
   fChannels.Show;
 end;
 

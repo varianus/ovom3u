@@ -57,6 +57,5 @@ begin
   Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
-  Application.CreateForm(TfChannels, fChannels);
   Application.Run;
 end.

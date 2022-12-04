@@ -6,17 +6,19 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids,
-  StdCtrls, Types, um3uloader, uBackEnd, GeneralFunc;
+  StdCtrls, LCLType, Types, um3uloader, uBackEnd, GeneralFunc;
 
 type
 
   { TfChannels }
 
   TfChannels = class(TForm)
+    cbGroups: TComboBox;
     cbViewEPG: TCheckBox;
     ChannelList: TDrawGrid;
     cbViewLogo: TCheckBox;
     Edit1: TEdit;
+    Label1: TLabel;
     Panel1: TPanel;
     procedure cbViewLogoChange(Sender: TObject);
     procedure ChannelListDblClick(Sender: TObject);
@@ -24,13 +26,14 @@ type
       aRect: TRect; aState: TGridDrawState);
     procedure ChannelListSelectCell(Sender: TObject; aCol, aRow: Integer;
       var CanSelect: Boolean);
-    procedure Edit1Change(Sender: TObject);
+    procedure FilterChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     fFilter: TFilteredList;
     procedure ComputeGridCellSize(data: ptrint);
   public
-
+    Procedure Init;
   end;
 
 var
@@ -139,6 +142,23 @@ begin
 
 end;
 
+procedure TfChannels.Init;
+begin
+  if (BackEnd.list.Groups.Count > 1) then
+    begin
+      cbGroups.Items.clear;
+      cbGroups.items.add(um3uloader.RSAnyGroup);
+      cbGroups.Items.AddStrings(BackEnd.List.Groups, false);
+      cbGroups.ItemIndex:=0;
+      cbGroups.Visible:=true;
+    end
+  else
+    cbGroups.Visible:=false;
+  ChannelList.RowCount:=ceil(ffilter.Count / 4 );
+  ComputeGridCellSize(0);
+  ChannelList.Invalidate;
+end;
+
 procedure TfChannels.cbViewLogoChange(Sender: TObject);
 begin
   ComputeGridCellSize(0);
@@ -154,13 +174,16 @@ begin
  BackEnd.Play(fFilter.Map(idx));
 end;
 
-procedure TfChannels.Edit1Change(Sender: TObject);
+procedure TfChannels.FilterChange(Sender: TObject);
 var
   Filter: TFilterParam;
 begin
   Filter := Default(TFilterParam);
   if Edit1.Text <> EmptyStr then
     Filter.Title := Edit1.Text;
+
+  if cbGroups.ItemIndex <> 0 then
+    Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
 
   fFilter := Backend.List.Filter(Filter);
   ChannelList.RowCount:=ceil(ffilter.Count / 4 );
@@ -170,6 +193,15 @@ end;
 procedure TfChannels.FormCreate(Sender: TObject);
 begin
   fFilter := BackEnd.List.Filter(Default(TFilterParam));
+end;
+
+procedure TfChannels.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  case Key of
+    VK_ESCAPE: Close;
+    VK_RETURN : ChannelListDblClick(Sender);
+  end;
 end;
 
 
