@@ -67,6 +67,7 @@ type
     RenderObj: TRender;
 
     function GetBoolProperty(const PropertyName: string): boolean;
+    function GetCustomOptions: string;
     function GetMainVolume: integer;
     procedure InitRenderer(Data: PtrInt);
     procedure PostCommand(Command: TEngineCommand; Param: integer);
@@ -291,10 +292,31 @@ begin
   end;
 end;
 
+function  TMPVEngine.GetCustomOptions:string;
+var
+  i: Integer;
+begin
+  Result := EmptyStr;
+   if ConfigObj.MPVProperties.HardwareAcceleration then
+   begin
+     Result := 'hwdec=auto,';
+   end;
+   for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
+   begin
+     if ConfigObj.MPVProperties.CustomOptions[i] <> EmptyStr then
+       Result := Result + ConfigObj.MPVProperties.CustomOptions[i] + ',';
+   end;
+   if Result <> EmptyStr then
+     Begin
+       Delete(Result, Length(Result), 1);
+     end;
+
+end;
+
 procedure TMPVEngine.Play(mrl: string);
 var
   Args: array of PChar;
-  ArgIdx, i: integer;
+  ArgIdx: integer;
   Options: string;
 begin
 
@@ -305,20 +327,10 @@ begin
   args[2] := 'replace';
 
   ArgIdx:=3;
-  Options := EmptyStr;
-  if ConfigObj.MPVProperties.HardwareAcceleration then
-  begin
-    Options := 'hwdec=auto,';
-  end;
-  for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
-  begin
-    if ConfigObj.MPVProperties.CustomOptions[i] <> EmptyStr then
-      Options := options + ConfigObj.MPVProperties.CustomOptions[i] + ',';
-  end;
-  if Options <> EmptyStr then
+  Options:=GetCustomOptions;
+   if Options <> EmptyStr then
     Begin
-      Delete(Options, Length(Options), 1);
-      Args[3] := PChar(Options);
+      Args[ArgIdx] := PChar(Options);
       Inc(ArgIdx);
     end;
   args[ArgIdx] := nil;
@@ -330,15 +342,28 @@ end;
 procedure TMPVEngine.PlayIMG(mrl: string);
 var
   Args: array of PChar;
+  Options: String;
+  ArgIdx: Integer;
 begin
-
   args := nil;
-  setlength(args, 5);
+  setlength(args, 6);
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
-  args[3] := 'image-display-duration=inf';
-  args[4] := nil;
+  ArgIdx := 3;
+  Options:=GetCustomOptions;
+   if Options <> EmptyStr then
+    Begin
+      Args[ArgIdx] := PChar('image-display-duration=inf,'+Options);
+      Inc(ArgIdx);
+    end
+   else
+      Begin
+      Args[ArgIdx] := 'image-display-duration=inf';
+      Inc(ArgIdx);
+    end     ;
+
+  args[ArgIdx] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
 
 end;
