@@ -230,7 +230,6 @@ begin
   OvoLogger.Log(INFO, 'Create main GUI');
 
   BackEnd.list.OnListChanged := OnListChanged;
-  BackEnd.epgData := TEpg.Create;
   ChannelList.RowCount := 0;
 
   ChannelSelecting := False;
@@ -318,6 +317,10 @@ begin
     begin
       backend.mpvengine.Stop;
       Backend.OsdMessage('Stop', True);
+    end;
+    VK_T:
+    begin
+      Backend.OsdMessage(FormatDateTime('t',now) , True);
     end;
     VK_SPACE:
     begin

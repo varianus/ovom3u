@@ -195,7 +195,7 @@ procedure TBackend.ShowEpg;
 var
   Info: REpgInfo;
 begin
-  if not ShowingInfo then
+  if not ShowingInfo and (currentIndex <> -1) then
   begin
     Info := epgData.GetEpgInfo(CurrentIndex, now);
     mpvengine.OsdEpg(Format('%3.3d: %s', [List[CurrentIndex].Number, BackEnd.List[CurrentIndex].title]), info, True);

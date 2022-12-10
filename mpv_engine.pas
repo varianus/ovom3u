@@ -70,6 +70,7 @@ type
     function GetCustomOptions: string;
     function GetMainVolume: integer;
     procedure InitRenderer(Data: PtrInt);
+    procedure OnRenderInitialized(AValue: TObject);
     procedure PostCommand(Command: TEngineCommand; Param: integer);
     procedure ReceivedCommand(Sender: TObject; Command: TEngineCommand; Param: integer);
     procedure SetBoolProperty(const PropertyName: string; AValue: boolean);
@@ -165,6 +166,11 @@ begin
   FOnLoadingState := AValue;
 end;
 
+procedure TMPVEngine.OnRenderInitialized(AValue: TObject);
+begin
+  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+end;
+
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
 var
   ServerVersion: PChar;
@@ -177,6 +183,7 @@ begin
 
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
+    mpv_set_option_string(fHandle^, 'idle', 'yes');
     mpv_request_log_messages(fhandle^, 'error');
     mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
     mpv_initialize(fHandle^);
@@ -237,7 +244,7 @@ begin
   GLRenderControl.ReleaseContext;
   Application.ProcessMessages;
   RenderObj := TRender.Create(FGLRenderControl, fHandle);
-  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  RenderObj.OnRenderInitalized:=OnRenderInitialized;
 
 end;
 
@@ -365,6 +372,7 @@ begin
 
   args[ArgIdx] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
+  Loading:= true;
 
 end;
 
