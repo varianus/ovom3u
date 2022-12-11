@@ -3,7 +3,7 @@ object fChannels: TfChannels
   Height = 452
   Top = 33
   Width = 894
-  Caption = 'fChannels'
+  Caption = 'Channel search'
   ClientHeight = 452
   ClientWidth = 894
   KeyPreview = True
