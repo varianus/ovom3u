@@ -497,7 +497,7 @@ end;
 procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   if (key) = VK_RETURN then
-    Play(ChannelList.Row);
+    Play(fFilteredList.Map(ChannelList.Row));
 end;
 
 procedure TfPlayer.ChannelSplitterMoved(Sender: TObject);
