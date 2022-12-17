@@ -136,7 +136,7 @@ begin
   RenderParams[1]._type := MPV_RENDER_PARAM_FLIP_Y;
   RenderParams[1].Data := @Flip;
   RenderParams[2]._type := MPV_RENDER_PARAM_INVALID;
-  RenderParams[3].Data := nil;
+  RenderParams[2].Data := nil;
   WaitEvent := RTLEventCreate;
   fControl.MakeCurrent();
   mpv_render_context_set_update_callback(Context^, @update_gl, fOwner);
