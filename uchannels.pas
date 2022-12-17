@@ -98,7 +98,7 @@ begin
 
   end;
 
-  cv.Font.Height := Scale96Toscreen(-16);
+  cv.Font.Height := Scale96Toscreen(-14);
 {  if fPlayer.CurrentChannel = aRow then
   begin
     cv.Font.Style := [fsBold, fsUnderline];
@@ -110,7 +110,7 @@ begin
     cv.Font.Style := [fsBold];
 
   Spacing := Scale96ToScreen(2);
-  cv.TextRect(aRect, aRect.left+ h + Spacing, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
+  cv.TextRect(aRect, aRect.left+ h + Spacing*2, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
   if cbViewEPG.Checked then
   begin
     epgInfo := Backend.epgdata.GetEpgInfo(idx, now);
@@ -134,10 +134,16 @@ end;
 
 procedure TfChannels.ComputeGridCellSize(data: ptrint);
 begin
-  if cbViewLogo.Checked or cbViewEPG.Checked then
-    ChannelList.DefaultRowHeight := Scale96ToScreen(64)
-  else
-    ChannelList.DefaultRowHeight := Scale96ToScreen(32);
+  begin
+    if ConfigObj.GuiProperties.ViewCurrentProgram then
+      ChannelList.DefaultRowHeight := Scale96ToScreen(64)
+    else
+      if ConfigObj.GuiProperties.ViewLogo then
+        ChannelList.DefaultRowHeight := Scale96ToScreen(48)
+      else
+        ChannelList.DefaultRowHeight := Scale96ToScreen(32);
+
+  end;
   ChannelList.Invalidate;
 
 end;

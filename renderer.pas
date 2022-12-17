@@ -166,6 +166,9 @@ begin
   Synchronize(@(fOwner.DoRenderInitialized));
   while not Terminated do
     begin
+    mpfbo.fbo := 0;
+    mpfbo.internal_format := 0;
+    RenderParams[0].Data := @mpfbo;
     RtlEventWaitFor(WaitEvent);
     begin
       while ((mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0) and not terminated do
@@ -173,11 +176,8 @@ begin
           if IsRenderActive then
             begin
               fControl.MakeCurrent();
-              mpfbo.fbo := 0;
               mpfbo.h := FControl.Height;
               mpfbo.w := FControl.Width;
-              mpfbo.internal_format := 0;
-              RenderParams[0].Data := @mpfbo;
               mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
               if IsRenderActive then
                 fControl.SwapBuffers();

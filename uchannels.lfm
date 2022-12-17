@@ -9,6 +9,7 @@ object fChannels: TfChannels
   KeyPreview = True
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
+  LCLVersion = '2.3.0.0'
   object Panel1: TPanel
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Owner
@@ -120,10 +121,10 @@ object fChannels: TfChannels
     OnDrawCell = ChannelListDrawCell
     OnSelectCell = ChannelListSelectCell
     ColWidths = (
-      220
-      219
-      219
-      219
+      224
+      224
+      223
+      223
     )
   end
 end
