@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config;
+  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config, uBackEnd;
 
 type
 
@@ -97,23 +97,23 @@ var
 begin
   ConfigObj.ReadConfig;
 
-  Kind := ConfigObj.ListProperties.ChannelsKind;
+  Kind := Backend.List.ListProperties.ChannelsKind;
   cbChannelsKind.ItemIndex := Ord(kind);
   cbChannelsKind.OnChange(cbChannelsKind);
-  edtChannelsFileName.Text := ConfigObj.ListProperties.ChannelsFileName;
-  edtChannelsUrl.Text := ConfigObj.ListProperties.ChannelsUrl;
+  edtChannelsFileName.Text := Backend.List.ListProperties.ChannelsFileName;
+  edtChannelsUrl.Text := Backend.List.ListProperties.ChannelsUrl;
 
-  Kind := ConfigObj.ListProperties.EpgKind;
+  Kind := Backend.EpgData.EpgProperties.EpgKind;
   cbEpgKind.ItemIndex := Ord(kind);
   cbEpgKind.OnChange(cbChannelsKind);
-  edtEpgFileName.Text := ConfigObj.ListProperties.EpgFileName;
-  edtEpgUrl.Text := ConfigObj.ListProperties.EpgUrl;
+  edtEpgFileName.Text := Backend.EpgData.EpgProperties.EpgFileName;
+  edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;
 
-  cbUseChno.Checked := ConfigObj.ListProperties.UseChno;
-  cbDownloadLogo.Checked := ConfigObj.ListProperties.ChannelsDownloadLogo;
+  cbUseChno.Checked := Backend.List.ListProperties.UseChno;
+  cbDownloadLogo.Checked := Backend.List.ListProperties.ChannelsDownloadLogo;
 
-  cbHardwareAcceleration.Checked := ConfigObj.MPVProperties.HardwareAcceleration;
-  vleCustomOptions.Strings.Assign(ConfigObj.MPVProperties.CustomOptions);
+  cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
+  vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
 
 
 end;
@@ -123,19 +123,18 @@ var
   ListProperties: TListProperties;
 begin
 
-  ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
-  ListProperties.ChannelsFileName := edtChannelsFileName.Text;
-  ListProperties.ChannelsUrl := edtChannelsUrl.Text;
-  ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
+  Backend.List.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
+  Backend.List.ListProperties.ChannelsFileName := edtChannelsFileName.Text;
+  Backend.List.ListProperties.ChannelsUrl := edtChannelsUrl.Text;
+  Backend.List.ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
+  Backend.List.ListProperties.UseChno := cbUseChno.Checked;
 
-  ListProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
-  ListProperties.EpgFileName := edtEpgFileName.Text;
-  ListProperties.EpgUrl := edtEpgUrl.Text;
-  ListProperties.UseChno := cbUseChno.Checked;
-  ConfigObj.ListProperties := ListProperties;
+  Backend.EpgData.EpgProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
+  Backend.EpgData.EpgProperties.EpgFileName := edtEpgFileName.Text;
+  Backend.EpgData.EpgProperties.EpgUrl := edtEpgUrl.Text;
 
-  ConfigObj.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
-  ConfigObj.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
+  BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
+  BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
 end;

@@ -134,16 +134,17 @@ end;
 
 procedure TfChannels.ComputeGridCellSize(data: ptrint);
 begin
-  begin
-    if ConfigObj.GuiProperties.ViewCurrentProgram then
-      ChannelList.DefaultRowHeight := Scale96ToScreen(64)
-    else
-      if ConfigObj.GuiProperties.ViewLogo then
-        ChannelList.DefaultRowHeight := Scale96ToScreen(48)
-      else
-        ChannelList.DefaultRowHeight := Scale96ToScreen(32);
-
-  end;
+  //mcmcmcmcmcmc
+  //begin
+  //  if GuiProperties.ViewCurrentProgram then
+  //    ChannelList.DefaultRowHeight := Scale96ToScreen(64)
+  //  else
+  //    if GuiProperties.ViewLogo then
+  //      ChannelList.DefaultRowHeight := Scale96ToScreen(48)
+  //    else
+  //      ChannelList.DefaultRowHeight := Scale96ToScreen(32);
+  //
+  //end;
   ChannelList.Invalidate;
 
 end;

@@ -23,7 +23,7 @@ unit um3uloader;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections, StrUtils, Nullable;
+  Classes, SysUtils, Generics.Collections, StrUtils, Config, Nullable;
 
 type
   TProviderKind = (Local, URL);
@@ -62,18 +62,46 @@ type
     function Map(idx:integer):integer;
   end;
 
+
+  { TListProperties }
+
+  TListProperties = Class(TConfigParam)
+  private
+    FChannelsDownloadLogo: boolean;
+    FChannelsFileName: string;
+    FChannelsKind: TProviderKind;
+    FChannelsUrl: string;
+    FUseChno: boolean;
+    procedure SetChannelsDownloadLogo(AValue: boolean);
+    procedure SetChannelsFileName(AValue: string);
+    procedure SetChannelsKind(AValue: TProviderKind);
+    procedure SetChannelsUrl(AValue: string);
+    procedure SetUseChno(AValue: boolean);
+  Protected
+    Procedure InternalSave; Override;
+  public
+    Property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
+    Property ChannelsFileName: string read FChannelsFileName write SetChannelsFileName;
+    Property ChannelsKind: TProviderKind read FChannelsKind write SetChannelsKind;
+    Property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
+    Property UseChno: boolean read FUseChno write SetUseChno;
+    Procedure Load; Override;
+  end;
   { TM3ULoader }
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
     fLastMessage: string;
+    fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(constref Left, Right: TM3UItem): integer;
 
   public
+
     ListMd5: string;
     Groups: TStringList;
+    Property ListProperties: TListProperties read fListProperties;
     procedure DoListChanged;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
@@ -106,12 +134,72 @@ resourcestring
 
 implementation
 
-uses Math, LoggerUnit, Config, GeneralFunc, Generics.Defaults, md5;
+uses Math, LoggerUnit, GeneralFunc, Generics.Defaults, md5;
 
 const
   CountExt = 4;
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
+
+{ TListProperties }
+
+procedure TListProperties.SetChannelsDownloadLogo(AValue: boolean);
+begin
+  if FChannelsDownloadLogo=AValue then Exit;
+  FChannelsDownloadLogo:=AValue;
+  Dirty:=true;
+end;
+
+procedure TListProperties.SetChannelsFileName(AValue: string);
+begin
+  if FChannelsFileName=AValue then Exit;
+  FChannelsFileName:=AValue;
+  Dirty:=true;
+
+end;
+
+procedure TListProperties.SetChannelsKind(AValue: TProviderKind);
+begin
+  if FChannelsKind=AValue then Exit;
+  FChannelsKind:=AValue;
+  Dirty:=true;
+
+end;
+
+procedure TListProperties.SetChannelsUrl(AValue: string);
+begin
+  if FChannelsUrl=AValue then Exit;
+  FChannelsUrl:=AValue;
+  Dirty:=true;
+
+end;
+
+procedure TListProperties.SetUseChno(AValue: boolean);
+begin
+  if FUseChno=AValue then Exit;
+  FUseChno:=AValue;
+  Dirty:=true;
+
+end;
+
+procedure TListProperties.InternalSave;
+begin
+  Owner.WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(ChannelsKind));
+  Owner.WriteString('m3u/FileName',ChannelsFileName);
+  Owner.WriteString('m3u/Url',ChannelsUrl);
+  Owner.WriteBoolean('m3u/UseChno', UseChno);
+  Owner.WriteBoolean('m3u/DownloadLogo', ChannelsDownloadLogo);
+end;
+
+procedure TListProperties.Load;
+begin
+  ChannelsKind:= TEnum<TProviderKind>.FromString(Owner.ReadString('m3u/ProviderKind',''), Local);
+  ChannelsFileName:= Owner.ReadString('m3u/FileName','');
+  ChannelsUrl:= Owner.ReadString('m3u/Url','');
+  UseChno := Owner.ReadBoolean('m3u/UseChno', false);
+  ChannelsDownloadLogo := Owner.ReadBoolean('m3u/DownloadLogo', false);
+  Dirty:=false;
+end;
 
 { TFilteredList }
 
@@ -176,6 +264,7 @@ end;
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
+  fListProperties := TListProperties.Create(ConfigObj);
   Groups := TStringList.Create;
   Groups.Sorted:=true;
   Groups.Duplicates:=dupIgnore;
@@ -184,6 +273,7 @@ end;
 destructor TM3ULoader.Destroy;
 begin
   Groups.free;
+  fListProperties.free;
   inherited Destroy;
 end;
 

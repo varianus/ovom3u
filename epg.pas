@@ -23,7 +23,7 @@ unit epg;
 interface
 
 uses
-  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes, AppConsts, Generics.Collections;
+  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes, AppConsts, Config, Generics.Collections;
 
 type
   TEpg = class;
@@ -62,10 +62,32 @@ type
     destructor Destroy; override;
   end;
 
+  { TListProperties }
+
+  { TEpgProperties }
+
+  TEpgProperties = Class(TConfigParam)
+  private
+    FEpgFileName: string;
+    FEpgKind: TProviderKind;
+    FEPGUrl: string;
+    procedure SetEpgFileName(AValue: string);
+    procedure SetEpgKind(AValue: TProviderKind);
+    procedure SetEPGUrl(AValue: string);
+  Protected
+    Procedure InternalSave; Override;
+  public
+    Property EpgFileName: string read FEpgFileName write SetEpgFileName;
+    Property EpgKind: TProviderKind read FEpgKind write SetEpgKind;
+    Property EPGUrl: string read FEPGUrl write SetEPGUrl;
+    Procedure Load; override;
+  end;
+
   TEpg = class
   private
     fDB: TSQLite3Connection;
     fEpgAvailable: boolean;
+    fEpgProperties: TEpgProperties;
     fTR: TSQLTransaction;
     FOnScanComplete: TNotifyEvent;
     FOnScanStart: TNotifyEvent;
@@ -78,6 +100,7 @@ type
     procedure SetupDBConnection;
     procedure UpgradeDBStructure(LoadedDBVersion: integer);
   public
+    Property EpgProperties: TEpgProperties read fEpgProperties;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
@@ -99,7 +122,7 @@ type
 
 implementation
 
-uses GeneralFunc, Config, LoggerUnit, ZStream;
+uses GeneralFunc, LoggerUnit, ZStream;
 
 { TEpg }
 const
@@ -148,6 +171,48 @@ const
 
   INSERTPROGRAMME = 'INSERT INTO "programme"("idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")'
                  + ' values  (NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
+
+{ TEpgProperties }
+
+procedure TEpgProperties.SetEpgFileName(AValue: string);
+begin
+  if FEpgFileName=AValue then Exit;
+  FEpgFileName:=AValue;
+  Dirty:=true;
+
+end;
+
+procedure TEpgProperties.SetEpgKind(AValue: TProviderKind);
+begin
+  if FEpgKind=AValue then Exit;
+  FEpgKind:=AValue;
+  Dirty:=true;
+
+end;
+
+procedure TEpgProperties.SetEPGUrl(AValue: string);
+begin
+  if FEPGUrl=AValue then Exit;
+  FEPGUrl:=AValue;
+  Dirty:=true;
+
+end;
+
+
+procedure TEpgProperties.InternalSave;
+begin
+  Owner.WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(EPGKind));
+  Owner.WriteString('EPG/FileName',EPGFileName);
+  Owner.WriteString('EPG/Url',EPGUrl)
+end;
+
+procedure TEpgProperties.Load;
+begin
+  EpgKind:= TEnum<TProviderKind>.FromString(Owner.ReadString('EPG/ProviderKind',''), Local);
+  EpgFileName:= Owner.ReadString('EPG/FileName','');
+  EpgUrl:= Owner.ReadString('EPG/Url','');
+  Dirty:=false;
+end;
 
 procedure TEpg.SetupDBConnection;
 var
@@ -490,6 +555,7 @@ end;
 
 constructor TEpg.Create;
 begin
+  fEpgProperties := TEpgProperties.Create(ConfigObj);
   fEpgAvailable := False;
   SetupDBConnection;
   CheckDBStructure;
@@ -540,6 +606,7 @@ begin
   fDB.Connected := False;
   fTR.Free;
   fDB.Free;
+  fEpgProperties.free;;
   inherited Destroy;
 end;
 
@@ -567,16 +634,16 @@ begin
       fOwner.fScanning := True;
       fOwner.fDB.ExecuteDirect('delete from programme');
       OvoLogger.Log(INFO, 'EPG update thread started');
-      if ConfigObj.ListProperties.EpgKind = Url then
+      if fOwner.EpgProperties.EpgKind = Url then
       begin
-        OvoLogger.Log(INFO, 'Downloading EPG from %s', [ConfigObj.ListProperties.EPGUrl]);
+        OvoLogger.Log(INFO, 'Downloading EPG from %s', [fOwner.EpgProperties.EPGUrl]);
         SourceEpg := CacheDir + TempEPGFile;
-        DownloadFromUrl(ConfigObj.ListProperties.EPGUrl, SourceEpg, StoppedCheck);
+        DownloadFromUrl(fOwner.EpgProperties.EPGUrl, SourceEpg, StoppedCheck);
       end
       else
       begin
-        SourceEpg := ConfigObj.ListProperties.EpgFileName;
-        OvoLogger.Log(INFO, 'Load EPG from local file %s', [ConfigObj.ListProperties.EpgFileName]);
+        SourceEpg := fOwner.EpgProperties.EpgFileName;
+        OvoLogger.Log(INFO, 'Load EPG from local file %s', [fOwner.EpgProperties.EpgFileName]);
       end;
       if StoppedCheck then
         Continue;

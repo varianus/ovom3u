@@ -75,14 +75,14 @@ var
 
 begin
 
-  Kind := ConfigObj.ListProperties.ChannelsKind;
+  Kind := List.ListProperties.ChannelsKind;
 
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
-    IPTVList := ConfigObj.ListProperties.ChannelsUrl;
+    IPTVList := List.ListProperties.ChannelsUrl;
     try
-      if (epgData.LastScan('channels') + 12 / 24 < now) or ConfigObj.ListChanged then
+      if (epgData.LastScan('channels') + 12 / 24 < now) or List.ListProperties.Dirty then
       begin
         try
           OvoLogger.Log(INFO, 'Downloding channels list from ' + IPTVList);
@@ -103,15 +103,14 @@ begin
     end;
   end
   else
-    IPTVList := ConfigObj.ListProperties.ChannelsFileName;
+    IPTVList := list.ListProperties.ChannelsFileName;
 
   if FileExists(IPTVList) then
     list.Load(IPTVList);
 
-  ConfigObj.ListChanged := False;
   OvoLogger.Log(INFO, 'Found %d channels', [BackEnd.List.Count]);
 
-  if ConfigObj.ListProperties.UseChno then
+  if List.ListProperties.UseChno then
   begin
     List.FixChannelNumbering;
     OvoLogger.Log(INFO, 'Renumber channels using tvg-chno');
@@ -125,10 +124,10 @@ begin
     epgData.SetLastScan('epg', 0);
   end;
 
-  if ConfigObj.ListProperties.ChannelsDownloadLogo then
+  if List.ListProperties.ChannelsDownloadLogo then
     List.UpdateLogo;
 
-  if not Configobj.ListProperties.EPGUrl.IsEmpty or not Configobj.ListProperties.EpgFileName.IsEmpty then
+  if not EpgData.EpgProperties.EPGUrl.IsEmpty or not EpgData.EpgProperties.EpgFileName.IsEmpty then
     epgData.Scan
   else
     OvoLogger.Log(INFO, 'No EPG configuration, skipping');

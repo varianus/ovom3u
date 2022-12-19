@@ -7,18 +7,21 @@ object fConfig: TfConfig
   ClientHeight = 439
   ClientWidth = 767
   OnShow = FormShow
+  LCLVersion = '2.3.0.0'
   object pcSettings: TPageControl
     Left = 185
     Height = 393
     Top = 0
     Width = 582
+    ActivePage = tsChannels
     Align = alClient
     ShowTabs = False
+    TabIndex = 0
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 385
-      ClientWidth = 574
+      ClientHeight = 358
+      ClientWidth = 576
       object cbChannelsKind: TComboBox
         AnchorSideLeft.Control = lb
         AnchorSideLeft.Side = asrBottom
@@ -51,7 +54,7 @@ object fConfig: TfConfig
         Caption = 'Channel list location'
         Color = clDefault
         FocusControl = cbChannelsKind
-        ParentColor = False
+        Transparent = False
       end
       object cbUseChno: TCheckBox
         AnchorSideLeft.Control = edtChannelsUrl
@@ -77,7 +80,7 @@ object fConfig: TfConfig
         BorderSpacing.Right = 12
         Caption = 'EPG'
         Color = clDefault
-        ParentColor = False
+        Transparent = False
       end
       object edtEpgUrl: TEdit
         AnchorSideLeft.Control = edtEpgFileName
@@ -107,7 +110,7 @@ object fConfig: TfConfig
         Caption = 'File Name'
         Color = clDefault
         FocusControl = edtChannelsFileName
-        ParentColor = False
+        Transparent = False
       end
       object edtChannelsFileName: TFileNameEdit
         AnchorSideLeft.Control = cbChannelsKind
@@ -160,7 +163,7 @@ object fConfig: TfConfig
         Caption = 'URL'
         Color = clDefault
         FocusControl = edtChannelsUrl
-        ParentColor = False
+        Transparent = False
       end
       object lb1: TLabel
         AnchorSideTop.Control = cbEpgKind
@@ -175,7 +178,7 @@ object fConfig: TfConfig
         Caption = 'EPG location'
         Color = clDefault
         FocusControl = cbEpgKind
-        ParentColor = False
+        Transparent = False
       end
       object cbEpgKind: TComboBox
         AnchorSideLeft.Control = cbChannelsKind
@@ -207,7 +210,7 @@ object fConfig: TfConfig
         Caption = 'File Name'
         Color = clDefault
         FocusControl = edtEpgFileName
-        ParentColor = False
+        Transparent = False
       end
       object edtEpgFileName: TFileNameEdit
         AnchorSideLeft.Control = cbEpgKind
@@ -249,8 +252,8 @@ object fConfig: TfConfig
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 385
-      ClientWidth = 574
+      ClientHeight = 358
+      ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
         AnchorSideTop.Control = lbWarning
@@ -297,7 +300,7 @@ object fConfig: TfConfig
         BorderSpacing.Top = 20
         Caption = 'WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options.'
         Color = clDefault
-        ParentColor = False
+        Transparent = False
         WordWrap = True
       end
     end
@@ -309,7 +312,7 @@ object fConfig: TfConfig
     Width = 185
     Align = alLeft
     Caption = 'Settings'
-    ClientHeight = 373
+    ClientHeight = 374
     ClientWidth = 181
     TabOrder = 1
     object SpeedButton1: TSpeedButton

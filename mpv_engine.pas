@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, libmpv, decoupler, BaseTypes, render,
-  OpenGLContext, Forms, LCLType, Renderer;
+  OpenGLContext, Forms, LCLType, Renderer, config;
 
 type
   TTrackType = (trkAudio, trkVideo, trkSub, trkUnknown);
@@ -47,10 +47,29 @@ type
   end;
 
   TTrackList = array of TTrack;
-  { TMPVEngine }
 
+  { TMPVProperties }
+
+  TMPVProperties = Class(TConfigParam)
+  private
+    fCustomOptions: TStrings;
+    fHardwareAcceleration: boolean;
+    procedure SetCustomOptions(AValue: TStrings);
+    procedure SetHardwareAcceleration(AValue: boolean);
+  Protected
+    Procedure InternalSave; override;
+  public
+    Property HardwareAcceleration: boolean read fHardwareAcceleration write SetHardwareAcceleration;
+    Property CustomOptions: TStrings read  fCustomOptions write SetCustomOptions;
+    Procedure Load; override;
+    Constructor Create(AOwner:TConfig); override;
+    Destructor Destroy; override;
+  end;
+
+  { TMPVEngine }
   TMPVEngine = class
   private
+    fMpvProperties : TMPVProperties;
     FGLRenderControl: TOpenGlControl;
     fHandle: Pmpv_handle;
     fdecoupler: TDecoupler;
@@ -86,6 +105,7 @@ type
     property OnTrackChange: TNotifyEvent read fOnTrackChange write fOnTrackChange;
     property TrackList: TTrackList read fTrackList;
     property Volume: integer read GetMainVolume write SetMainVolume;
+    Property MpvProperties: TMPVProperties read fMpvProperties;
     function Initialize(Renderer: TOpenGLControl): boolean;
     function IsIdle: boolean;
     procedure LoadTracks;
@@ -110,7 +130,7 @@ type
 implementation
 
 uses
-  GeneralFunc, LoggerUnit, Config, Math, LCLIntf
+  GeneralFunc, LoggerUnit, Math, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -125,6 +145,48 @@ begin
   if (Data = nil) then
     exit;
   TMPVEngine(Data).PostCommand(ecEvent, 1);
+end;
+
+{ TMPVProperties }
+
+procedure TMPVProperties.SetCustomOptions(AValue: TStrings);
+begin
+  if fCustomOptions=AValue then Exit;
+  fCustomOptions:=AValue;
+  Dirty:=true;
+end;
+
+procedure TMPVProperties.SetHardwareAcceleration(AValue: boolean);
+begin
+  if fHardwareAcceleration=AValue then Exit;
+  fHardwareAcceleration:=AValue;
+  Dirty:=true;
+end;
+
+procedure TMPVProperties.InternalSave;
+begin
+  Owner.WriteBoolean('MPV/HardwareAcceleration', HardwareAcceleration);
+  Owner.WriteStrings('MPV/CustomOptions', CustomOptions);
+
+end;
+
+procedure TMPVProperties.Load;
+begin
+  HardwareAcceleration := Owner.ReadBoolean('MPV/HardwareAcceleration', true);
+  Owner.ReadStrings('MPV/CustomOptions', fCustomOptions);
+  Dirty:=false;
+end;
+
+constructor TMPVProperties.Create(AOwner: TConfig);
+begin
+  fCustomOptions:= TStringList.Create;
+  inherited Create(AOwner);
+end;
+
+destructor TMPVProperties.Destroy;
+begin
+  fCustomOptions.free;
+  inherited Destroy;
 end;
 
 { TTrack }
@@ -213,6 +275,7 @@ begin
   {$ifdef LINUX}
   setlocale(1, 'C');
   {$endif}
+  fMpvProperties := TMPVProperties.Create(ConfigObj);
   fdecoupler := nil;
   Load_libmpv(libmpv.External_library);
   Loadrender(libmpv.External_library);
@@ -233,6 +296,7 @@ begin
     fdecoupler.Free;
 
   Free_libmpv;
+  fMpvProperties.Free;
   inherited Destroy;
 end;
 
@@ -304,14 +368,14 @@ var
   i: Integer;
 begin
   Result := EmptyStr;
-   if ConfigObj.MPVProperties.HardwareAcceleration then
+   if fMpvProperties.HardwareAcceleration then
    begin
      Result := 'hwdec=auto,';
    end;
-   for i := 0 to ConfigObj.MPVProperties.CustomOptions.Count - 1 do
+   for i := 0 to fMpvProperties.CustomOptions.Count - 1 do
    begin
-     if ConfigObj.MPVProperties.CustomOptions[i] <> EmptyStr then
-       Result := Result + ConfigObj.MPVProperties.CustomOptions[i] + ',';
+     if fMpvProperties.CustomOptions[i] <> EmptyStr then
+       Result := Result + fMpvProperties.CustomOptions[i] + ',';
    end;
    if Result <> EmptyStr then
      Begin
@@ -328,7 +392,7 @@ var
 begin
 
   args := nil;
-  setlength(args, 4 + IfThen(ConfigObj.MPVProperties.HardwareAcceleration or (ConfigObj.MPVProperties.CustomOptions.Count > 0), 1, 0));
+  setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0));
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';

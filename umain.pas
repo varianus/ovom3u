@@ -28,6 +28,25 @@ uses
   OpenGLContext, Types, Math, SysUtils,
   MPV_Engine, Config, GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd;
 
+type
+
+  { TGuiProperties }
+
+  TGuiProperties = class(TConfigParam)
+    fViewLogo:boolean;
+    fViewCurrentProgram: boolean;
+  private
+    procedure SetViewCurrentProgram(AValue: boolean);
+    procedure SetViewLogo(AValue: boolean);
+  protected
+    Procedure InternalSave; override;
+  public
+    property ViewLogo:boolean read fViewLogo write SetViewLogo;
+    property ViewCurrentProgram: boolean read fViewCurrentProgram write SetViewCurrentProgram;
+    Procedure Load; override;
+  end;
+
+
 { TfPlayer }
 type
 
@@ -89,6 +108,7 @@ type
     procedure pnlContainerPaint(Sender: TObject);
     procedure ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
   private
+    GuiProperties: TGuiProperties;
     FLoading: boolean;
     ChannelSelecting: boolean;
     ChannelSelected: integer;
@@ -131,6 +151,35 @@ var
 
 {$R *.lfm}
 
+{ TGuiProperties }
+
+procedure TGuiProperties.SetViewCurrentProgram(AValue: boolean);
+begin
+  if fViewCurrentProgram=AValue then Exit;
+  fViewCurrentProgram:=AValue;
+  Dirty:=true;
+end;
+
+procedure TGuiProperties.SetViewLogo(AValue: boolean);
+begin
+  if fViewLogo=AValue then Exit;
+  fViewLogo:=AValue;
+  Dirty:=true;
+end;
+
+procedure TGuiProperties.InternalSave;
+begin
+  Owner.WriteBoolean('gui/ViewLogo', ViewLogo);
+  Owner.WriteBoolean('gui/ViewCurrentProgram', ViewCurrentProgram);
+end;
+
+procedure TGuiProperties.Load;
+begin
+  ViewLogo := Owner.ReadBoolean('gui/ViewLogo', false);
+  ViewCurrentProgram := Owner.ReadBoolean('gui/ViewCurrentProgram', false);
+  Dirty:=false;
+end;
+
 { TfPlayer }
 
 function TfPlayer.CheckConfigAndSystem: boolean;
@@ -166,12 +215,12 @@ begin
 
 
   Result := True;
-  Kind := ConfigObj.ListProperties.ChannelsKind;
+  Kind := BackEnd.List.ListProperties.ChannelsKind;
   case Kind of
     Local:
-      IPTVList := ConfigObj.ListProperties.ChannelsFileName;
+      IPTVList := BackEnd.List.ListProperties.ChannelsFileName;
     URL:
-      IPTVList := ConfigObj.ListProperties.ChannelsUrl;
+      IPTVList := BackEnd.List.ListProperties.ChannelsUrl;
   end;
 
   if IPTVList.IsEmpty then
@@ -223,7 +272,7 @@ end;
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
   OvoLogger.Log(INFO, 'Load configuration from %s',[ConfigObj.ConfigFile]);
-  ConfigObj.ReadConfig;
+  GuiProperties := TGuiProperties.Create(ConfigObj);
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
@@ -250,6 +299,7 @@ end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
 begin
+  GuiProperties.Free;
   Application.ProcessMessages;
   OvoLogger.Log(INFO, 'Closed main GUI');
 end;
@@ -299,7 +349,7 @@ begin
     VK_RETURN:
       if ChannelSelecting then
       begin
-        if ConfigObj.ListProperties.UseChno then
+        if BackEnd.List.ListProperties.UseChno then
           ChannelSelected := BackEnd.List.ItemByChno(ChannelSelected)
         else
           ChannelSelected:= ChannelSelected -1;
@@ -421,7 +471,7 @@ begin
   Element := fFilteredList [Arow];
   h := 0;
   cv := ChannelList.Canvas;
-  if ConfigObj.GuiProperties.ViewLogo then
+  if GuiProperties.ViewLogo then
   begin
     h := ChannelList.RowHeights[aRow];
     if Element.IconAvailable then
@@ -464,7 +514,7 @@ begin
 
   Spacing := Scale96ToScreen(2);
   cv.TextRect(aRect, h + Spacing*2, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
-  if ConfigObj.GuiProperties.ViewCurrentProgram then
+  if GuiProperties.ViewCurrentProgram then
   begin
     epgInfo := BackEnd.epgdata.GetEpgInfo(fFilteredList.Map(arow), now);
     if epgInfo.HaveData then
@@ -509,7 +559,7 @@ procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
   begin
-    if ConfigObj.ListProperties.UseChno then
+    if BackEnd.List.ListProperties.UseChno then
       ChannelSelected := BackEnd.List.ItemByChno(ChannelSelected)
     else
       ChannelSelected := ChannelSelected - 1;
@@ -577,21 +627,21 @@ end;
 
 procedure TfPlayer.actListUpdate(AAction: TBasicAction; var Handled: boolean);
 begin
-  actViewLogo.Checked := ConfigObj.GuiProperties.ViewLogo;
-  actViewCurrentProgram.Checked := ConfigObj.GuiProperties.ViewCurrentProgram;
+  actViewLogo.Checked := GuiProperties.ViewLogo;
+  actViewCurrentProgram.Checked := GuiProperties.ViewCurrentProgram;
 end;
 
 procedure TfPlayer.actShowConfigExecute(Sender: TObject);
 begin
   if ShowConfig = mrOk then
   begin
-    if ConfigObj.ListChanged then
+    if BackEnd.List.ListProperties.Dirty then
     begin
       OvoLogger.Log(INFO, 'List configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('Channels', 0);
       LoadList;
     end;
-    if ConfigObj.EPGChanged then
+    if BackEnd.EpgData.EpgProperties.Dirty then
     begin
       OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('epg', 0);
@@ -612,14 +662,14 @@ end;
 procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
 begin
   actViewCurrentProgram.Checked := not actViewCurrentProgram.Checked;
-  ConfigObj.GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
+  GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
   ComputeGridCellSize(0);
 end;
 
 procedure TfPlayer.actViewLogoExecute(Sender: TObject);
 begin
   actViewLogo.Checked := not actViewLogo.Checked;
-  ConfigObj.GuiProperties.ViewLogo := actViewLogo.Checked;
+  GuiProperties.ViewLogo := actViewLogo.Checked;
   ComputeGridCellSize(0);
   if actViewLogo.Checked then
     BackEnd.list.UpdateLogo;
@@ -627,10 +677,10 @@ end;
 
 procedure TfPlayer.ComputeGridCellSize(data: ptrint);
 begin
-  if ConfigObj.GuiProperties.ViewCurrentProgram then
+  if GuiProperties.ViewCurrentProgram then
     ChannelList.DefaultRowHeight := Scale96ToScreen(64)
   else
-    if ConfigObj.GuiProperties.ViewLogo then
+    if GuiProperties.ViewLogo then
       ChannelList.DefaultRowHeight := Scale96ToScreen(48)
     else
       ChannelList.DefaultRowHeight := Scale96ToScreen(32);
