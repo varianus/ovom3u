@@ -333,14 +333,17 @@ begin
       VK_C:
         begin
           pnlChannel.Visible:= not pnlChannel.visible;
+          HideMouse.Enabled:= not pnlChannel.Visible;
         end;
       VK_DOWN:
       begin
-        play(fFilteredList.Map(ChannelList.Row+1));
+        if not pnlChannel.visible then
+          play(fFilteredList.Map(ChannelList.Row+1));
       end;
       VK_UP:
       begin
-        play(fFilteredList.Map(ChannelList.Row-1));
+        if not pnlChannel.visible then
+          play(fFilteredList.Map(ChannelList.Row-1));
       end;
       else
         Pass := True;
@@ -714,7 +717,7 @@ begin
   if flgFullScreen then
   begin
     Screen.Cursor := crdefault;
-    HideMouse.Enabled := flgFullScreen;
+    HideMouse.Enabled := flgFullScreen and not  pnlChannel.Visible;
   end;
 end;
 
