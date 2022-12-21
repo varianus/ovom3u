@@ -97,6 +97,7 @@ constructor TRenderThread.Create;
 
 begin
   inherited Create(True);
+  Priority:= tpHigher;
 end;
 
 procedure TRenderThread.Init(Owner: TRender; AControl: TOpenGlControl; AHandle: Pmpv_handle);

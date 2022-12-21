@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, libmpv, decoupler, BaseTypes, render,
-  OpenGLContext, Forms, LCLType, Renderer, config;
+  OpenGLContext, Forms, LoggerUnit, LCLType, Renderer, config;
 
 type
   TTrackType = (trkAudio, trkVideo, trkSub, trkUnknown);
@@ -97,6 +97,7 @@ type
     procedure SetIsRenderActive(AValue: boolean);
     procedure SetMainVolume(const AValue: integer);
     procedure SetOnLoadingState(AValue: TNotifyEvent);
+    function GetLevelFromLogger:string;
   public
     property GLRenderControl: TOpenGlControl read FGLRenderControl write SetGLRenderControl;
     property isRenderActive: boolean read fIsRenderActive write SetIsRenderActive;
@@ -130,7 +131,7 @@ type
 implementation
 
 uses
-  GeneralFunc, LoggerUnit, Math, LCLIntf
+  GeneralFunc, Math, LCLIntf
 {$ifdef LINUX}
   , ctypes
 {$endif};
@@ -228,6 +229,18 @@ begin
   FOnLoadingState := AValue;
 end;
 
+function TMPVEngine.GetLevelFromLogger: string;
+begin
+  case OvoLogger.Level of
+    llTRACE : Result := 'trace';
+    llDEBUG : Result := 'debug';
+    llINFO  : Result := 'info';
+    llWARN  : Result := 'warn';
+    llERROR : Result := 'error';
+    llNO_LOG : Result := 'no';
+  end;
+end;
+
 procedure TMPVEngine.OnRenderInitialized(AValue: TObject);
 begin
   PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
@@ -242,19 +255,18 @@ begin
   try
     fhandle := mpv_create();
 
-
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_set_option_string(fHandle^, 'idle', 'yes');
-    mpv_request_log_messages(fhandle^, 'error');
-    mpv_set_option_string(fHandle^, 'msg-level', 'all=error');
+    mpv_request_log_messages(fhandle^, PChar(GetLevelFromLogger));
+    mpv_set_option_string(fHandle^, 'msg-level', PChar('all='+GetLevelFromLogger));
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
 
     fdecoupler := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
     ServerVersion := mpv_get_property_string(fHandle^, 'mpv-version');
-    OvoLogger.Log(FORCED, StrPas(ServerVersion));
+    OvoLogger.Log(llFORCED, StrPas(ServerVersion));
 
     mpv_observe_property(fHandle^, 0, 'aid', MPV_FORMAT_INT64);
     mpv_observe_property(fHandle^, 0, 'sid', MPV_FORMAT_INT64);
@@ -331,9 +343,9 @@ begin
     begin
       case (Event^.event_id) of
         MPV_EVENT_LOG_MESSAGE:
-          OvoLogger.Log(INFO, Pmpv_event_log_message(Event^.Data)^.Text);
+          OvoLogger.Log(llINFO, Pmpv_event_log_message(Event^.Data)^.Text);
         MPV_EVENT_QUEUE_OVERFLOW:
-          OvoLogger.Log(ERROR, 'Event owerflow');
+          OvoLogger.Log(llERROR, 'Event owerflow');
         MPV_EVENT_PLAYBACK_RESTART:
         begin
           Loading := False;

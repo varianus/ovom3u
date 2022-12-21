@@ -311,12 +311,12 @@ begin
 
   if ListName.IsEmpty then
   begin
-    OvoLogger.Log(WARN, 'No list to load');
+    OvoLogger.Log(llWARN, 'No list to load');
     exit;
   end;
 
   try
-    OvoLogger.Log(INFO, 'Loading list from %s', [ListName]);
+    OvoLogger.Log(llINFO, 'Loading list from %s', [ListName]);
     MD5Init(Context);
     Cachedir := IncludeTrailingPathDelimiter(ConfigObj.CacheDir + 'logo');
     ForceDirectories(Cachedir);
@@ -388,7 +388,7 @@ begin
     DoListChanged;
   finally
     if not fLastMessage.IsEmpty then
-      OvoLogger.Log(WARN, fLastMessage);
+      OvoLogger.Log(llWARN, fLastMessage);
     closefile(f);
   end;
 end;

@@ -26,7 +26,7 @@ uses
   Classes, SysUtils, LazLogger;
 
 Type
-  TOvoLogLevel = (TRACE, DEBUG, INFO, WARN, ERROR, FORCED, NoLogging);
+  TOvoLogLevel = (llTRACE, llDEBUG, llINFO, llWARN, llERROR, llFORCED, llNO_LOG);
 
   { TOvoLogger }
 
@@ -41,6 +41,7 @@ Type
   public
     property Level : TOvoLogLevel read FLevel write SetLevel;
     Property LogName: string read GetLogName write SetLogName;
+    procedure LevelFromString(VerboseLevel:string);
     Procedure SaveOldLog;
     procedure Log(ALevel: TOvoLogLevel; const Msg: string);  overload;
     procedure Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const); overload;
@@ -75,18 +76,39 @@ end;
 function TOvoLogger.DecodeLevel(ALevel: TOvoLogLevel): string;
 begin
   Case ALevel of
-    TRACE: Result  := '   TRACE: ';
-    DEBUG: Result  := '   DEBUG: ';
-    INFO: Result   := '    INFO: ';
-    WARN: Result   := ' WARNING: ';
-    ERROR: Result  := '   ERROR: ';
-    FORCED: Result := '  NOTICE: ';
+    llTRACE: Result  := '   TRACE: ';
+    llDEBUG: Result  := '   DEBUG: ';
+    llINFO: Result   := '    INFO: ';
+    llWARN: Result   := ' WARNING: ';
+    llERROR: Result  := '   ERROR: ';
+    llFORCED: Result := '  NOTICE: ';
   end;
 end;
 
 procedure TOvoLogger.SetLogName(AValue: string);
 begin
   DebugLogger.LogName := AValue;
+end;
+
+procedure TOvoLogger.LevelFromString(VerboseLevel: string);
+begin
+  if VerboseLevel = 'TRACE' then
+    Level := llTRACE
+  else
+  if VerboseLevel = 'DEBUG' then
+    Level := llDEBUG
+  else
+  if VerboseLevel = 'INFO' then
+     Level := llINFO
+  else
+  if VerboseLevel = 'WARNING' then
+     Level := llWARN
+  else
+  if VerboseLevel = 'NONE' then
+     Level := llNO_LOG
+  else
+     Level := llERROR;
+
 end;
 
 procedure TOvoLogger.SaveOldLog;
@@ -119,7 +141,7 @@ end;
 
 constructor TOvoLogger.Create;
 begin
-  FLevel := WARN;
+  FLevel := llWARN;
 end;
 
 Initialization

@@ -39,22 +39,25 @@ uses {$IFDEF UNIX}
   LoggerUnit, appconsts, Renderer, uChannels, uBackEnd;
 
 {$R *.res}
+var
+  Verbose: string;
 
 begin
-//  setHeapTraceOutput('trace.log');
+  //setHeapTraceOutput('trace.log');
   // needed to output exception to a file
   Application.Flags := Application.Flags + [appNoExceptionMessages];
 
   OvoLogger.LogName := ConfigObj.ConfigDir+LogFileName;
   OvoLogger.SaveOldLog;
-  OvoLogger.Level := TRACE;
-  OvoLogger.Log(FORCED, '----------------------------');
-  OvoLogger.Log(FORCED, DisplayAppName);
-  OvoLogger.Log(FORCED, format (rVersionString,[AppVersion, RevisionStr, BuildDate]));
-  OvoLogger.Log(FORCED, format (rBuildEnv,[lazVersion, fpcVersion]));
-  OvoLogger.Log(FORCED, format (rTarget,[TargetCPU, TargetOS]));
+  Verbose := Application.GetOptionValue('v','verbose');
+  OvoLogger.LevelFromString(Verbose);
+  OvoLogger.Log(llFORCED, '----------------------------');
+  OvoLogger.Log(llFORCED, DisplayAppName);
+  OvoLogger.Log(llFORCED, format (rVersionString,[AppVersion, RevisionStr, BuildDate]));
+  OvoLogger.Log(llFORCED, format (rBuildEnv,[lazVersion, fpcVersion]));
+  OvoLogger.Log(llFORCED, format (rTarget,[TargetCPU, TargetOS]));
   RequireDerivedFormResource := True;
-  Application.Scaled := True;
+  Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
   Application.Run;

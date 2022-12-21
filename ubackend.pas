@@ -85,18 +85,18 @@ begin
       if (epgData.LastScan('channels') + 12 / 24 < now) or List.ListProperties.Dirty then
       begin
         try
-          OvoLogger.Log(INFO, 'Downloding channels list from ' + IPTVList);
+          OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
           DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
           epgData.SetLastScan('channels', now);
         except
           on e: Exception do
-            OvoLogger.Log(ERROR, 'Can''t download list at: ' +
+            OvoLogger.Log(llERROR, 'Can''t download list at: ' +
               IPTVList + ' error:' +
               E.Message);
         end;
       end
       else
-        OvoLogger.Log(INFO, 'Using cached channels list');
+        OvoLogger.Log(llINFO, 'Using cached channels list');
 
       IPTVList := CacheDir + 'current-iptv.m3u';
     finally
@@ -108,17 +108,17 @@ begin
   if FileExists(IPTVList) then
     list.Load(IPTVList);
 
-  OvoLogger.Log(INFO, 'Found %d channels', [BackEnd.List.Count]);
+  OvoLogger.Log(llINFO, 'Found %d channels', [BackEnd.List.Count]);
 
   if List.ListProperties.UseChno then
   begin
     List.FixChannelNumbering;
-    OvoLogger.Log(INFO, 'Renumber channels using tvg-chno');
+    OvoLogger.Log(llINFO, 'Renumber channels using tvg-chno');
   end;
 
   if BackEnd.List.ListMd5 <> BackEnd.epgData.LastChannelMd5 then
   begin
-    OvoLogger.Log(INFO, 'Channels list changed, reloading EPG');
+    OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
     epgData.LoadChannelList(List);
     epgData.SetLastChannelMd5(List.ListMd5);
     epgData.SetLastScan('epg', 0);
@@ -130,7 +130,7 @@ begin
   if not EpgData.EpgProperties.EPGUrl.IsEmpty or not EpgData.EpgProperties.EpgFileName.IsEmpty then
     epgData.Scan
   else
-    OvoLogger.Log(INFO, 'No EPG configuration, skipping');
+    OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
 
 end;
 
@@ -172,7 +172,7 @@ begin
       exit;
     end;
 
-    OvoLogger.Log(INFO, 'Tuning to %s',[list[Index].Title]);
+    OvoLogger.Log(llINFO, 'Tuning to %s',[list[Index].Title]);
 
 
     PreviousIndex := CurrentIndex;
@@ -215,6 +215,7 @@ begin
   begin
     mpvengine.OsdEpg('', Default(REpgInfo), False);
     mpvengine.OsdMessage();
+    ShowingInfo:= false;
   end;
   OSDTimer.Enabled := False;
 end;

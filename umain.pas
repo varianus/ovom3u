@@ -190,7 +190,7 @@ begin
     Retry := False;
     if not Tmpvengine.CheckMPV then
     begin
-      OvoLogger.Log(ERROR, 'Cannot initialize libMPV');
+      OvoLogger.Log(llERROR, 'Cannot initialize libMPV');
       case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
           'LibMPV shared library is missing or could not be initialized.' + #10 +
           'OvoM3U uses this library to decode and play video.' + #10 +
@@ -271,12 +271,12 @@ end;
 
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
-  OvoLogger.Log(INFO, 'Load configuration from %s',[ConfigObj.ConfigFile]);
+  OvoLogger.Log(llINFO, 'Load configuration from %s',[ConfigObj.ConfigFile]);
   GuiProperties := TGuiProperties.Create(ConfigObj);
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
-  OvoLogger.Log(INFO, 'Create main GUI');
+  OvoLogger.Log(llINFO, 'Create main GUI');
 
   BackEnd.list.OnListChanged := OnListChanged;
   ChannelList.RowCount := 0;
@@ -293,7 +293,7 @@ begin
     backend.mpvengine.OnTrackChange := OnTrackChange;
   end
   else
-    OvoLogger.Log(WARN, 'Invalid config');
+    OvoLogger.Log(llWARN, 'Invalid config');
 
 end;
 
@@ -301,7 +301,7 @@ procedure TfPlayer.FormDestroy(Sender: TObject);
 begin
   GuiProperties.Free;
   Application.ProcessMessages;
-  OvoLogger.Log(INFO, 'Closed main GUI');
+  OvoLogger.Log(llINFO, 'Closed main GUI');
 end;
 
 procedure TfPlayer.OnLoadingState(Sender: TObject);
@@ -595,7 +595,7 @@ end;
 procedure TfPlayer.AppPropertiesException(Sender: TObject; E: Exception);
 begin
   TRY
-  OvoLogger.Log(ERROR, 'EXCEPTION : %s' + LineEnding +
+  OvoLogger.Log(llERROR, 'EXCEPTION : %s' + LineEnding +
     '%s', [e.message, BackTraceStrFunc(ExceptAddr)]);
 
   except
@@ -640,13 +640,13 @@ begin
   begin
     if BackEnd.List.ListProperties.Dirty then
     begin
-      OvoLogger.Log(INFO, 'List configuration changed, reloading');
+      OvoLogger.Log(llINFO, 'List configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('Channels', 0);
       LoadList;
     end;
     if BackEnd.EpgData.EpgProperties.Dirty then
     begin
-      OvoLogger.Log(INFO, 'EPG configuration changed, reloading');
+      OvoLogger.Log(llINFO, 'EPG configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('epg', 0);
       BackEnd.EpgData.Scan;
     end;
@@ -870,7 +870,7 @@ var
   mnu: TMenuItem;
   i: integer;
 begin
-  OvoLogger.Log(DEBUG, 'Loading tracks');
+  OvoLogger.Log(llDEBUG, 'Loading tracks');
   mnuAudio.Clear;
   mnuVideo.Clear;
   mnuAudio.Clear;
@@ -933,7 +933,7 @@ begin
   flgFullScreen := not flgFullScreen;
   if flgFullScreen then
     try
-      OvoLogger.Log(DEBUG, 'Going fullscreen');
+      OvoLogger.Log(llDEBUG, 'Going fullscreen');
       backend.mpvengine.isRenderActive := False;
       Application.ProcessMessages;
       pnlChannel.Visible := False;
@@ -952,7 +952,7 @@ begin
     end
   else
   begin
-    OvoLogger.Log(DEBUG, 'Going windowed');
+    OvoLogger.Log(llDEBUG, 'Going windowed');
     backend.mpvengine.isRenderActive := False;
     Application.ProcessMessages;
     pnlChannel.Visible := True;
