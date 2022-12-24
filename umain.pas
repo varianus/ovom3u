@@ -97,6 +97,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure FormWindowStateChange(Sender: TObject);
     procedure LoadingTimerStartTimer(Sender: TObject);
     procedure LoadingTimerTimer(Sender: TObject);
     procedure GLRendererDblClick(Sender: TObject);
@@ -127,7 +128,7 @@ type
     procedure SetLoading(AValue: boolean);
   private
     flgFullScreen: boolean;
-    RestoredBorderStyle: TBorderStyle;
+    RestoredBorderStyle: TFormBorderStyle;
     RestoredWindowState: TWindowState;
     Progress: integer;
     property Loading: boolean read FLoading write SetLoading;
@@ -929,6 +930,9 @@ end;
 
 
 procedure TfPlayer.SetFullScreen;
+const
+  ShowCommands: array[TWindowState] of Integer =
+    (SW_SHOWNORMAL, SW_MINIMIZE, SW_SHOWMAXIMIZED, SW_SHOWFULLSCREEN);
 begin
   flgFullScreen := not flgFullScreen;
   if flgFullScreen then
@@ -945,8 +949,10 @@ begin
      // but there is a bug in LCL and I get only a black screen!!
      // BorderStyle := bsNone;
         {$ENDIF}
-      WindowState := wsFullScreen;
+//      WindowState := wsFullScreen;
+      ShowWindow(Handle, SW_SHOWFULLSCREEN);
       HideMouse.Enabled := True;
+      GLRenderer.SetFocus;
     finally
       backend.mpvengine.isRenderActive := True;
     end
@@ -957,8 +963,7 @@ begin
     Application.ProcessMessages;
     pnlChannel.Visible := True;
     ChannelSplitter.Visible := True;
-    WindowState := wsNormal;
-    WindowState := RestoredWindowState;
+    ShowWindow(Handle, ShowCommands[RestoredWindowState]);
     BorderStyle := RestoredBorderStyle;
     screen.cursor := crdefauLt;
     HideMouse.Enabled := False;
