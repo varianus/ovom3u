@@ -11,7 +11,6 @@ object fPlayer: TfPlayer
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  LCLVersion = '2.3.0.0'
   object pnlContainer: TPanel
     Left = 219
     Height = 512
@@ -33,16 +32,26 @@ object fPlayer: TfPlayer
     OnPaint = pnlContainerPaint
     object GLRenderer: TOpenGLControl
       Left = 0
-      Height = 512
+      Height = 511
       Top = 0
       Width = 868
       Align = alClient
       OpenGLMajorVersion = 2
       OpenGLMinorVersion = 1
+      OnChangeBounds = GLRendererChangeBounds
       OnDblClick = GLRendererDblClick
       OnMouseMove = GLRendererMouseMove
       PopupMenu = pmPlayer
       Visible = False
+    end
+    object pnlSubForm: TPanel
+      Left = 0
+      Height = 1
+      Top = 511
+      Width = 868
+      Align = alBottom
+      ParentBackground = False
+      TabOrder = 1
     end
   end
   object pnlChannel: TPanel
@@ -82,7 +91,7 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        213
+        196
       )
     end
     object Panel1: TPanel
@@ -150,7 +159,6 @@ object fPlayer: TfPlayer
     Height = 512
     Top = 0
     Width = 4
-    OnMoved = ChannelSplitterMoved
   end
   object HideMouse: TTimer
     Enabled = False

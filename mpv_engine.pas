@@ -84,6 +84,7 @@ type
     Loading: boolean;
     ClientVersion: DWORD;
     RenderObj: TRender;
+    ImgMode: Boolean;
 
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetCustomOptions: string;
@@ -124,6 +125,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Test;
+    Procedure Refresh;
     class function CheckMPV: boolean;
 
   end;
@@ -402,7 +404,7 @@ var
   ArgIdx: integer;
   Options: string;
 begin
-
+  ImgMode:= False;
   args := nil;
   setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0));
   args[0] := 'loadfile';
@@ -428,6 +430,7 @@ var
   Options: String;
   ArgIdx: Integer;
 begin
+  ImgMode:= True;
   args := nil;
   setlength(args, 6);
   args[0] := 'loadfile';
@@ -777,6 +780,12 @@ var
 begin
   mpv_get_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @s);
   OsdMessage(IntToStr(s));
+end;
+
+procedure TMPVEngine.Refresh;
+begin
+ if ImgMode then
+   seek(0);
 end;
 
 class function TMPVEngine.CheckMPV: boolean;
