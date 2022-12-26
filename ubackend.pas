@@ -24,24 +24,47 @@ interface
 
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
-  GeneralFunc, BaseTypes, OpenGLContext;
+  GeneralFunc, BaseTypes, OpenGLContext, cec_intf;
 
 type
+  ExternalInput = procedure(Sender: TObject; var Key: Word) of Object;
+
+  { TPluginsProperties }
+
+  TPluginsProperties = Class(TConfigParam)
+  private
+    FEnableCEC: boolean;
+    procedure SetEnableCEC(AValue: boolean);
+  Protected
+    Procedure InternalSave; override;
+  public
+    Property EnableCEC: boolean read FEnableCEC write SetEnableCEC;
+
+    Procedure Load; override;
+
+  end;
 
   { TBackend }
 
   TBackend = class
   private
+    FOnExternalInput: ExternalInput;
     procedure OSDTimerTimer(Sender: TObject);
+    procedure SetOnExternalInput(AValue: ExternalInput);
+    procedure CecKey(Sender: TObject; var Key: word);
   public
     List: TM3ULoader;
     EpgData: TEpg;
+
+    HDMI_CEC: THDMI_CEC;
     MpvEngine: TMPVEngine;
     OSDTimer: TFPTimer;
     Loading: boolean;
     PreviousIndex, CurrentIndex:integer;
     ShowingInfo: boolean;
+
   public
+    PluginsProperties: TPluginsProperties;
     procedure ShowEpg;
     procedure OsdMessage(Message: string; TimeOut: boolean=True);
     procedure LoadList;
@@ -49,6 +72,7 @@ type
     procedure Play(index:integer);
     Procedure SwapChannel;
   public
+    Property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -65,6 +89,25 @@ begin
   if not Assigned(fBackend) then
     fBackend := TBackend.Create;
   Result := fBackend;
+end;
+{ TPluginsProperties }
+
+procedure TPluginsProperties.SetEnableCEC(AValue: boolean);
+begin
+  if FEnableCEC=AValue then Exit;
+  FEnableCEC:=AValue;
+  Dirty := true;
+end;
+
+procedure TPluginsProperties.InternalSave;
+begin
+ Owner.WriteBoolean('Plugins/HDMI-CEC/Enabled', EnableCEC);
+end;
+
+procedure TPluginsProperties.Load;
+begin
+ EnableCEC := Owner.ReadBoolean('Plugins/HDMI-CEC/Enabled', false);
+ Dirty:=false;
 end;
 
 { TBackend }
@@ -220,10 +263,39 @@ begin
   OSDTimer.Enabled := False;
 end;
 
+procedure TBackend.SetOnExternalInput(AValue: ExternalInput);
+begin
+  FOnExternalInput:=AValue;
+end;
+
+procedure TBackend.CecKey(Sender: TObject; var Key: word);
+begin
+  if Assigned(FOnExternalInput) then
+   FOnExternalInput(Sender, key);
+end;
+
+
 constructor TBackend.Create;
 begin
+  PluginsProperties:= TPluginsProperties.Create(ConfigObj);
+
   List := TM3ULoader.Create;
   EpgData := TEpg.Create;
+
+  if PluginsProperties.EnableCEC then
+    try
+      HDMI_CEC:= THDMI_CEC.create;
+      HDMI_CEC.OnCecKey:= CecKey;
+    Except
+      on e: exception do
+        begin
+          OvoLogger.Log(llERROR, 'CEC ->'+ e.Message);
+          HDMI_CEC := nil;
+        end;
+    end
+  else
+    HDMI_CEC := nil;
+
   OSDTimer:= TFPTimer.Create(nil);
   OSDTimer.Enabled := False;
   OSDTimer.Interval := 8000;
@@ -240,6 +312,7 @@ begin
   OsdTimer.Free;
   EpgData.Free;
   List.Free;
+  HDMI_CEC.free;
   inherited Destroy;
 end;
 

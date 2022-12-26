@@ -120,6 +120,8 @@ type
     procedure ComputeGridCellSize(data: ptrint);
     function ComputeTrackTitle(Track: TTrack): string;
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
+    procedure DoExternalInput(Data: PtrInt);
+    procedure ExternalInput(Sender: TObject; var Key: word);
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
     procedure OnTrackChange(Sender: TObject);
@@ -269,6 +271,19 @@ begin
   ChannelList.invalidate;
 end;
 
+procedure TfPlayer.DoExternalInput(Data: PtrInt);
+var
+  key : word;
+begin
+  Key := word(PtrInt(data));
+  FormKeyDown(self, Key, []);
+end;
+
+procedure TfPlayer.ExternalInput(Sender: TObject; var Key: word);
+begin
+  Application.QueueAsyncCall(DoExternalInput, PtrInt(key) );
+end;
+
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
   OvoLogger.Log(llINFO, 'Load configuration from %s',[ConfigObj.ConfigFile]);
@@ -277,7 +292,7 @@ begin
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
   OvoLogger.Log(llINFO, 'Create main GUI');
-
+  BackEnd.OnExternalInput:= ExternalInput;
   BackEnd.list.OnListChanged := OnListChanged;
   ChannelList.RowCount := 0;
 

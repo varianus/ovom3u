@@ -38,6 +38,7 @@ type
     cbUseChno: TCheckBox;
     cbDownloadLogo: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
+    cbLibCEC: TCheckBox;
     edtChannelsFileName: TFileNameEdit;
     edtEpgFileName: TFileNameEdit;
     edtChannelsUrl: TEdit;
@@ -53,6 +54,8 @@ type
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     lbWarning: TLabel;
+    SpeedButton3: TSpeedButton;
+    tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
     vleCustomOptions: TValueListEditor;
@@ -63,6 +66,7 @@ type
     procedure OKButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
+    procedure SpeedButton3Click(Sender: TObject);
   private
 
   public
@@ -115,6 +119,8 @@ begin
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
 
+  cbLibCEC.Checked:= BackEnd.PluginsProperties.EnableCEC;
+
 
 end;
 
@@ -135,6 +141,9 @@ begin
 
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
+
+  BackEnd.PluginsProperties.EnableCEC:= cbLibCEC.Checked;
+
   ConfigObj.SaveConfig;
   ModalResult:=mrOK;
 end;
@@ -147,6 +156,11 @@ end;
 procedure TfConfig.SpeedButton2Click(Sender: TObject);
 begin
   pcSettings.ActivePage:= tsMpv;
+end;
+
+procedure TfConfig.SpeedButton3Click(Sender: TObject);
+begin
+  pcSettings.ActivePage := tsPlugins;
 end;
 
 procedure TfConfig.cbChannelsKindChange(Sender: TObject);

@@ -36,7 +36,7 @@ uses {$IFDEF UNIX}
   umain,
   sysutils,
   uEPGFOrm,
-  LoggerUnit, appconsts, Renderer, uChannels, uBackEnd;
+  LoggerUnit, appconsts, Renderer, uChannels, uBackEnd, cec, CEC_intf;
 
 {$R *.res}
 var
