@@ -1,21 +1,21 @@
 object EPGForm: TEPGForm
   Left = 447
-  Height = 690
+  Height = 417
   Top = 169
   Width = 867
   Caption = 'EPG Guide'
-  ClientHeight = 690
+  ClientHeight = 417
   ClientWidth = 867
   OnCreate = FormCreate
-  object Panel1: TPanel
+  object pnlDetail: TPanel
     Left = 0
-    Height = 157
-    Top = 533
+    Height = 130
+    Top = 287
     Width = 867
     Align = alBottom
     BevelInner = bvLowered
     BorderStyle = bsSingle
-    ClientHeight = 155
+    ClientHeight = 128
     ClientWidth = 865
     TabOrder = 0
     object stChannel: TStaticText
@@ -59,17 +59,17 @@ object EPGForm: TEPGForm
       TabOrder = 2
     end
     object mmPlot: TMemo
-      AnchorSideLeft.Control = stChannel
+      AnchorSideLeft.Control = pnlDetail
       AnchorSideTop.Control = stTitle
       AnchorSideTop.Side = asrBottom
-      AnchorSideRight.Control = Panel1
+      AnchorSideRight.Control = pnlDetail
       AnchorSideRight.Side = asrBottom
-      AnchorSideBottom.Control = Panel1
+      AnchorSideBottom.Control = pnlDetail
       AnchorSideBottom.Side = asrBottom
-      Left = 23
-      Height = 109
+      Left = 11
+      Height = 82
       Top = 35
-      Width = 831
+      Width = 843
       Anchors = [akTop, akLeft, akRight, akBottom]
       BorderSpacing.Around = 9
       ParentColor = True
@@ -80,7 +80,7 @@ object EPGForm: TEPGForm
   end
   object pcView: TPageControl
     Left = 0
-    Height = 533
+    Height = 287
     Top = 0
     Width = 867
     ActivePage = tsFullGuide
@@ -91,11 +91,11 @@ object EPGForm: TEPGForm
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
       Caption = 'FullGuide'
-      ClientHeight = 527
+      ClientHeight = 281
       ClientWidth = 861
       object TimeGrid: TDrawGrid
         Left = 0
-        Height = 477
+        Height = 231
         Hint = 'Click a broadcast for details'
         Top = 50
         Width = 861
@@ -121,7 +121,7 @@ object EPGForm: TEPGForm
         FixedCols = 0
         MouseWheelOption = mwGrid
         Options = [goFixedVertLine, goFixedHorzLine, goRangeSelect, goColSizing, goSmoothScroll]
-        TabOrder = 0
+        TabOrder = 1
         OnDrawCell = TimeGridDrawCell
         OnKeyDown = TimeGridKeyDown
         OnMouseDown = TimeGridMouseDown
@@ -139,8 +139,10 @@ object EPGForm: TEPGForm
         AutoSize = True
         ClientHeight = 50
         ClientWidth = 861
-        TabOrder = 1
+        TabOrder = 0
         object arBackward: TArrow
+          AnchorSideLeft.Control = pnlControl
+          AnchorSideTop.Control = pnlControl
           Left = 10
           Height = 30
           Top = 10
@@ -153,6 +155,7 @@ object EPGForm: TEPGForm
         object arForward: TArrow
           AnchorSideLeft.Control = arBackward
           AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = pnlControl
           Left = 49
           Height = 30
           Top = 10
@@ -166,50 +169,54 @@ object EPGForm: TEPGForm
         object lbMessage: TLabel
           AnchorSideLeft.Control = arForward
           AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = arForward
-          AnchorSideTop.Side = asrCenter
+          AnchorSideTop.Control = pnlControl
           AnchorSideRight.Control = pnlControl
           AnchorSideRight.Side = asrBottom
-          Left = 769
-          Height = 23
-          Top = 14
-          Width = 82
+          Left = 790
+          Height = 17
+          Top = 10
+          Width = 61
           Anchors = [akTop, akRight]
           BorderSpacing.Around = 9
           Caption = 'lbMessage'
-          Color = clDefault
-          Font.Height = -16
           ParentFont = False
           Transparent = False
         end
         object bNow: TBitBtn
           AnchorSideLeft.Control = arForward
           AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = arForward
-          AnchorSideTop.Side = asrCenter
+          AnchorSideTop.Control = pnlControl
           Left = 88
-          Height = 30
+          Height = 27
           Top = 10
-          Width = 75
+          Width = 82
           Action = actNow
           BorderSpacing.Around = 9
           Caption = '&Now'
           TabOrder = 0
         end
         object bViewSearch: TButton
-          Left = 192
-          Height = 30
+          AnchorSideLeft.Control = bNow
+          AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = pnlControl
+          Left = 179
+          Height = 27
           Top = 10
-          Width = 75
+          Width = 82
+          BorderSpacing.Around = 9
           Caption = '&Search...'
           OnClick = bViewSearchClick
           TabOrder = 1
         end
         object bForceReload: TButton
-          Left = 320
-          Height = 30
+          AnchorSideLeft.Control = bViewSearch
+          AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = pnlControl
+          Left = 270
+          Height = 27
           Top = 10
-          Width = 75
+          Width = 82
+          BorderSpacing.Around = 9
           Caption = '&Force Reload'
           OnClick = bForceReloadClick
           TabOrder = 2
@@ -218,7 +225,7 @@ object EPGForm: TEPGForm
     end
     object tsDetail: TTabSheet
       Caption = 'Detail'
-      ClientHeight = 527
+      ClientHeight = 281
       ClientWidth = 861
       object DetailGrid: TDrawGrid
         AnchorSideLeft.Control = tsDetail
@@ -293,7 +300,7 @@ object EPGForm: TEPGForm
     end
     object tsSearch: TTabSheet
       Caption = 'Search'
-      ClientHeight = 527
+      ClientHeight = 281
       ClientWidth = 861
       object lbeSearch: TLabeledEdit
         Left = 88
@@ -303,7 +310,6 @@ object EPGForm: TEPGForm
         EditLabel.Height = 17
         EditLabel.Width = 69
         EditLabel.Caption = 'Search term'
-        EditLabel.Color = clDefault
         LabelPosition = lpLeft
         TabOrder = 0
       end
@@ -326,7 +332,7 @@ object EPGForm: TEPGForm
         AnchorSideBottom.Control = tsSearch
         AnchorSideBottom.Side = asrBottom
         Left = 0
-        Height = 475
+        Height = 229
         Top = 52
         Width = 861
         Anchors = [akTop, akLeft, akRight, akBottom]

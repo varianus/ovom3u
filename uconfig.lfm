@@ -19,15 +19,15 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 388
-      ClientWidth = 578
+      ClientHeight = 386
+      ClientWidth = 576
       object cbChannelsKind: TComboBox
         AnchorSideLeft.Control = lb
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = lb
         AnchorSideTop.Side = asrBottom
         Left = 124
-        Height = 26
+        Height = 27
         Top = 16
         Width = 240
         BorderSpacing.Around = 12
@@ -60,11 +60,11 @@ object fConfig: TfConfig
         AnchorSideTop.Side = asrBottom
         Left = 124
         Height = 21
-        Top = 120
+        Top = 127
         Width = 197
         BorderSpacing.Top = 9
         Caption = 'Use channel number from m3u'
-        TabOrder = 1
+        TabOrder = 3
       end
       object Label4: TLabel
         AnchorSideTop.Control = edtEpgUrl
@@ -72,7 +72,7 @@ object fConfig: TfConfig
         AnchorSideRight.Control = edtEpgUrl
         Left = 89
         Height = 17
-        Top = 232
+        Top = 237
         Width = 23
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
@@ -86,13 +86,13 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 124
-        Height = 24
-        Top = 228
-        Width = 442
+        Height = 27
+        Top = 232
+        Width = 440
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Top = 9
         BorderSpacing.Right = 12
-        TabOrder = 2
+        TabOrder = 7
       end
       object Label2: TLabel
         AnchorSideTop.Control = edtChannelsFileName
@@ -100,7 +100,7 @@ object fConfig: TfConfig
         AnchorSideRight.Control = edtChannelsFileName
         Left = 56
         Height = 17
-        Top = 58
+        Top = 60
         Width = 56
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
@@ -115,9 +115,9 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 124
-        Height = 24
-        Top = 54
-        Width = 442
+        Height = 27
+        Top = 55
+        Width = 440
         DialogTitle = 'Choose M3U file'
         Filter = 'M3U Files (*.m3u)|*.m3u|M3U8 Files (*.m3u8)|*.m3u8'
         FilterIndex = 0
@@ -129,7 +129,7 @@ object fConfig: TfConfig
         BorderSpacing.Top = 9
         BorderSpacing.Right = 12
         MaxLength = 0
-        TabOrder = 3
+        TabOrder = 1
       end
       object edtChannelsUrl: TEdit
         AnchorSideLeft.Control = cbChannelsKind
@@ -138,13 +138,13 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 124
-        Height = 24
-        Top = 87
-        Width = 442
+        Height = 27
+        Top = 91
+        Width = 440
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Top = 9
         BorderSpacing.Right = 12
-        TabOrder = 4
+        TabOrder = 2
       end
       object Label3: TLabel
         AnchorSideTop.Control = edtChannelsUrl
@@ -152,7 +152,7 @@ object fConfig: TfConfig
         AnchorSideRight.Control = edtChannelsUrl
         Left = 90
         Height = 17
-        Top = 91
+        Top = 96
         Width = 22
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
@@ -178,7 +178,7 @@ object fConfig: TfConfig
         AnchorSideLeft.Control = cbChannelsKind
         AnchorSideTop.Side = asrCenter
         Left = 124
-        Height = 26
+        Height = 27
         Top = 160
         Width = 240
         BorderSpacing.Top = 9
@@ -197,7 +197,7 @@ object fConfig: TfConfig
         AnchorSideRight.Control = edtEpgFileName
         Left = 56
         Height = 17
-        Top = 199
+        Top = 201
         Width = 56
         Anchors = [akTop, akRight]
         BorderSpacing.Right = 12
@@ -212,9 +212,9 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 124
-        Height = 24
-        Top = 195
-        Width = 442
+        Height = 27
+        Top = 196
+        Width = 440
         DialogTitle = 'Choose EPG file'
         Filter = 'XML Files (*.xml)|*.xml|Gzipped file (*.gz)|*.gz;*.gzip|All Files (*.*)|*.*'
         FilterIndex = 0
@@ -235,18 +235,18 @@ object fConfig: TfConfig
         AnchorSideTop.Side = asrBottom
         Left = 330
         Height = 21
-        Top = 120
+        Top = 127
         Width = 159
         BorderSpacing.Left = 9
         BorderSpacing.Top = 9
         Caption = 'Download channels logo'
-        TabOrder = 7
+        TabOrder = 4
       end
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 388
-      ClientWidth = 578
+      ClientHeight = 386
+      ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
         AnchorSideTop.Control = lbWarning
@@ -255,23 +255,23 @@ object fConfig: TfConfig
         AnchorSideRight.Side = asrBottom
         AnchorSideBottom.Control = tsMpv
         AnchorSideBottom.Side = asrBottom
-        Left = 12
-        Height = 267
-        Top = 109
-        Width = 554
+        Left = 9
+        Height = 277
+        Top = 100
+        Width = 558
         AlternateColor = clBtnFace
         Anchors = [akTop, akLeft, akRight, akBottom]
-        BorderSpacing.Around = 12
+        BorderSpacing.Around = 9
         DefaultColWidth = 150
         FixedCols = 0
         Flat = True
         RowCount = 2
-        TabOrder = 0
+        TabOrder = 1
         KeyOptions = [keyEdit, keyAdd, keyDelete, keyUnique]
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
         ColWidths = (
           150
-          403
+          407
         )
       end
       object cbHardwareAcceleration: TCheckBox
@@ -279,18 +279,19 @@ object fConfig: TfConfig
         Height = 21
         Top = 8
         Width = 190
+        BorderSpacing.Around = 9
         Caption = 'Enable hardware acceleration'
-        TabOrder = 1
+        TabOrder = 0
       end
       object lbWarning: TLabel
         AnchorSideTop.Control = cbHardwareAcceleration
         AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 48
-        Top = 49
+        Top = 43
         Width = 534
         AutoSize = False
-        BorderSpacing.Top = 20
+        BorderSpacing.Top = 14
         Caption = 'WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options.'
         Transparent = False
         WordWrap = True
@@ -298,13 +299,14 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 388
-      ClientWidth = 578
+      ClientHeight = 368
+      ClientWidth = 558
       object cbLibCEC: TCheckBox
         Left = 12
         Height = 21
         Top = 8
         Width = 210
+        BorderSpacing.Around = 9
         Caption = 'Enable HDMI-CEC remote control'
         TabOrder = 0
       end

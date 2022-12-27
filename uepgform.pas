@@ -28,7 +28,7 @@ type
     lbeSearch: TLabeledEdit;
     mmPlot: TMemo;
     pcView: TPageControl;
-    Panel1: TPanel;
+    pnlDetail: TPanel;
     bBack: TButton;
     stChannel: TStaticText;
     stTime: TStaticText;

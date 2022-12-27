@@ -1,4 +1,5 @@
 object fChannels: TfChannels
+  AnchorSideLeft.Side = asrBottom
   Left = 319
   Height = 452
   Top = 33
@@ -9,7 +10,6 @@ object fChannels: TfChannels
   KeyPreview = True
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  LCLVersion = '2.3.0.0'
   object Panel1: TPanel
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Owner
@@ -24,67 +24,71 @@ object fChannels: TfChannels
     ClientWidth = 894
     TabOrder = 0
     object Edit1: TEdit
-      Left = 328
+      AnchorSideLeft.Control = Label1
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = Panel1
+      Left = 316
       Height = 27
-      Top = 16
+      Top = 10
       Width = 153
+      BorderSpacing.Around = 9
       OnChange = FilterChange
-      TabOrder = 0
+      TabOrder = 1
     end
     object cbViewLogo: TCheckBox
       AnchorSideLeft.Control = Edit1
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = Edit1
       AnchorSideTop.Side = asrCenter
-      Left = 493
+      Left = 478
       Height = 21
-      Top = 19
+      Top = 13
       Width = 50
-      BorderSpacing.Around = 12
+      BorderSpacing.Around = 9
       Caption = 'Logo'
       OnChange = cbViewLogoChange
-      TabOrder = 1
+      TabOrder = 2
     end
     object cbViewEPG: TCheckBox
       AnchorSideLeft.Control = cbViewLogo
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = Edit1
       AnchorSideTop.Side = asrCenter
-      Left = 555
+      Left = 537
       Height = 21
-      Top = 19
+      Top = 13
       Width = 118
-      BorderSpacing.Around = 12
+      BorderSpacing.Around = 9
       Caption = 'Current program'
       OnChange = cbViewLogoChange
-      TabOrder = 2
+      TabOrder = 3
     end
     object Label1: TLabel
+      AnchorSideLeft.Control = cbGroups
+      AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = Edit1
       AnchorSideTop.Side = asrCenter
       AnchorSideRight.Control = Edit1
-      Left = 235
+      Left = 226
       Height = 17
-      Top = 21
+      Top = 15
       Width = 81
-      Anchors = [akTop, akRight]
-      BorderSpacing.Around = 12
+      BorderSpacing.Around = 9
       Caption = 'Channel name'
     end
     object cbGroups: TComboBox
-      AnchorSideTop.Control = Edit1
-      AnchorSideTop.Side = asrCenter
+      AnchorSideLeft.Control = Panel1
+      AnchorSideTop.Control = Panel1
       AnchorSideRight.Control = Label1
-      Left = 16
+      Left = 11
       Height = 29
-      Top = 15
-      Width = 207
-      Anchors = [akTop, akLeft, akRight]
-      BorderSpacing.Around = 12
+      Top = 11
+      Width = 205
+      BorderSpacing.Around = 10
       ItemHeight = 0
       OnChange = FilterChange
       Style = csDropDownList
-      TabOrder = 3
+      TabOrder = 0
       Visible = False
     end
   end
@@ -121,10 +125,10 @@ object fChannels: TfChannels
     OnDrawCell = ChannelListDrawCell
     OnSelectCell = ChannelListSelectCell
     ColWidths = (
-      224
-      224
-      223
-      223
+      220
+      219
+      219
+      219
     )
   end
 end
