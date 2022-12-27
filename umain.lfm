@@ -11,6 +11,7 @@ object fPlayer: TfPlayer
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
+  OnResize = FormResize
   object pnlContainer: TPanel
     Left = 219
     Height = 512

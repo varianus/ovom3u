@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config, uBackEnd;
+  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config, uBackEnd, LoggerUnit;
 
 type
 
@@ -68,26 +68,29 @@ type
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
   private
+    FOnWorkDone: TNotifyEvent;
+    procedure SetOnWorkDone(AValue: TNotifyEvent);
 
   public
+    Property OnWorkDone:TNotifyEvent read FOnWorkDone write SetOnWorkDone;
 
   end;
+var
+  fConfig: TfConfig;
 
 
-Function ShowConfig: integer;
+function ShowConfig: integer;
 
 implementation
 
 uses um3uloader;
 
-var
-  fConfig: TfConfig;
 
-Function ShowConfig: integer;
+function ShowConfig: integer;
 begin
   if not Assigned(fConfig) then
     fConfig := TfConfig.Create(nil);
-  Result:=fConfig.ShowModal;
+  Result := fConfig.ShowModal;
 end;
 
 
@@ -119,8 +122,7 @@ begin
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
 
-  cbLibCEC.Checked:= BackEnd.PluginsProperties.EnableCEC;
-
+  cbLibCEC.Checked := BackEnd.PluginsProperties.EnableCEC;
 
 end;
 
@@ -142,20 +144,23 @@ begin
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
 
-  BackEnd.PluginsProperties.EnableCEC:= cbLibCEC.Checked;
+  BackEnd.PluginsProperties.EnableCEC := cbLibCEC.Checked;
 
   ConfigObj.SaveConfig;
-  ModalResult:=mrOK;
+
+  ModalResult := mrOk;
+  If Assigned(FOnWorkDone) then
+    FOnWorkDone(self);
 end;
 
 procedure TfConfig.SpeedButton1Click(Sender: TObject);
 begin
-  pcSettings.ActivePage:= tsChannels;
+  pcSettings.ActivePage := tsChannels;
 end;
 
 procedure TfConfig.SpeedButton2Click(Sender: TObject);
 begin
-  pcSettings.ActivePage:= tsMpv;
+  pcSettings.ActivePage := tsMpv;
 end;
 
 procedure TfConfig.SpeedButton3Click(Sender: TObject);
@@ -163,16 +168,24 @@ begin
   pcSettings.ActivePage := tsPlugins;
 end;
 
+procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);
+begin
+
+  FOnWorkDone:=AValue;
+end;
+
 procedure TfConfig.cbChannelsKindChange(Sender: TObject);
 begin
   case cbChannelsKind.ItemIndex of
-    0: begin
-         edtChannelsFileName.Enabled := true;
-         edtChannelsUrl.Enabled := false;
+    0:
+    begin
+      edtChannelsFileName.Enabled := True;
+      edtChannelsUrl.Enabled := False;
     end;
-    1: begin
-         edtChannelsFileName.Enabled := false;
-         edtChannelsUrl.Enabled := true;
+    1:
+    begin
+      edtChannelsFileName.Enabled := False;
+      edtChannelsUrl.Enabled := True;
     end;
   end;
 end;
@@ -180,26 +193,29 @@ end;
 procedure TfConfig.cbEpgKindChange(Sender: TObject);
 begin
   case cbEpgKind.ItemIndex of
-    0: begin
-         edtEpgFileName.Enabled := true;
-         edtEpgUrl.Enabled := false;
+    0:
+    begin
+      edtEpgFileName.Enabled := True;
+      edtEpgUrl.Enabled := False;
     end;
-    1: begin
-         edtEpgFileName.Enabled := false;
-         edtEpgUrl.Enabled := true;
+    1:
+    begin
+      edtEpgFileName.Enabled := False;
+      edtEpgUrl.Enabled := True;
     end;
   end;
 end;
 
+
 procedure TfConfig.CancelButtonClick(Sender: TObject);
 begin
-  ModalResult:=mrCancel;
+  ModalResult := mrCancel;
+  If Assigned(FOnWorkDone) then
+    FOnWorkDone(self);
 end;
 
 initialization
-  fConfig := nil;
+
 
 finalization
-  if Assigned(fConfig) then
-    fConfig.Free;
 end.

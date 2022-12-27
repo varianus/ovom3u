@@ -25,7 +25,7 @@ interface
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, um3uloader,
-  OpenGLContext, Types, Math, SysUtils,
+  OpenGLContext, Types, Math, SysUtils, clocale,
   MPV_Engine, Config, GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd;
 
 type
@@ -97,6 +97,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure FormResize(Sender: TObject);
     procedure GLRendererChangeBounds(Sender: TObject);
     procedure LoadingTimerStartTimer(Sender: TObject);
     procedure LoadingTimerTimer(Sender: TObject);
@@ -123,6 +124,7 @@ type
     procedure CloseSubForm;
     procedure ComputeGridCellSize(Data: ptrint);
     function ComputeTrackTitle(Track: TTrack): string;
+    procedure ConfigDone(Sender: TObject);
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
     procedure DoExternalInput(Data: PtrInt);
     procedure EmbedSubForm(AForm: TForm);
@@ -473,6 +475,14 @@ begin
     key := 0;
 end;
 
+procedure TfPlayer.FormResize(Sender: TObject);
+begin
+  if SubFormVisible then
+  begin
+    pnlsubform.Height := min(600, pnlcontainer.Height - 100);
+  end;
+end;
+
 procedure TfPlayer.GLRendererChangeBounds(Sender: TObject);
 begin
   BackEnd.MpvEngine.Refresh;
@@ -660,7 +670,7 @@ begin
     CloseSubForm;
 
   AForm.Parent := pnlSubForm;
-  pnlSubForm.Height := 500;
+  pnlSubForm.Height := min(600, pnlcontainer.Height - 100);
   AForm.Align := alclient;
   SubFormVisible := True;
   SubForm := AForm;
@@ -695,9 +705,9 @@ begin
   actViewCurrentProgram.Checked := GuiProperties.ViewCurrentProgram;
 end;
 
-procedure TfPlayer.actShowConfigExecute(Sender: TObject);
+procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
-  if ShowConfig = mrOk then
+  if fConfig.ModalResult = mrOk then
   begin
     if BackEnd.List.ListProperties.Dirty then
     begin
@@ -713,6 +723,19 @@ begin
     end;
 
   end;
+
+  CloseSubForm();
+end;
+
+procedure TfPlayer.actShowConfigExecute(Sender: TObject);
+begin
+  if not Assigned(fConfig) then
+    Application.CreateForm(TfConfig, fConfig);
+
+  fConfig.OnWorkDone := ConfigDone;
+
+  EmbedSubForm(fConfig);
+
 end;
 
 procedure TfPlayer.actShowListExecute(Sender: TObject);
