@@ -29,6 +29,8 @@ type
     procedure FilterChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure GotFocus(Sender: TObject);
+    procedure LostFocus(Sender: TObject);
   private
     fFilter: TFilteredList;
     procedure ComputeGridCellSize(data: ptrint);
@@ -209,6 +211,18 @@ begin
     VK_ESCAPE: Close;
     VK_RETURN : ChannelListDblClick(Sender);
   end;
+end;
+
+procedure TfChannels.GotFocus(Sender: TObject);
+begin
+  TControl(Sender).Color:= clHighlight;
+  TControl(Sender).Invalidate;
+end;
+
+procedure TfChannels.LostFocus(Sender: TObject);
+begin
+  TControl(Sender).Color:= clDefault;
+  TControl(Sender).Invalidate;
 end;
 
 

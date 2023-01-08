@@ -273,7 +273,6 @@ end;
 destructor TM3ULoader.Destroy;
 begin
   Groups.free;
-  fListProperties.free;
   inherited Destroy;
 end;
 
@@ -301,7 +300,9 @@ var
     begin
       TagStart := PosEx('"', st, tagpos) + 1;
       Result := ExtractSubstr(St, TagStart, ['"']);
-    end;
+    end
+    else
+      result := EmptyStr;
   end;
 
 begin

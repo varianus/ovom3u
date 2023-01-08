@@ -81,7 +81,8 @@ begin
     llINFO: Result   := '    INFO: ';
     llWARN: Result   := ' WARNING: ';
     llERROR: Result  := '   ERROR: ';
-    llFORCED: Result := '  NOTICE: ';
+  else
+    Result := '  NOTICE: '; // llFORCED
   end;
 end;
 

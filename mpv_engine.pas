@@ -238,8 +238,9 @@ begin
     llDEBUG : Result := 'debug';
     llINFO  : Result := 'info';
     llWARN  : Result := 'warn';
-    llERROR : Result := 'error';
-    llNO_LOG : Result := 'no';
+    llERROR : Result := 'error'
+  else
+     Result := 'no';  // llNO_LOG
   end;
 end;
 
@@ -310,7 +311,6 @@ begin
     fdecoupler.Free;
 
   Free_libmpv;
-  fMpvProperties.Free;
   inherited Destroy;
 end;
 
@@ -744,6 +744,7 @@ end;
 
 function TMPVEngine.Pause: boolean;
 begin
+  Result := false;
   if (EngineState = ENGINE_PAUSE) then
   begin
     SetBoolProperty('pause', False);

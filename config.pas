@@ -38,7 +38,7 @@ type
   TConfig = class;
 
   { TConfigParam }
-  TConfigParam = class(tobject)
+  TConfigParam = class(TObject)
   private
     FDirty: boolean;
     fOwner: TConfig;
@@ -90,6 +90,8 @@ type
     function ReadBoolean(const APath: string; ADefault: Boolean): Boolean;
     procedure WriteInteger(const APath: string; Value: Integer);
     function ReadInteger(const APath: string; ADefault: Integer): Integer;
+    procedure WriteRect(const APath: string; Value: TRect);
+    function ReadRect(const APath: string; ADefault: TRect): TRect;
 
     procedure Flush;
     constructor Create;
@@ -225,7 +227,7 @@ procedure TConfigParam.Save;
 begin
   if FDirty then
     InternalSave;
-  FDirty:=false;
+
 end;
 
 { TSimpleHistory }
@@ -399,11 +401,12 @@ procedure TConfig.SaveConfig;
 var
   i: integer;
 begin
-
+  fDirty:= false;
   for i := 0 to Pred(fConfigList.Count) do
     if fConfigList[i].Dirty then
        begin
          fConfigList[i].Save;
+         fConfigList[i].Dirty:=false;
          FDirty:= true;
        end;
   if fDirty then
@@ -414,7 +417,6 @@ begin
 
   fDirty := false;
 
-  fConfigHolder.SaveToFile(FConfigFile, true);
 end;
 
 procedure TConfig.ReadConfig;
@@ -541,6 +543,22 @@ begin
      Result :=  Node.AsInteger
   else
      Result :=  ADefault;
+end;
+
+procedure TConfig.WriteRect(const APath: string; Value: TRect);
+begin
+  WriteInteger(APath+'/Top',Value.Top);
+  WriteInteger(APath+'/Left',Value.Left);
+  WriteInteger(APath+'/Heigth',Value.Height);
+  WriteInteger(APath+'/Width',Value.Width);
+end;
+
+function TConfig.ReadRect(const APath: string; ADefault: TRect): TRect;
+begin
+  Result.Top:= ReadInteger(APath+'/Top',ADefault.Top);
+  Result.Left:= ReadInteger(APath+'/Left',ADefault.Left);
+  Result.Height:= ReadInteger(APath+'/Heigth',ADefault.Height);
+  Result.Width:= ReadInteger(APath+'/Width',ADefault.Width);
 end;
 
 procedure TConfig.Flush;

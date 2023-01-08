@@ -7,11 +7,12 @@ object fPlayer: TfPlayer
   ClientHeight = 512
   ClientWidth = 1087
   KeyPreview = True
+  OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  OnResize = FormResize
+  LCLVersion = '2.3.0.0'
   object pnlContainer: TPanel
     Left = 219
     Height = 512
@@ -92,7 +93,7 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        196
+        213
       )
     end
     object Panel1: TPanel
@@ -160,6 +161,7 @@ object fPlayer: TfPlayer
     Height = 512
     Top = 0
     Width = 4
+    OnMoved = ChannelSplitterMoved
   end
   object HideMouse: TTimer
     Enabled = False
@@ -241,5 +243,9 @@ object fPlayer: TfPlayer
     object N1: TMenuItem
       Caption = '-'
     end
+  end
+  object ApplicationProperties1: TApplicationProperties
+    Left = 119
+    Top = 285
   end
 end

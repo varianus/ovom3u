@@ -33,6 +33,8 @@ object fChannels: TfChannels
       Width = 153
       BorderSpacing.Around = 9
       OnChange = FilterChange
+      OnEnter = GotFocus
+      OnExit = LostFocus
       TabOrder = 1
     end
     object cbViewLogo: TCheckBox
@@ -46,7 +48,11 @@ object fChannels: TfChannels
       Width = 50
       BorderSpacing.Around = 9
       Caption = 'Logo'
+      Color = clDefault
       OnChange = cbViewLogoChange
+      OnEnter = GotFocus
+      OnExit = LostFocus
+      ParentColor = False
       TabOrder = 2
     end
     object cbViewEPG: TCheckBox
@@ -61,6 +67,8 @@ object fChannels: TfChannels
       BorderSpacing.Around = 9
       Caption = 'Current program'
       OnChange = cbViewLogoChange
+      OnEnter = GotFocus
+      OnExit = LostFocus
       TabOrder = 3
     end
     object Label1: TLabel
@@ -87,6 +95,8 @@ object fChannels: TfChannels
       BorderSpacing.Around = 10
       ItemHeight = 0
       OnChange = FilterChange
+      OnEnter = GotFocus
+      OnExit = LostFocus
       Style = csDropDownList
       TabOrder = 0
       Visible = False

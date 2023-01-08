@@ -23,10 +23,10 @@ unit umain;
 interface
 
 uses
-  Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Grids, LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, um3uloader,
-  OpenGLContext, Types, Math, SysUtils, clocale,
-  MPV_Engine, Config, GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd;
+  Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids, LCLIntf,
+  lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
+  um3uloader, OpenGLContext, Types, Math, SysUtils, clocale, MPV_Engine, Config,
+  GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd;
 
 type
 
@@ -36,6 +36,10 @@ type
     fViewLogo: boolean;
     fViewCurrentProgram: boolean;
   private
+    FBoundsRect: TRect;
+    FChannelGridWidth: integer;
+    procedure SetBoundRect(AValue: TRect);
+    procedure SetChannelGridWidth(AValue: integer);
     procedure SetViewCurrentProgram(AValue: boolean);
     procedure SetViewLogo(AValue: boolean);
   protected
@@ -43,7 +47,10 @@ type
   public
     property ViewLogo: boolean read fViewLogo write SetViewLogo;
     property ViewCurrentProgram: boolean read fViewCurrentProgram write SetViewCurrentProgram;
+    property ChannelGridWidth: integer read FChannelGridWidth write SetChannelGridWidth;
+    property BoundsRect: TRect read FBoundsRect write SetBoundRect;
     procedure Load; override;
+    Constructor Create(aOwner:TConfig; ABoundsRect:TRect); reintroduce;
   end;
 
 
@@ -57,6 +64,7 @@ type
     actViewLogo: TAction;
     actViewCurrentProgram: TAction;
     actList: TActionList;
+    ApplicationProperties1: TApplicationProperties;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
     cbGroups: TComboBox;
@@ -92,12 +100,13 @@ type
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListGetCellHint(Sender: TObject; ACol, ARow: integer; var HintText: string);
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure ChannelSplitterMoved(Sender: TObject);
     procedure ChannelTimerTimer(Sender: TObject);
+    procedure FormChangeBounds(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
-    procedure FormResize(Sender: TObject);
     procedure GLRendererChangeBounds(Sender: TObject);
     procedure LoadingTimerStartTimer(Sender: TObject);
     procedure LoadingTimerTimer(Sender: TObject);
@@ -122,13 +131,14 @@ type
     SubFormVisible: boolean;
     function CheckConfigAndSystem: boolean;
     procedure CloseSubForm;
-    procedure ComputeGridCellSize(Data: ptrint);
+    procedure ComputeGridCellSize;
     function ComputeTrackTitle(Track: TTrack): string;
     procedure ConfigDone(Sender: TObject);
     procedure DebugLnHook(Sender: TObject; S: string; var Handled: boolean);
     procedure DoExternalInput(Data: PtrInt);
     procedure EmbedSubForm(AForm: TForm);
     procedure ExternalInput(Sender: TObject; var Key: word);
+    procedure InitializeGui(Data: ptrint);
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
     procedure OnTrackChange(Sender: TObject);
@@ -162,6 +172,20 @@ var
 
 { TGuiProperties }
 
+procedure TGuiProperties.SetChannelGridWidth(AValue: integer);
+begin
+  if FChannelGridWidth=AValue then Exit;
+  FChannelGridWidth:=AValue;
+  Dirty := True;
+end;
+
+procedure TGuiProperties.SetBoundRect(AValue: TRect);
+begin
+  if FBoundsRect=AValue then Exit;
+  FBoundsRect:=AValue;
+  Dirty := true;
+end;
+
 procedure TGuiProperties.SetViewCurrentProgram(AValue: boolean);
 begin
   if fViewCurrentProgram = AValue then Exit;
@@ -180,12 +204,24 @@ procedure TGuiProperties.InternalSave;
 begin
   Owner.WriteBoolean('gui/ViewLogo', ViewLogo);
   Owner.WriteBoolean('gui/ViewCurrentProgram', ViewCurrentProgram);
+  Owner.WriteInteger('gui/ChannelGridWidth', ChannelGridWidth);
+  Owner.WriteRect('gui/MainForm/Position', BoundsRect);
 end;
 
 procedure TGuiProperties.Load;
 begin
   ViewLogo := Owner.ReadBoolean('gui/ViewLogo', False);
   ViewCurrentProgram := Owner.ReadBoolean('gui/ViewCurrentProgram', False);
+  ChannelGridWidth := Owner.ReadInteger('gui/ChannelGridWidth', 215);
+  BoundsRect := Owner.ReadRect('gui/MainForm/Position', BoundsRect);
+
+  Dirty := False;
+end;
+
+constructor TGuiProperties.Create(aOwner: TConfig; ABoundsRect: TRect);
+begin
+  FBoundsRect := ABoundsRect;
+  inherited Create(aOwner);
   Dirty := False;
 end;
 
@@ -295,7 +331,7 @@ procedure TfPlayer.FormCreate(Sender: TObject);
 begin
   SubFormVisible := False;
   OvoLogger.Log(llINFO, 'Load configuration from %s', [ConfigObj.ConfigFile]);
-  GuiProperties := TGuiProperties.Create(ConfigObj);
+
   Progress := 0;
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   flgFullScreen := False;
@@ -307,7 +343,7 @@ begin
   ChannelSelecting := False;
   fLoading := False;
   ChannelSelected := 0;
-  Application.QueueAsyncCall(ComputeGridCellSize, 0);
+  Application.QueueAsyncCall(InitializeGui, 0);
 
   if CheckConfigAndSystem then
   begin
@@ -322,7 +358,6 @@ end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
 begin
-  GuiProperties.Free;
   Application.ProcessMessages;
   OvoLogger.Log(llINFO, 'Closed main GUI');
 end;
@@ -475,14 +510,6 @@ begin
     key := 0;
 end;
 
-procedure TfPlayer.FormResize(Sender: TObject);
-begin
-  if SubFormVisible then
-  begin
-    pnlsubform.Height := min(600, pnlcontainer.Height - 100);
-  end;
-end;
-
 procedure TfPlayer.GLRendererChangeBounds(Sender: TObject);
 begin
   BackEnd.MpvEngine.Refresh;
@@ -522,6 +549,8 @@ var
   Spacing: integer;
   epgInfo: REpgInfo;
 begin
+  if not Assigned(GuiProperties) then
+    exit;
   Element := fFilteredList[Arow];
   h := 0;
   cv := ChannelList.Canvas;
@@ -603,6 +632,11 @@ begin
     Play(fFilteredList.Map(ChannelList.Row));
 end;
 
+procedure TfPlayer.ChannelSplitterMoved(Sender: TObject);
+begin
+  GuiProperties.ChannelGridWidth:= ScaleScreenTo96(ChannelSplitter.Left);
+end;
+
 procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
@@ -618,6 +652,15 @@ begin
 
   end;
   ChannelTimer.Enabled := False;
+end;
+
+procedure TfPlayer.FormChangeBounds(Sender: TObject);
+begin
+  if SubFormVisible then
+  begin
+    pnlsubform.Height := min(600, pnlcontainer.Height - 100);
+  end;
+  GuiProperties.BoundsRect := BoundsRect;
 end;
 
 procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -680,13 +723,13 @@ end;
 
 procedure TfPlayer.CloseSubForm;
 begin
-  pnlSubForm.Height := 0;
   SubForm.Hide;
+  pnlSubForm.Height := 0;
+  BackEnd.MpvEngine.Refresh;
   SubForm.Parent := nil;
   SubForm.Close;
   SubFormVisible := False;
   SubForm := nil;
-  BackEnd.MpvEngine.Refresh;
 
 end;
 
@@ -701,6 +744,8 @@ end;
 
 procedure TfPlayer.actListUpdate(AAction: TBasicAction; var Handled: boolean);
 begin
+  if not Assigned(GuiProperties) then
+    exit;
   actViewLogo.Checked := GuiProperties.ViewLogo;
   actViewCurrentProgram.Checked := GuiProperties.ViewCurrentProgram;
 end;
@@ -750,19 +795,28 @@ procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
 begin
   actViewCurrentProgram.Checked := not actViewCurrentProgram.Checked;
   GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
-  ComputeGridCellSize(0);
+  ComputeGridCellSize;
 end;
 
 procedure TfPlayer.actViewLogoExecute(Sender: TObject);
 begin
   actViewLogo.Checked := not actViewLogo.Checked;
   GuiProperties.ViewLogo := actViewLogo.Checked;
-  ComputeGridCellSize(0);
+  ComputeGridCellSize;
   if actViewLogo.Checked then
     BackEnd.list.UpdateLogo;
 end;
 
-procedure TfPlayer.ComputeGridCellSize(Data: ptrint);
+procedure TfPlayer.InitializeGui(Data: ptrint);
+begin
+  GuiProperties := TGuiProperties.Create(ConfigObj, BoundsRect);
+  ChannelSplitter.Left:=Scale96ToScreen(GuiProperties.ChannelGridWidth);
+  BoundsRect := GuiProperties.BoundsRect;
+  ComputeGridCellSize;
+
+end;
+
+procedure TfPlayer.ComputeGridCellSize;
 begin
   if GuiProperties.ViewCurrentProgram then
     ChannelList.DefaultRowHeight := Scale96ToScreen(64)

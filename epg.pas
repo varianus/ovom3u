@@ -606,7 +606,6 @@ begin
   fDB.Connected := False;
   fTR.Free;
   fDB.Free;
-  fEpgProperties.free;;
   inherited Destroy;
 end;
 
