@@ -26,7 +26,7 @@ uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids, LCLIntf,
   lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
   um3uloader, OpenGLContext, Types, Math, SysUtils, clocale, MPV_Engine, Config,
-  GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd;
+  GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes;
 
 type
 
@@ -50,7 +50,7 @@ type
     property ChannelGridWidth: integer read FChannelGridWidth write SetChannelGridWidth;
     property BoundsRect: TRect read FBoundsRect write SetBoundRect;
     procedure Load; override;
-    Constructor Create(aOwner:TConfig; ABoundsRect:TRect); reintroduce;
+    constructor Create(aOwner: TConfig; ABoundsRect: TRect); reintroduce;
   end;
 
 
@@ -68,6 +68,7 @@ type
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
     cbGroups: TComboBox;
+    EPGList: TDrawGrid;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     N1: TMenuItem;
@@ -77,6 +78,7 @@ type
     GLRenderer: TOpenGLControl;
     ChannelTimer: TTimer;
     Panel1: TPanel;
+    pnlEpg: TPanel;
     pnlSubForm: TPanel;
     pnlChannel: TPanel;
     pnlContainer: TPanel;
@@ -102,6 +104,7 @@ type
     procedure ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure ChannelSplitterMoved(Sender: TObject);
     procedure ChannelTimerTimer(Sender: TObject);
+    procedure EPGListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure FormChangeBounds(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -119,6 +122,7 @@ type
     procedure pnlContainerPaint(Sender: TObject);
     procedure ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
   private
+    ChannelInfo: AREpgInfo;
     GuiProperties: TGuiProperties;
     FLoading: boolean;
     ChannelSelecting: boolean;
@@ -139,6 +143,7 @@ type
     procedure EmbedSubForm(AForm: TForm);
     procedure ExternalInput(Sender: TObject; var Key: word);
     procedure InitializeGui(Data: ptrint);
+    procedure LoadDailyEpg;
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
     procedure OnTrackChange(Sender: TObject);
@@ -163,7 +168,7 @@ var
 
 implementation
 
-uses uconfig, BaseTypes, LoggerUnit, AppConsts, uChannels, LazUTF8, LazLogger;
+uses uconfig, LoggerUnit, AppConsts, uChannels, LazUTF8, LazLogger;
 
 var
   f: Text;
@@ -174,16 +179,16 @@ var
 
 procedure TGuiProperties.SetChannelGridWidth(AValue: integer);
 begin
-  if FChannelGridWidth=AValue then Exit;
-  FChannelGridWidth:=AValue;
+  if FChannelGridWidth = AValue then Exit;
+  FChannelGridWidth := AValue;
   Dirty := True;
 end;
 
 procedure TGuiProperties.SetBoundRect(AValue: TRect);
 begin
-  if FBoundsRect=AValue then Exit;
-  FBoundsRect:=AValue;
-  Dirty := true;
+  if FBoundsRect = AValue then Exit;
+  FBoundsRect := AValue;
+  Dirty := True;
 end;
 
 procedure TGuiProperties.SetViewCurrentProgram(AValue: boolean);
@@ -253,6 +258,8 @@ begin
           Retry := True;
         100:
           OpenURL(WIKI_MPV_LINK);
+        else
+          Retry := False;
       end;
 
     end;
@@ -329,6 +336,7 @@ end;
 
 procedure TfPlayer.FormCreate(Sender: TObject);
 begin
+  SetLength(ChannelInfo, 0);
   SubFormVisible := False;
   OvoLogger.Log(llINFO, 'Load configuration from %s', [ConfigObj.ConfigFile]);
 
@@ -386,11 +394,6 @@ begin
   Application.ProcessMessages;
   if flgFullScreen then
     case key of
-      VK_C:
-      begin
-        pnlChannel.Visible := not pnlChannel.Visible;
-        HideMouse.Enabled := not pnlChannel.Visible;
-      end;
       VK_DOWN:
       begin
         if not pnlChannel.Visible then
@@ -432,10 +435,25 @@ begin
         end
         else
           pass := True;
+      VK_C:
+      begin
+        pnlChannel.Visible := not pnlChannel.Visible;
+        ChannelSplitter.Visible := pnlChannel.Visible;
+        HideMouse.Enabled := (not pnlChannel.Visible) and flgFullScreen;
+      end;
+
       VK_I:
         Backend.ShowEpg;
       VK_O:
         backend.mpvengine.ShowStats();
+      VK_P:
+        if not pnlEpg.Visible then
+        begin
+          LoadDailyEpg;
+          pnlEpg.Visible := True;
+        end
+        else
+          pnlEpg.Visible := False;
       VK_S:
       begin
         backend.mpvengine.Stop;
@@ -634,7 +652,7 @@ end;
 
 procedure TfPlayer.ChannelSplitterMoved(Sender: TObject);
 begin
-  GuiProperties.ChannelGridWidth:= ScaleScreenTo96(ChannelSplitter.Left);
+  GuiProperties.ChannelGridWidth := ScaleScreenTo96(ChannelSplitter.Left);
 end;
 
 procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
@@ -652,6 +670,45 @@ begin
 
   end;
   ChannelTimer.Enabled := False;
+end;
+
+procedure TfPlayer.LoadDailyEpg;
+var
+  StartTime, EndTime: TDateTime;
+  i: integer;
+begin
+  StartTime := Trunc(now);
+  EndTime := Trunc(now) + 1;
+  ChannelInfo := BackEnd.EpgData.GetEpgInfo(BackEnd.CurrentIndex, StartTime, EndTime);
+  if Length(ChannelInfo) > 0 then
+  begin
+    EPGList.RowCount := Length(ChannelInfo);
+    EPGList.Visible := True;
+  end
+  else
+    EPGList.Visible := False;
+
+end;
+
+procedure TfPlayer.EPGListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
+var
+  i, Spacing: integer;
+  epgInfo: REpgInfo;
+  cv: TCanvas;
+  CurrProgram: string;
+begin
+  epgInfo := ChannelInfo[Arow];
+  cv := EPGList.Canvas;
+  if epgInfo.HaveData then
+  begin
+    cv.Font.Height := Scale96ToScreen(-12);
+    cv.Font.Style := [];
+    Spacing := Scale96ToScreen(5);
+    CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
+    cv.TextRect(aRect, aRect.Left + Spacing, aRect.top + Spacing, CurrProgram);
+    cv.TextRect(aRect, aRect.Left + spacing, aRect.top + Spacing + scale96toscreen(12), EpgInfo.Title);
+  end;
+
 end;
 
 procedure TfPlayer.FormChangeBounds(Sender: TObject);
@@ -810,7 +867,7 @@ end;
 procedure TfPlayer.InitializeGui(Data: ptrint);
 begin
   GuiProperties := TGuiProperties.Create(ConfigObj, BoundsRect);
-  ChannelSplitter.Left:=Scale96ToScreen(GuiProperties.ChannelGridWidth);
+  ChannelSplitter.Left := Scale96ToScreen(GuiProperties.ChannelGridWidth);
   BoundsRect := GuiProperties.BoundsRect;
   ComputeGridCellSize;
 
@@ -841,6 +898,11 @@ begin
   BackEnd.Play(Row);
   ChannelList.Invalidate;
   Caption := BackEnd.list[Backend.CurrentIndex].title;
+  if pnlEpg.Visible then
+  begin
+    LoadDailyEpg;
+    EPGList.Invalidate;
+  end;
   Loading := True;
 
 end;

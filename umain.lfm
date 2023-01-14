@@ -12,7 +12,6 @@ object fPlayer: TfPlayer
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  LCLVersion = '2.3.0.0'
   object pnlContainer: TPanel
     Left = 219
     Height = 512
@@ -36,7 +35,7 @@ object fPlayer: TfPlayer
       Left = 0
       Height = 511
       Top = 0
-      Width = 868
+      Width = 656
       Align = alClient
       OpenGLMajorVersion = 2
       OpenGLMinorVersion = 1
@@ -54,6 +53,46 @@ object fPlayer: TfPlayer
       Align = alBottom
       ParentBackground = False
       TabOrder = 1
+    end
+    object pnlEpg: TPanel
+      Left = 656
+      Height = 511
+      Top = 0
+      Width = 212
+      Align = alRight
+      Caption = 'No EPG for current channel'
+      ClientHeight = 511
+      ClientWidth = 212
+      ParentBackground = False
+      TabOrder = 2
+      Visible = False
+      object EPGList: TDrawGrid
+        Left = 1
+        Height = 509
+        Top = 1
+        Width = 210
+        Align = alClient
+        AutoFillColumns = True
+        ColCount = 1
+        DefaultRowHeight = 48
+        ExtendedSelect = False
+        FixedCols = 0
+        FixedRows = 0
+        MouseWheelOption = mwGrid
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellHints, goCellEllipsis]
+        ParentFont = False
+        ParentShowHint = False
+        ScrollBars = ssVertical
+        ShowHint = True
+        TabAdvance = aaDown
+        TabOrder = 0
+        UseXORFeatures = True
+        OnDrawCell = EPGListDrawCell
+        OnKeyDown = ChannelListKeyDown
+        ColWidths = (
+          193
+        )
+      end
     end
   end
   object pnlChannel: TPanel
@@ -93,7 +132,7 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        213
+        196
       )
     end
     object Panel1: TPanel
@@ -157,6 +196,7 @@ object fPlayer: TfPlayer
     end
   end
   object ChannelSplitter: TSplitter
+    AnchorSideRight.Control = pnlContainer
     Left = 215
     Height = 512
     Top = 0
