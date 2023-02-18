@@ -397,12 +397,20 @@ begin
       VK_DOWN:
       begin
         if not pnlChannel.Visible then
-          play(fFilteredList.Map(ChannelList.Row + 1));
+          begin
+            ChannelList.Row := ChannelList.Row +1;
+            play(fFilteredList.Map(ChannelList.Row));
+          end;
       end;
       VK_UP:
       begin
         if not pnlChannel.Visible then
-          play(fFilteredList.Map(ChannelList.Row - 1));
+          begin
+            ChannelList.Row := ChannelList.Row -1;
+            play(fFilteredList.Map(ChannelList.Row));
+
+
+          end;
       end;
       else
         Pass := True;
