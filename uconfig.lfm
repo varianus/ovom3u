@@ -7,6 +7,7 @@ object fConfig: TfConfig
   ClientHeight = 439
   ClientWidth = 767
   OnShow = FormShow
+  LCLVersion = '2.3.0.0'
   object pcSettings: TPageControl
     Left = 185
     Height = 392
@@ -19,7 +20,7 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object cbChannelsKind: TComboBox
         AnchorSideLeft.Control = lb
@@ -245,7 +246,7 @@ object fConfig: TfConfig
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -299,8 +300,8 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 368
-      ClientWidth = 558
+      ClientHeight = 357
+      ClientWidth = 576
       object cbLibCEC: TCheckBox
         Left = 12
         Height = 21

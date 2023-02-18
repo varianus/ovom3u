@@ -146,11 +146,17 @@ begin
 
   BackEnd.PluginsProperties.EnableCEC := cbLibCEC.Checked;
 
-  ConfigObj.SaveConfig;
-
   ModalResult := mrOk;
-  If Assigned(FOnWorkDone) then
-    FOnWorkDone(self);
+  try
+    If Assigned(FOnWorkDone) then
+      FOnWorkDone(self);
+  finally
+    ConfigObj.SaveConfig;
+  end;
+
+
+
+
 end;
 
 procedure TfConfig.SpeedButton1Click(Sender: TObject);
