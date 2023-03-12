@@ -60,6 +60,7 @@ type
     property Item[idx:integer]:TM3UItem read GetItem; default;
     Function Count: integer;
     function Map(idx:integer):integer;
+    function IndexOf(value:integer):integer;
   end;
 
 
@@ -206,6 +207,19 @@ end;
 function TFilteredList.Map(idx: integer): integer;
 begin
   Result := FFilterArray[idx];
+end;
+
+function TFilteredList.IndexOf(value: integer): integer;
+var
+  i: Integer;
+begin
+  for i in FFilterArray do
+    if FFilterArray[i] = value then
+      begin
+        Result := i;
+        exit;
+      end;
+  Result := -1;
 end;
 
 function TFilteredList.GetItem(idx: integer): TM3UItem;

@@ -49,9 +49,11 @@ type
   TBackend = class
   private
     FOnExternalInput: ExternalInput;
+    FOnPlay: TNotifyEvent;
     procedure OSDTimerTimer(Sender: TObject);
     procedure SetOnExternalInput(AValue: ExternalInput);
     procedure CecKey(Sender: TObject; var Key: word);
+    procedure SetOnPlay(AValue: TNotifyEvent);
   public
     List: TM3ULoader;
     EpgData: TEpg;
@@ -73,6 +75,7 @@ type
     Procedure SwapChannel;
   public
     Property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
+    Property OnPlay: TNotifyEvent read FOnPlay write SetOnPlay;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -217,13 +220,14 @@ begin
 
     OvoLogger.Log(llINFO, 'Tuning to %s',[list[Index].Title]);
 
-
     PreviousIndex := CurrentIndex;
     CurrentIndex := Index;
     mpvengine.Play(BackEnd.list[CurrentIndex].Mrl);
     Loading := True;
     fLastMessage := 'Loading: ' + BackEnd.list[CurrentIndex].title;
     OsdMessage(fLastMessage);
+    if Assigned(FOnPlay) then
+      FOnPlay(Self);
 end;
 
 procedure TBackend.SwapChannel;
@@ -272,6 +276,11 @@ procedure TBackend.CecKey(Sender: TObject; var Key: word);
 begin
   if Assigned(FOnExternalInput) then
    FOnExternalInput(Sender, key);
+end;
+
+procedure TBackend.SetOnPlay(AValue: TNotifyEvent);
+begin
+  FOnPlay:=AValue;
 end;
 
 

@@ -31,7 +31,7 @@ uses {$IFDEF UNIX}
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms,
-  LazLogger,
+  LazLogger, lazmouseandkeyinput,
   Config,
   umain,
   sysutils,

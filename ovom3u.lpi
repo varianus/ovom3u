@@ -123,6 +123,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="lazmouseandkeyinput"/>
+      </Item>
+      <Item>
         <PackageName Value="LazOpenGLContext"/>
       </Item>
       <Item>

@@ -25,8 +25,9 @@ interface
 uses
   Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids, LCLIntf,
   lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
-  um3uloader, OpenGLContext, Types, Math, SysUtils, clocale, MPV_Engine, Config,
-  GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes;
+  um3uloader, OpenGLContext, Types, Math, SysUtils, MPV_Engine, Config,
+  {$IFDEF LINUX} clocale,{$endif}
+  GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput;
 
 type
 
@@ -126,7 +127,6 @@ type
     GuiProperties: TGuiProperties;
     FLoading: boolean;
     ChannelSelecting: boolean;
-    ChannelSelected: integer;
     fLastMessage: string;
     IPTVList: string;
     Kind: TProviderKind;
@@ -149,7 +149,10 @@ type
     procedure OnTrackChange(Sender: TObject);
     procedure Play(Row: integer);
     procedure SetLoading(AValue: boolean);
+    procedure OnPlay(Sender: TObject);
+
   private
+    ChannelSelected: integer;
     flgFullScreen: boolean;
     RestoredBorderStyle: TFormBorderStyle;
     RestoredWindowState: TWindowState;
@@ -326,7 +329,10 @@ var
   key: word;
 begin
   Key := word(PtrInt(Data));
-  FormKeyDown(self, Key, []);
+  if key > $1ff then
+    FormKeyDown(self, Key, [])
+  else
+    KeyInput.Press(Key);
 end;
 
 procedure TfPlayer.ExternalInput(Sender: TObject; var Key: word);
@@ -345,6 +351,7 @@ begin
   flgFullScreen := False;
   OvoLogger.Log(llINFO, 'Create main GUI');
   BackEnd.OnExternalInput := ExternalInput;
+  BackEnd.OnPlay := OnPlay;
   BackEnd.list.OnListChanged := OnListChanged;
   ChannelList.RowCount := 0;
 
@@ -385,49 +392,67 @@ begin
   LoadTracks;
 end;
 
+procedure TfPlayer.OnPlay(Sender: TObject);
+var
+  Idx: integer;
+begin
+  Idx := fFilteredList.IndexOf(BackEnd.CurrentIndex);
+  if Idx <> -1 then
+    ChannelList.Row := Idx
+  else
+    ChannelList.Selection := Rect(-1, -1, -1, -1);
+end;
+
 
 procedure TfPlayer.FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
 var
   Pass: boolean;
+  channel: integer;
+  ExtendedKey: boolean;
 begin
   Pass := False;
   Application.ProcessMessages;
-  if flgFullScreen then
-    case key of
-      VK_DOWN:
-      begin
-        if not pnlChannel.Visible then
-          begin
-            ChannelList.Row := ChannelList.Row +1;
-            play(fFilteredList.Map(ChannelList.Row));
-          end;
-      end;
-      VK_UP:
-      begin
-        if not pnlChannel.Visible then
-          begin
-            ChannelList.Row := ChannelList.Row -1;
-            play(fFilteredList.Map(ChannelList.Row));
 
-
-          end;
-      end;
-      else
-        Pass := True;
-    end;
-  if key = VK_ESCAPE then
+  if (Key and $200) <> 0 then
   begin
-    if SubFormVisible then
+    ExtendedKey := True;
+    Key := key and $1FF;
+  end
+  else
+    ExtendedKey := False;
+
+  case key of
+    VK_ESCAPE:
     begin
-      CloseSubForm;
-    end
-    else
-    if flgFullScreen then
-      SetFullScreen;
-    Key := 0;
+      if SubFormVisible then
+      begin
+        CloseSubForm;
+      end
+      else
+      if flgFullScreen then
+        SetFullScreen;
+      Key := 0;
+    end;
+
+    VK_MEDIA_NEXT_TRACK:
+    begin
+        channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
+        play(channel + 1);
+    end;
+    VK_MEDIA_PREV_TRACK:
+    begin
+        channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
+        play(channel - 1);
+     end;
+    VK_MEDIA_STOP:
+    begin
+      backend.mpvengine.Stop;
+      Backend.OsdMessage('Stop', True);
+    end;
+
   end;
 
-  if not SubFormVisible then
+  if (not SubFormVisible) or ExtendedKey then
   begin
     case key of
       VK_RETURN:
