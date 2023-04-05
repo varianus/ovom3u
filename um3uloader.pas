@@ -213,7 +213,7 @@ function TFilteredList.IndexOf(value: integer): integer;
 var
   i: Integer;
 begin
-  for i in FFilterArray do
+  for i :=0 to Length(FFilterArray) -1 do
     if FFilterArray[i] = value then
       begin
         Result := i;

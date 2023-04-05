@@ -373,6 +373,7 @@ end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
 begin
+   GuiProperties.free;
   Application.ProcessMessages;
   OvoLogger.Log(llINFO, 'Closed main GUI');
 end;
@@ -437,12 +438,12 @@ begin
     VK_MEDIA_NEXT_TRACK:
     begin
         channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
-        play(channel + 1);
+        play(fFilteredList.Map(channel + 1));
     end;
     VK_MEDIA_PREV_TRACK:
     begin
         channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
-        play(channel - 1);
+        play(fFilteredList.Map(channel - 1));
      end;
     VK_MEDIA_STOP:
     begin
