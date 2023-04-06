@@ -373,7 +373,6 @@ end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
 begin
-   GuiProperties.free;
   Application.ProcessMessages;
   OvoLogger.Log(llINFO, 'Closed main GUI');
 end;
@@ -413,6 +412,12 @@ var
 begin
   Pass := False;
   Application.ProcessMessages;
+  if (key and $300) =$300 then
+   begin
+     hide;
+     application.ProcessMessages;
+     Application.Terminate;
+   end;
 
   if (Key and $200) <> 0 then
   begin
@@ -756,6 +761,7 @@ end;
 
 procedure TfPlayer.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  hide;
   if Assigned(backend.mpvengine) then
   begin
     backend.mpvengine.isRenderActive := False;

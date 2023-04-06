@@ -67,21 +67,24 @@ begin
       CEC_USER_CONTROL_CODE_NUMBER0..CEC_USER_CONTROL_CODE_NUMBER9:    cec.DoCecKey(ord(Key^.keycode) +16+FakeKey);
       CEC_USER_CONTROL_CODE_DISPLAY_INFORMATION: cec.DoCecKey(FakeKey+VK_I);
       CEC_USER_CONTROL_CODE_ELECTRONIC_PROGRAM_GUIDE: cec.DoCecKey(FakeKey+VK_E);
-      CEC_USER_CONTROL_CODE_SELECT: cec.DoCecKey(FakeKey+ VK_RETURN);
+      CEC_USER_CONTROL_CODE_SELECT: cec.DoCecKey(+VK_RETURN);
       CEC_USER_CONTROL_CODE_CHANNEL_UP: cec.DoCecKey(FakeKey+VK_MEDIA_NEXT_TRACK);
       CEC_USER_CONTROL_CODE_CHANNEL_DOWN: cec.DoCecKey(FakeKey+VK_MEDIA_PREV_TRACK);
       CEC_USER_CONTROL_CODE_LEFT: cec.DoCecKey(VK_LEFT);
       CEC_USER_CONTROL_CODE_RIGHT: cec.DoCecKey(VK_RIGHT);
       CEC_USER_CONTROL_CODE_UP: cec.DoCecKey(VK_UP);
       CEC_USER_CONTROL_CODE_DOWN: cec.DoCecKey(VK_DOWN);
+      CEC_USER_CONTROL_CODE_ROOT_MENU : cec.DoCecKey(FakeKey+VK_C);
 
       CEC_USER_CONTROL_CODE_STOP: cec.DoCecKey(FakeKey+VK_MEDIA_STOP);
       CEC_USER_CONTROL_CODE_PAUSE: cec.DoCecKey(FakeKey+VK_P);
       CEC_USER_CONTROL_CODE_EXIT: cec.DoCecKey(VK_ESCAPE);
       CEC_USER_CONTROL_CODE_F4_YELLOW: cec.DoCecKey(FakeKey+VK_F);
+      CEC_USER_CONTROL_CODE_F2_RED: cec.DoCecKey($300);
+      CEC_USER_CONTROL_CODE_F3_GREEN: cec.DoCecKey(FakeKey+VK_B);
 
     end;
-      OvoLogger.Log(llDEBUG, ' CEC Key %d',   [Key^.keycode]);
+    OvoLogger.Log(llDEBUG, ' CEC Key %d',   [Key^.keycode]);
     end;
 
 end;

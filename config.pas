@@ -304,7 +304,7 @@ end;
 constructor TConfig.Create;
 begin
   fDirty:= False;
-  fConfigList:= TConfigList.Create(false);
+  fConfigList:= TConfigList.Create(True);
 
   fExecutableDir:= IncludeTrailingPathDelimiter(ProgramDirectory);
 
