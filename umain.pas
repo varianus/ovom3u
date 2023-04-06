@@ -479,6 +479,8 @@ begin
         pnlChannel.Visible := not pnlChannel.Visible;
         ChannelSplitter.Visible := pnlChannel.Visible;
         HideMouse.Enabled := (not pnlChannel.Visible) and flgFullScreen;
+        if pnlChannel.Visible then
+          ChannelList.SetFocus;;
       end;
 
       VK_I:
