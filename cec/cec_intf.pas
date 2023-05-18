@@ -2,7 +2,7 @@
 This file is part of OvoM3U
 Copyright (C) 2020 Marco Caselli
 
-OvoPlayer is free software; you can redistribute it and/or
+OvoM3U is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
@@ -24,7 +24,7 @@ unit cec_intf;
 interface
 
 uses
-  Classes, SysUtils, cec, LCLType, config;
+  Classes, SysUtils, cec, config;
 
 Type
 
@@ -47,7 +47,7 @@ Type
   end;
 
 implementation
-uses LoggerUnit;
+uses LoggerUnit, LCLType;
 
 { THDMI_CEC }
 procedure LogMessage(cbparam: Pointer; const &message: Pcec_log_message); cdecl;

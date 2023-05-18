@@ -7,20 +7,19 @@ object fConfig: TfConfig
   ClientHeight = 439
   ClientWidth = 767
   OnShow = FormShow
-  LCLVersion = '2.3.0.0'
   object pcSettings: TPageControl
     Left = 185
     Height = 392
     Top = 0
     Width = 582
-    ActivePage = tsChannels
+    ActivePage = tsPlugins
     Align = alClient
     ShowTabs = False
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 357
+      ClientHeight = 386
       ClientWidth = 576
       object cbChannelsKind: TComboBox
         AnchorSideLeft.Control = lb
@@ -246,7 +245,7 @@ object fConfig: TfConfig
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 357
+      ClientHeight = 386
       ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -300,7 +299,7 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 357
+      ClientHeight = 386
       ClientWidth = 576
       object cbLibCEC: TCheckBox
         Left = 12
@@ -310,6 +309,48 @@ object fConfig: TfConfig
         BorderSpacing.Around = 9
         Caption = 'Enable HDMI-CEC remote control'
         TabOrder = 0
+      end
+      object cbMpris2: TCheckBox
+        Left = 12
+        Height = 21
+        Top = 40
+        Width = 167
+        BorderSpacing.Around = 9
+        Caption = 'Enable Mpris2 integration'
+        TabOrder = 1
+      end
+      object cbMMkeys: TCheckBox
+        Left = 12
+        Height = 21
+        Top = 72
+        Width = 155
+        BorderSpacing.Around = 9
+        Caption = 'Enable Multimedia keys'
+        TabOrder = 2
+      end
+      object rgKeyCaptureMode: TRadioGroup
+        Left = 56
+        Height = 82
+        Top = 104
+        Width = 203
+        AutoFill = True
+        Caption = 'Keys Capture Mode'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.TopBottomSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 63
+        ClientWidth = 199
+        Items.Strings = (
+          'Gnome D-BUS mode'
+          'X Events Capture'
+        )
+        TabOrder = 3
+        Visible = False
       end
     end
   end

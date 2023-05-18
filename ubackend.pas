@@ -2,7 +2,7 @@
 This file is part of OvoM3U
 Copyright (C) 2020 Marco Caselli
 
-OvoPlayer is free software; you can redistribute it and/or
+OvoM3U is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
-  GeneralFunc, BaseTypes, OpenGLContext, cec_intf;
+  GeneralFunc, BaseTypes, OpenGLContext, cec_intf, MultimediaKeys, mpris2;
 
 type
   ExternalInput = procedure(Sender: TObject; var Key: Word) of Object;
@@ -34,12 +34,20 @@ type
   TPluginsProperties = Class(TConfigParam)
   private
     FEnableCEC: boolean;
+    FEnableMMKeys: boolean;
+    FEnableMPRIS2: boolean;
+    FMMKeysMode: integer;
     procedure SetEnableCEC(AValue: boolean);
+    procedure SetEnableMMKeys(AValue: boolean);
+    procedure SetEnableMPRIS2(AValue: boolean);
+    procedure SetMMKeysMode(AValue: integer);
   Protected
     Procedure InternalSave; override;
   public
     Property EnableCEC: boolean read FEnableCEC write SetEnableCEC;
-
+    Property EnableMPRIS2: boolean read FEnableMPRIS2 write SetEnableMPRIS2;
+    Property EnableMMKeys: boolean read FEnableMMKeys write SetEnableMMKeys;
+    Property MMKeysMode: integer read FMMKeysMode write SetMMKeysMode;
     Procedure Load; override;
 
   end;
@@ -59,6 +67,9 @@ type
     EpgData: TEpg;
 
     HDMI_CEC: THDMI_CEC;
+    mmkey: TMultimediaKeys;
+    Mpris: TMpris2;
+
     MpvEngine: TMPVEngine;
     OSDTimer: TFPTimer;
     Loading: boolean;
@@ -102,14 +113,38 @@ begin
   Dirty := true;
 end;
 
+procedure TPluginsProperties.SetEnableMMKeys(AValue: boolean);
+begin
+  if FEnableMMKeys=AValue then Exit;
+  FEnableMMKeys:=AValue;
+end;
+
+procedure TPluginsProperties.SetEnableMPRIS2(AValue: boolean);
+begin
+  if FEnableMPRIS2=AValue then Exit;
+  FEnableMPRIS2:=AValue;
+end;
+
+procedure TPluginsProperties.SetMMKeysMode(AValue: integer);
+begin
+  if FMMKeysMode=AValue then Exit;
+  FMMKeysMode:=AValue;
+end;
+
 procedure TPluginsProperties.InternalSave;
 begin
  Owner.WriteBoolean('Plugins/HDMI-CEC/Enabled', EnableCEC);
+ Owner.WriteBoolean('Plugins/MPRIS2/Enabled', EnableMPRIS2);
+ Owner.WriteBoolean('Plugins/MMKeys/Enabled', EnableMMKeys);
+ Owner.WriteInteger('Plugins/MMKeys/Mode', MMKeysMode);
 end;
 
 procedure TPluginsProperties.Load;
 begin
  EnableCEC := Owner.ReadBoolean('Plugins/HDMI-CEC/Enabled', false);
+ EnableMPRIS2 := Owner.ReadBoolean('Plugins/MPRIS2/Enabled', false);
+ EnableMMKeys := Owner.ReadBoolean('Plugins/MMKeys/Enabled', false);
+ MMKeysMode := Owner.ReadInteger('Plugins/MMKeys/Mode', 1);
  Dirty:=false;
 end;
 
@@ -305,6 +340,35 @@ begin
   else
     HDMI_CEC := nil;
 
+  if  PluginsProperties.EnableMMKeys then
+    try
+      mmkey:= TMultimediaKeys.create(PluginsProperties.MMKeysMode);
+      mmkey.OnMmKey:= CecKey;
+    Except
+      on e: exception do
+        begin
+          OvoLogger.Log(llERROR, 'MultimediaKeys ->'+ e.Message);
+          mmkey := nil;
+        end;
+    end
+  else
+    mmkey := nil;
+
+  if  PluginsProperties.EnableMPRIS2 then
+    try
+      Mpris:= TMpris2.create();
+      Mpris.Activate();
+      Mpris.OnMmKey:= CecKey;
+    Except
+      on e: exception do
+        begin
+          OvoLogger.Log(llERROR, 'MPRIS2 ->'+ e.Message);
+          mmkey := nil;
+        end;
+    end
+  else
+    Mpris := nil;
+
   OSDTimer:= TFPTimer.Create(nil);
   OSDTimer.Enabled := False;
   OSDTimer.Interval := 8000;
@@ -322,6 +386,8 @@ begin
   EpgData.Free;
   List.Free;
   HDMI_CEC.free;
+  mmkey.Free;
+  Mpris.Free;
   inherited Destroy;
 end;
 

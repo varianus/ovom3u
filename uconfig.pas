@@ -2,7 +2,7 @@
 This file is part of OvoM3U
 Copyright (C) 2020 Marco Caselli
 
-OvoPlayer is free software; you can redistribute it and/or
+OvoM3U is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
@@ -24,7 +24,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, Config, uBackEnd, LoggerUnit;
+  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls, Config, uBackEnd,
+  LoggerUnit;
 
 type
 
@@ -35,6 +36,8 @@ type
     bpConfig: TButtonPanel;
     cbChannelsKind: TComboBox;
     cbEpgKind: TComboBox;
+    cbMpris2: TCheckBox;
+    cbMMkeys: TCheckBox;
     cbUseChno: TCheckBox;
     cbDownloadLogo: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
@@ -51,6 +54,7 @@ type
     Label4: TLabel;
     lb1: TLabel;
     pcSettings: TPageControl;
+    rgKeyCaptureMode: TRadioGroup;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     lbWarning: TLabel;
@@ -70,11 +74,11 @@ type
   private
     FOnWorkDone: TNotifyEvent;
     procedure SetOnWorkDone(AValue: TNotifyEvent);
-
   public
-    Property OnWorkDone:TNotifyEvent read FOnWorkDone write SetOnWorkDone;
+    property OnWorkDone: TNotifyEvent read FOnWorkDone write SetOnWorkDone;
 
   end;
+
 var
   fConfig: TfConfig;
 
@@ -84,7 +88,6 @@ function ShowConfig: integer;
 implementation
 
 uses um3uloader;
-
 
 function ShowConfig: integer;
 begin
@@ -123,6 +126,9 @@ begin
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
 
   cbLibCEC.Checked := BackEnd.PluginsProperties.EnableCEC;
+  cbMpris2.Checked := BackEnd.PluginsProperties.EnableMPRIS2;
+  cbMMkeys.Checked := BackEnd.PluginsProperties.EnableMMKeys;
+  rgKeyCaptureMode.ItemIndex := BackEnd.PluginsProperties.MMKeysMode;
 
 end;
 
@@ -145,17 +151,17 @@ begin
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
 
   BackEnd.PluginsProperties.EnableCEC := cbLibCEC.Checked;
+  BackEnd.PluginsProperties.EnableMPRIS2 := cbMpris2.Checked;
+  BackEnd.PluginsProperties.EnableMMKeys := cbMMkeys.Checked;
+  BackEnd.PluginsProperties.MMKeysMode := rgKeyCaptureMode.ItemIndex;
 
   ModalResult := mrOk;
   try
-    If Assigned(FOnWorkDone) then
+    if Assigned(FOnWorkDone) then
       FOnWorkDone(self);
   finally
     ConfigObj.SaveConfig;
   end;
-
-
-
 
 end;
 
@@ -177,7 +183,7 @@ end;
 procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);
 begin
 
-  FOnWorkDone:=AValue;
+  FOnWorkDone := AValue;
 end;
 
 procedure TfConfig.cbChannelsKindChange(Sender: TObject);
@@ -216,7 +222,7 @@ end;
 procedure TfConfig.CancelButtonClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
-  If Assigned(FOnWorkDone) then
+  if Assigned(FOnWorkDone) then
     FOnWorkDone(self);
 end;
 

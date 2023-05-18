@@ -2,7 +2,7 @@
 This file is part of OvoM3U
 Copyright (C) 2020 Marco Caselli
 
-OvoPlayer is free software; you can redistribute it and/or
+OvoM3U is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
@@ -36,7 +36,8 @@ uses {$IFDEF UNIX}
   umain,
   sysutils,
   uEPGFOrm,
-  LoggerUnit, appconsts, Renderer, uChannels, uBackEnd, cec, CEC_intf;
+  LoggerUnit, appconsts, Renderer, uChannels, uBackEnd,
+  cec, CEC_intf, MultimediaKeys, mpris2;
 
 {$R *.res}
 var

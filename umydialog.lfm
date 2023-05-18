@@ -8,7 +8,7 @@ object MyDialog: TMyDialog
   Caption = 'Message'
   ClientHeight = 380
   ClientWidth = 580
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '2.3.0.0'
   object lbText: TLabel
     Left = 12
     Height = 213
