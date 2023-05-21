@@ -61,7 +61,7 @@ var
 const
   FakeKey = $200;
 begin
-  if key^.duration > 0 then
+ // if key^.duration > 0 then
     begin
     case Key^.keycode of
       CEC_USER_CONTROL_CODE_NUMBER0..CEC_USER_CONTROL_CODE_NUMBER9:    cec.DoCecKey(ord(Key^.keycode) +16+FakeKey);
@@ -127,6 +127,7 @@ begin
   config.callbacks:= @Callback;
   config.deviceTypes.types[0] := CEC_DEVICE_TYPE_RECORDING_DEVICE;
   config.callbackParam:=self;
+  config.iButtonRepeatRateMs:=300;
   Connection := libcec_initialise(@config);
   if not Assigned(Connection) then
     begin
