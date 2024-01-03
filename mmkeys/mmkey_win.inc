@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 }
 {$I codegen.inc}
-uses windows;
+uses Windows;
 
 var
   WindowClassAtom: ATOM; // RegisterWindowClass yields an atom if successful.
@@ -31,32 +31,35 @@ type
 
   { TkeyCaptureWin }
 
-  TkeyCaptureWin = class (TKeyCapture)
+  TkeyCaptureWin = class(TKeyCapture)
   private
     function CreateAppWindow: boolean;
   public
-    Procedure BeginGrab; Override;
-    Procedure EndGrab; Override;
+    procedure BeginGrab; override;
+    procedure EndGrab; override;
   end;
 
-{ TkeyCaptureWin }
+  { TkeyCaptureWin }
 
-function WinProc(hw: HWND; uMsg: UINT; wp: WPARAM; lp: LPARAM): LRESULT;
-  stdcall; export;
+function WinProc(hw: HWND; uMsg: UINT; wp: WPARAM; lp: LPARAM): LRESULT; stdcall; export;
 var
- obj : TKeyCaptureWin;
+  obj: TKeyCaptureWin;
+  key: word;
 begin
 
   Result := 0;
   case uMsg of
-    WM_HOTKEY : begin
-                  obj := TKeyCaptureWin(GetWindowLongPtr(HWindow,GWL_USERDATA));
-                  if Assigned(obj.owner.onMmKey) then
-                     obj.Owner.onMmKey(Obj.Owner, FakeKey+ Wp);
-                    end;
-  else
+    WM_HOTKEY: begin
+      obj := TKeyCaptureWin(GetWindowLongPtr(HWindow, GWL_USERDATA));
+      if Assigned(obj.owner.onMmKey) then
+      begin
+        Key := FakeKey + Wp;
+        obj.Owner.onMmKey(Obj.Owner, key);
+      end;
+    end;
+    else
       Result := DefWindowProc(hw, uMsg, wp, lp);
-    end; // Case
+  end; // Case
 end; // WinProc
 
 function TkeyCaptureWin.CreateAppWindow: boolean;
@@ -80,49 +83,49 @@ function TkeyCaptureWin.CreateAppWindow: boolean;
   end; // RegisterWindowClass - Nested Function
 
 begin
-  Result := false;
+  Result := False;
 
   if not RegisterWindowClass then
-     exit;
+    exit;
 
   HWindow := CreateWindowEx(WS_EX_NOACTIVATE or WS_EX_TRANSPARENT,
     PChar(WinClassName), PChar(WinClassName), Ws_popup or WS_CLIPSIBLINGS, 0,
     0, 0, 0, 0, 0, HInstance, nil);
 
   if HWindow <> 0 then
-    begin
+  begin
     ShowWindow(HWindow, SW_HIDE);
-    SetWindowLongPtr(HWindow,GWL_USERDATA,PtrInt(Self));
+    SetWindowLongPtr(HWindow, GWL_USERDATA, PtrInt(Self));
     UpdateWindow(HWindow);
     Result := True;
-    end;
+  end;
 end; // CreateAppWindow
 
 procedure TkeyCaptureWin.BeginGrab;
 begin
   CreateAppWindow;
-  RegisterHotKey(hwindow, Longint(VK_MEDIA_STOP),     0, VK_MEDIA_STOP);
-  RegisterHotKey(hwindow, Longint(VK_MEDIA_PREV_TRACK), 0, VK_MEDIA_PREV_TRACK);
-  RegisterHotKey(hwindow, Longint(VK_MEDIA_PLAY_PAUSE),     0, VK_MEDIA_PLAY_PAUSE);
-  RegisterHotKey(hwindow, Longint(VK_MEDIA_NEXT_TRACK),     0, VK_MEDIA_NEXT_TRACK);
+  RegisterHotKey(hwindow, longint(VK_MEDIA_STOP), 0, VK_MEDIA_STOP);
+  RegisterHotKey(hwindow, longint(VK_MEDIA_PREV_TRACK), 0, VK_MEDIA_PREV_TRACK);
+  RegisterHotKey(hwindow, longint(VK_MEDIA_PLAY_PAUSE), 0, VK_MEDIA_PLAY_PAUSE);
+  RegisterHotKey(hwindow, longint(VK_MEDIA_NEXT_TRACK), 0, VK_MEDIA_NEXT_TRACK);
 
 end;
 
 procedure TkeyCaptureWin.EndGrab;
 begin
-  UnRegisterHotkey( hwindow, Longint(VK_MEDIA_STOP));
-  UnRegisterHotkey( hwindow, Longint(VK_MEDIA_PREV_TRACK));
-  UnRegisterHotkey( hwindow, Longint(VK_MEDIA_PLAY_PAUSE));
-  UnRegisterHotkey( hwindow, Longint(VK_MEDIA_NEXT_TRACK));
+  UnRegisterHotkey(hwindow, longint(VK_MEDIA_STOP));
+  UnRegisterHotkey(hwindow, longint(VK_MEDIA_PREV_TRACK));
+  UnRegisterHotkey(hwindow, longint(VK_MEDIA_PLAY_PAUSE));
+  UnRegisterHotkey(hwindow, longint(VK_MEDIA_NEXT_TRACK));
 
   DestroyWindow(hwindow);
 end;
 
-constructor TMultimediaKeys.Create(Mode:Integer);
+constructor TMultimediaKeys.Create(Mode: integer);
 begin
   fMode := Mode;
   KeyCapture := TkeyCaptureWin.Create;
-  KeyCapture.Owner:= Self;
+  KeyCapture.Owner := Self;
   KeyCapture.BeginGrab;
 end;
 
@@ -131,5 +134,4 @@ begin
   KeyCapture.EndGrab;
   KeyCapture.Free;
 end;
-
 

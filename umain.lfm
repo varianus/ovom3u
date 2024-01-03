@@ -7,12 +7,12 @@ object fPlayer: TfPlayer
   ClientHeight = 512
   ClientWidth = 1087
   KeyPreview = True
+  LCLVersion = '3.99.0.0'
   OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
-  LCLVersion = '2.3.0.0'
   object pnlContainer: TPanel
     Left = 328
     Height = 768
@@ -176,9 +176,9 @@ object fPlayer: TfPlayer
         AutoSize = True
         Caption = 'View ▼'
         Font.Height = -19
-        OnMouseDown = ToolButton5MouseDown
         ParentFont = False
         PopupMenu = pmuView
+        OnMouseDown = ToolButton5MouseDown
       end
     end
     object cbGroups: TComboBox
@@ -189,11 +189,11 @@ object fPlayer: TfPlayer
       Align = alTop
       Font.Height = -14
       ItemHeight = 0
-      OnChange = cbGroupsChange
       ParentFont = False
       Style = csDropDownList
       TabOrder = 2
       Visible = False
+      OnChange = cbGroupsChange
     end
   end
   object ChannelSplitter: TSplitter

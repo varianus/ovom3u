@@ -23,11 +23,11 @@ unit umain;
 interface
 
 uses
-  Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids, LCLIntf,
+  System.UITypes, Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids, LCLIntf,
   lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
   um3uloader, OpenGLContext, Types, Math, SysUtils, MPV_Engine, Config,
   {$IFDEF LINUX} clocale,{$endif}
-  GeneralFunc, System.UITypes, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput;
+  GeneralFunc,  epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput;
 
 type
 

@@ -24,7 +24,9 @@ interface
 
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
-  GeneralFunc, BaseTypes, OpenGLContext, cec_intf, MultimediaKeys, mpris2;
+  GeneralFunc, BaseTypes, OpenGLContext, cec_intf, MultimediaKeys
+    {$IFDEF LINUX}, mpris2{$ENDIF}
+  ;
 
 type
   ExternalInput = procedure(Sender: TObject; var Key: Word) of Object;
@@ -68,8 +70,9 @@ type
 
     HDMI_CEC: THDMI_CEC;
     mmkey: TMultimediaKeys;
+    {$IFDEF LINUX}
     Mpris: TMpris2;
-
+    {$ENDIF}
     MpvEngine: TMPVEngine;
     OSDTimer: TFPTimer;
     Loading: boolean;
@@ -353,7 +356,7 @@ begin
     end
   else
     mmkey := nil;
-
+  {$IFDEF LINUX}
   if  PluginsProperties.EnableMPRIS2 then
     try
       Mpris:= TMpris2.create();
@@ -368,6 +371,7 @@ begin
     end
   else
     Mpris := nil;
+   {$ENDIF}
 
   OSDTimer:= TFPTimer.Create(nil);
   OSDTimer.Enabled := False;
@@ -387,7 +391,8 @@ begin
   List.Free;
   HDMI_CEC.free;
   mmkey.Free;
-  Mpris.Free;
+
+ {$IFDEF LINUX} Mpris.Free; {$ENDIF}
   inherited Destroy;
 end;
 

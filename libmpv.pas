@@ -26,13 +26,16 @@ uses
 
 const
   {$IFDEF LINUX}
-     External_library='libmpv.so.1';
+     External_libraryV1='libmpv.so.1';
+     External_libraryV2='libmpv.so.2';
   {$ENDIF LINUX}
   {$IFDEF WINDOWS}
-     External_library='mpv-1.dll';
+     External_libraryV1='mpv-1.dll';
+     External_libraryV2='libmpv-2.dll';
   {$ENDIF LINUX}
   {$IFDEF DARWIN}
-     External_library = 'libmpv.dylib';
+     External_libraryV1 = 'libmpv.dylib';
+     External_libraryV2 = 'libmpv.dylib';
   {$ENDIF DARWIN}
 
 
@@ -1996,7 +1999,7 @@ var
  mpv_get_sub_api: function(var ctx: mpv_handle; sub_api: mpv_sub_api): Pointer; cdecl; //new
 
  Function Check_libmpv:boolean;
- procedure Load_libmpv(lib : pchar);
+ function Load_libmpv(lib : pchar):boolean;
  procedure Free_libmpv;
 
 implementation
@@ -2049,10 +2052,12 @@ implementation
     end;
 
 
-  procedure Load_libmpv(lib : pchar);
+    function Load_libmpv(lib: pchar): boolean;
     begin
+
       hlib:=LoadLibrary(lib);
-      if hlib=0 then
+      Result:=  hlib<>0 ;
+      if not Result then
         Exit;
 
       pointer(mpv_client_api_version):=GetProcAddress(hlib,'mpv_client_api_version');
@@ -2093,23 +2098,30 @@ implementation
     end;
 
 function Check_libmpv: boolean;
+  var
+    MustFree :boolean ;
 begin
+    // no error
+    MustFree := hlib = 0;
+
+    if not Load_libmpv(External_libraryV2) then
+      Load_libmpv(External_libraryV1);
+
   Result := False;
-  if Hlib <> 0 then
+    // exit, report error
+    if (hlib = 0) then
+      begin
+      end
+    else
   begin
     Result := True;
-    exit;
-  end;
-  try
-    Load_libmpv(External_library);
-    if (hlib = 0) then
-      Exit;
-  except
+        if MustFree then
+           begin
+             UnloadLibrary(hlib);
              hlib := 0;
-    exit;
+           end;
            end;
 
-  Result := True;
   end;
 
 initialization
