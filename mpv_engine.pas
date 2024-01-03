@@ -50,26 +50,26 @@ type
 
   { TMPVProperties }
 
-  TMPVProperties = Class(TConfigParam)
+  TMPVProperties = class(TConfigParam)
   private
     fCustomOptions: TStrings;
     fHardwareAcceleration: boolean;
     procedure SetCustomOptions(AValue: TStrings);
     procedure SetHardwareAcceleration(AValue: boolean);
-  Protected
-    Procedure InternalSave; override;
+  protected
+    procedure InternalSave; override;
   public
-    Property HardwareAcceleration: boolean read fHardwareAcceleration write SetHardwareAcceleration;
-    Property CustomOptions: TStrings read  fCustomOptions write SetCustomOptions;
-    Procedure Load; override;
-    Constructor Create(AOwner:TConfig); override;
-    Destructor Destroy; override;
+    property HardwareAcceleration: boolean read fHardwareAcceleration write SetHardwareAcceleration;
+    property CustomOptions: TStrings read fCustomOptions write SetCustomOptions;
+    procedure Load; override;
+    constructor Create(AOwner: TConfig); override;
+    destructor Destroy; override;
   end;
 
   { TMPVEngine }
   TMPVEngine = class
   private
-    fMpvProperties : TMPVProperties;
+    fMpvProperties: TMPVProperties;
     FGLRenderControl: TOpenGlControl;
     fHandle: Pmpv_handle;
     fdecoupler: TDecoupler;
@@ -84,7 +84,7 @@ type
     Loading: boolean;
     ClientVersion: DWORD;
     RenderObj: TRender;
-    ImgMode: Boolean;
+    ImgMode: boolean;
 
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetCustomOptions: string;
@@ -98,7 +98,7 @@ type
     procedure SetIsRenderActive(AValue: boolean);
     procedure SetMainVolume(const AValue: integer);
     procedure SetOnLoadingState(AValue: TNotifyEvent);
-    function GetLevelFromLogger:string;
+    function GetLevelFromLogger: string;
   public
     property GLRenderControl: TOpenGlControl read FGLRenderControl write SetGLRenderControl;
     property isRenderActive: boolean read fIsRenderActive write SetIsRenderActive;
@@ -107,7 +107,7 @@ type
     property OnTrackChange: TNotifyEvent read fOnTrackChange write fOnTrackChange;
     property TrackList: TTrackList read fTrackList;
     property Volume: integer read GetMainVolume write SetMainVolume;
-    Property MpvProperties: TMPVProperties read fMpvProperties;
+    property MpvProperties: TMPVProperties read fMpvProperties;
     function Initialize(Renderer: TOpenGLControl): boolean;
     function IsIdle: boolean;
     procedure LoadTracks;
@@ -125,7 +125,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Test;
-    Procedure Refresh;
+    procedure Refresh;
     class function CheckMPV: boolean;
 
   end;
@@ -134,9 +134,9 @@ implementation
 
 uses
   GeneralFunc, Math, LCLIntf
-{$ifdef LINUX}
+  {$ifdef LINUX}
   , ctypes
-{$endif};
+  {$endif};
 
 {$ifdef LINUX}
 function setlocale(category: cint; locale: PChar): PChar; cdecl; external 'c' Name 'setlocale';
@@ -154,16 +154,16 @@ end;
 
 procedure TMPVProperties.SetCustomOptions(AValue: TStrings);
 begin
-  if fCustomOptions=AValue then Exit;
-  fCustomOptions:=AValue;
-  Dirty:=true;
+  if fCustomOptions = AValue then Exit;
+  fCustomOptions := AValue;
+  Dirty := True;
 end;
 
 procedure TMPVProperties.SetHardwareAcceleration(AValue: boolean);
 begin
-  if fHardwareAcceleration=AValue then Exit;
-  fHardwareAcceleration:=AValue;
-  Dirty:=true;
+  if fHardwareAcceleration = AValue then Exit;
+  fHardwareAcceleration := AValue;
+  Dirty := True;
 end;
 
 procedure TMPVProperties.InternalSave;
@@ -175,20 +175,20 @@ end;
 
 procedure TMPVProperties.Load;
 begin
-  HardwareAcceleration := Owner.ReadBoolean('MPV/HardwareAcceleration', true);
+  HardwareAcceleration := Owner.ReadBoolean('MPV/HardwareAcceleration', True);
   Owner.ReadStrings('MPV/CustomOptions', fCustomOptions);
-  Dirty:=false;
+  Dirty := False;
 end;
 
 constructor TMPVProperties.Create(AOwner: TConfig);
 begin
-  fCustomOptions:= TStringList.Create;
+  fCustomOptions := TStringList.Create;
   inherited Create(AOwner);
 end;
 
 destructor TMPVProperties.Destroy;
 begin
-  fCustomOptions.free;
+  fCustomOptions.Free;
   inherited Destroy;
 end;
 
@@ -220,10 +220,10 @@ end;
 
 procedure TMPVEngine.SetIsRenderActive(AValue: boolean);
 begin
-  if fIsRenderActive=AValue then Exit;
-  fIsRenderActive:=AValue;
+  if fIsRenderActive = AValue then Exit;
+  fIsRenderActive := AValue;
   if Assigned(RenderObj) then
-    RenderObj.IsRenderActive:=AValue;
+    RenderObj.IsRenderActive := AValue;
 end;
 
 procedure TMPVEngine.SetOnLoadingState(AValue: TNotifyEvent);
@@ -234,13 +234,13 @@ end;
 function TMPVEngine.GetLevelFromLogger: string;
 begin
   case OvoLogger.Level of
-    llTRACE : Result := 'trace';
-    llDEBUG : Result := 'debug';
-    llINFO  : Result := 'info';
-    llWARN  : Result := 'warn';
-    llERROR : Result := 'error'
-  else
-     Result := 'no';  // llNO_LOG
+    llTRACE: Result := 'trace';
+    llDEBUG: Result := 'debug';
+    llINFO: Result := 'info';
+    llWARN: Result := 'warn';
+    llERROR: Result := 'error'
+    else
+      Result := 'no';  // llNO_LOG
   end;
 end;
 
@@ -262,7 +262,7 @@ begin
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_set_option_string(fHandle^, 'idle', 'yes');
     mpv_request_log_messages(fhandle^, PChar(GetLevelFromLogger));
-    mpv_set_option_string(fHandle^, 'msg-level', PChar('all='+GetLevelFromLogger));
+    mpv_set_option_string(fHandle^, 'msg-level', PChar('all=' + GetLevelFromLogger));
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
 
@@ -292,8 +292,12 @@ begin
   {$endif}
   fMpvProperties := TMPVProperties.Create(ConfigObj);
   fdecoupler := nil;
-  Load_libmpv(libmpv.External_library);
-  Loadrender(libmpv.External_library);
+
+  if not Load_libmpv(External_libraryV2) then
+    Load_libmpv(External_libraryV1);
+
+  if not Loadrender(External_libraryV2) then
+    Loadrender(External_libraryV1);
   EngineState := ENGINE_IDLE;
   fHandle := nil;
   fMuted := False;
@@ -322,7 +326,7 @@ begin
   GLRenderControl.ReleaseContext;
   Application.ProcessMessages;
   RenderObj := TRender.Create(FGLRenderControl, fHandle);
-  RenderObj.OnRenderInitalized:=OnRenderInitialized;
+  RenderObj.OnRenderInitalized := OnRenderInitialized;
 
 end;
 
@@ -377,24 +381,18 @@ begin
   end;
 end;
 
-function  TMPVEngine.GetCustomOptions:string;
+function TMPVEngine.GetCustomOptions: string;
 var
-  i: Integer;
+  i: integer;
 begin
   Result := EmptyStr;
-   if fMpvProperties.HardwareAcceleration then
-   begin
-     Result := 'hwdec=auto,';
-   end;
-   for i := 0 to fMpvProperties.CustomOptions.Count - 1 do
-   begin
-     if fMpvProperties.CustomOptions[i] <> EmptyStr then
-       Result := Result + fMpvProperties.CustomOptions[i] + ',';
-   end;
-   if Result <> EmptyStr then
-     Begin
-       Delete(Result, Length(Result), 1);
-     end;
+  if fMpvProperties.HardwareAcceleration then
+    Result := 'hwdec=auto,';
+  for i := 0 to fMpvProperties.CustomOptions.Count - 1 do
+    if fMpvProperties.CustomOptions[i] <> EmptyStr then
+      Result := Result + fMpvProperties.CustomOptions[i] + ',';
+  if Result <> EmptyStr then
+    Delete(Result, Length(Result), 1);
 
 end;
 
@@ -404,20 +402,20 @@ var
   ArgIdx: integer;
   Options: string;
 begin
-  ImgMode:= False;
+  ImgMode := False;
   args := nil;
   setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0));
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
 
-  ArgIdx:=3;
-  Options:=GetCustomOptions;
-   if Options <> EmptyStr then
-    Begin
-      Args[ArgIdx] := PChar(Options);
-      Inc(ArgIdx);
-    end;
+  ArgIdx := 3;
+  Options := GetCustomOptions;
+  if Options <> EmptyStr then
+  begin
+    Args[ArgIdx] := PChar(Options);
+    Inc(ArgIdx);
+  end;
   args[ArgIdx] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
   Loading := True;
@@ -427,31 +425,31 @@ end;
 procedure TMPVEngine.PlayIMG(mrl: string);
 var
   Args: array of PChar;
-  Options: String;
-  ArgIdx: Integer;
+  Options: string;
+  ArgIdx: integer;
 begin
-  ImgMode:= True;
+  ImgMode := True;
   args := nil;
   setlength(args, 6);
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
   ArgIdx := 3;
-  Options:=GetCustomOptions;
-   if Options <> EmptyStr then
-    Begin
-      Args[ArgIdx] := PChar('image-display-duration=inf,'+Options);
-      Inc(ArgIdx);
-    end
-   else
-      Begin
-      Args[ArgIdx] := 'image-display-duration=inf';
-      Inc(ArgIdx);
-    end     ;
+  Options := GetCustomOptions;
+  if Options <> EmptyStr then
+  begin
+    Args[ArgIdx] := PChar('image-display-duration=inf,' + Options);
+    Inc(ArgIdx);
+  end
+  else
+  begin
+    Args[ArgIdx] := 'image-display-duration=inf';
+    Inc(ArgIdx);
+  end;
 
   args[ArgIdx] := nil;
   mpv_command(fhandle^, ppchar(@args[0]));
-  Loading:= true;
+  Loading := True;
 
 end;
 
@@ -620,7 +618,6 @@ begin
 end;
 
 procedure TMPVEngine.Seek(Seconds: integer);
-
 var
   Args: array of PChar;
 begin
@@ -666,10 +663,10 @@ begin
     values[1].u.int64_ := 1;
     Keys[2] := 'format';
     values[2].format := MPV_FORMAT_STRING;
-  //  if True then
-      values[2].u.string_ := 'ass-events' ;
- //   else
- //     values[2].u.string_ := 'none';
+    //  if True then
+    values[2].u.string_ := 'ass-events';
+    //   else
+    //     values[2].u.string_ := 'none';
     Keys[3] := 'data';
     values[3].format := MPV_FORMAT_STRING;
     values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]));
@@ -744,7 +741,7 @@ end;
 
 function TMPVEngine.Pause: boolean;
 begin
-  Result := false;
+  Result := False;
   if (EngineState = ENGINE_PAUSE) then
   begin
     SetBoolProperty('pause', False);
@@ -785,8 +782,8 @@ end;
 
 procedure TMPVEngine.Refresh;
 begin
- if ImgMode then
-   seek(0);
+  if ImgMode then
+    seek(0);
 end;
 
 class function TMPVEngine.CheckMPV: boolean;
