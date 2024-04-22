@@ -235,6 +235,11 @@
         <Filename Value="cec\cec_intf.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="mmkeys\multimediakeys.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="MultimediaKeys"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
