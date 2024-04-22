@@ -566,7 +566,7 @@ begin
   else
     Pass := True;
   if not pass then
-    key := 0;
+    key := 0
 end;
 
 procedure TfPlayer.GLRendererChangeBounds(Sender: TObject);
@@ -810,7 +810,8 @@ procedure TfPlayer.EmbedSubForm(AForm: TForm);
 begin
   if Assigned(SubForm) then
     CloseSubForm;
-
+  AForm.BorderIcons := [];
+  AForm.BorderStyle := bsNone;
   AForm.Parent := pnlSubForm;
   pnlSubForm.Height := min(600, pnlcontainer.Height - 100);
   AForm.Align := alclient;
@@ -829,6 +830,7 @@ begin
   SubForm.Close;
   SubFormVisible := False;
   SubForm := nil;
+  HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible and not SubFormVisible;
 
 end;
 
@@ -959,7 +961,7 @@ begin
   if flgFullScreen then
   begin
     Screen.Cursor := crdefault;
-    HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible;
+    HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible and not SubFormVisible;
   end;
 end;
 

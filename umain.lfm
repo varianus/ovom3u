@@ -7,21 +7,20 @@ object fPlayer: TfPlayer
   ClientHeight = 512
   ClientWidth = 1087
   KeyPreview = True
-  LCLVersion = '3.99.0.0'
   OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   object pnlContainer: TPanel
-    Left = 328
-    Height = 768
+    Left = 219
+    Height = 512
     Top = 0
-    Width = 1302
+    Width = 868
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 768
-    ClientWidth = 1302
+    ClientHeight = 512
+    ClientWidth = 868
     Color = clBlack
     DoubleBuffered = False
     FullRepaint = False
@@ -34,9 +33,9 @@ object fPlayer: TfPlayer
     OnPaint = pnlContainerPaint
     object GLRenderer: TOpenGLControl
       Left = 0
-      Height = 766
+      Height = 511
       Top = 0
-      Width = 984
+      Width = 656
       Align = alClient
       OpenGLMajorVersion = 2
       OpenGLMinorVersion = 1
@@ -49,29 +48,29 @@ object fPlayer: TfPlayer
     object pnlSubForm: TPanel
       Left = 0
       Height = 1
-      Top = 767
-      Width = 1302
+      Top = 511
+      Width = 868
       Align = alBottom
       ParentBackground = False
       TabOrder = 1
     end
     object pnlEpg: TPanel
-      Left = 1090
-      Height = 766
+      Left = 656
+      Height = 511
       Top = 0
       Width = 212
       Align = alRight
       Caption = 'No EPG for current channel'
-      ClientHeight = 766
+      ClientHeight = 511
       ClientWidth = 212
       ParentBackground = False
       TabOrder = 2
       Visible = False
       object EPGList: TDrawGrid
         Left = 1
-        Height = 764
+        Height = 509
         Top = 1
-        Width = 316
+        Width = 210
         Align = alClient
         AutoFillColumns = True
         ColCount = 1
@@ -91,27 +90,27 @@ object fPlayer: TfPlayer
         OnDrawCell = EPGListDrawCell
         OnKeyDown = ChannelListKeyDown
         ColWidths = (
-          316
+          189
         )
       end
     end
   end
   object pnlChannel: TPanel
     Left = 0
-    Height = 768
+    Height = 512
     Top = 0
     Width = 215
     Align = alLeft
     Caption = 'pnlChannel'
-    ClientHeight = 768
+    ClientHeight = 512
     ClientWidth = 215
     ParentFont = False
     TabOrder = 1
     object ChannelList: TDrawGrid
       Left = 1
-      Height = 685
-      Top = 82
-      Width = 320
+      Height = 452
+      Top = 59
+      Width = 213
       Align = alClient
       AutoFillColumns = True
       ColCount = 1
@@ -133,22 +132,22 @@ object fPlayer: TfPlayer
       OnGetCellHint = ChannelListGetCellHint
       OnKeyDown = ChannelListKeyDown
       ColWidths = (
-        320
+        192
       )
     end
     object Panel1: TPanel
       Left = 1
-      Height = 40
+      Height = 31
       Top = 1
-      Width = 320
+      Width = 213
       Align = alTop
       AutoSize = True
-      ClientHeight = 40
-      ClientWidth = 320
+      ClientHeight = 31
+      ClientWidth = 213
       TabOrder = 1
       object ToolButton1: TSpeedButton
         Left = 1
-        Height = 38
+        Height = 29
         Top = 1
         Width = 25
         Action = actShowConfig
@@ -157,10 +156,10 @@ object fPlayer: TfPlayer
         ParentFont = False
       end
       object ToolButton2: TSpeedButton
-        Left = 39
-        Height = 38
+        Left = 26
+        Height = 29
         Top = 1
-        Width = 58
+        Width = 36
         Action = actShowEpg
         Align = alLeft
         AutoSize = True
@@ -168,10 +167,10 @@ object fPlayer: TfPlayer
         ParentFont = False
       end
       object ToolButton5: TSpeedButton
-        Left = 215
-        Height = 38
+        Left = 146
+        Height = 29
         Top = 1
-        Width = 104
+        Width = 66
         Align = alRight
         AutoSize = True
         Caption = 'View ▼'
@@ -183,12 +182,12 @@ object fPlayer: TfPlayer
     end
     object cbGroups: TComboBox
       Left = 1
-      Height = 41
-      Top = 41
-      Width = 320
+      Height = 27
+      Top = 32
+      Width = 213
       Align = alTop
       Font.Height = -14
-      ItemHeight = 0
+      ItemHeight = 19
       ParentFont = False
       Style = csDropDownList
       TabOrder = 2
@@ -198,8 +197,8 @@ object fPlayer: TfPlayer
   end
   object ChannelSplitter: TSplitter
     AnchorSideRight.Control = pnlContainer
-    Left = 322
-    Height = 768
+    Left = 215
+    Height = 512
     Top = 0
     Width = 4
     OnMoved = ChannelSplitterMoved
