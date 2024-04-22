@@ -96,7 +96,7 @@ type
     fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
     procedure SetOnListChange(AValue: TNotifyEvent);
-    function SortbyNumber(constref Left, Right: TM3UItem): integer;
+    function SortbyNumber(const Left, Right: TM3UItem): integer;
 
   public
 
@@ -443,7 +443,7 @@ begin
 
 end;
 
-function TM3ULoader.SortbyNumber(constref Left, Right: TM3UItem): integer;
+function TM3ULoader.SortbyNumber(const Left, Right: TM3UItem): integer;
 begin
   Result := CompareValue(left.Number, Right.Number);
 end;
