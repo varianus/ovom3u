@@ -270,10 +270,10 @@ begin
 
 
   Result := True;
-  Kind := BackEnd.List.ListProperties.ChannelsKind;
+  Kind := BackEnd.List.ListProperties.ChannelKind;
   case Kind of
     Local:
-      IPTVList := BackEnd.List.ListProperties.ChannelsFileName;
+      IPTVList := BackEnd.List.ListProperties.ChannelsUrl;
     URL:
       IPTVList := BackEnd.List.ListProperties.ChannelsUrl;
   end;
@@ -855,12 +855,12 @@ procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
   if fConfig.ModalResult = mrOk then
   begin
-    if BackEnd.List.ListProperties.Dirty then
+ {mcmcmcmcmcmc    if BackEnd.List.ListProperties.Dirty then
     begin
       OvoLogger.Log(llINFO, 'List configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('Channels', 0);
       LoadList;
-    end;
+    end; }
     if BackEnd.EpgData.EpgProperties.Dirty then
     begin
       OvoLogger.Log(llINFO, 'EPG configuration changed, reloading');

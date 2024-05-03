@@ -107,10 +107,9 @@ var
 begin
   ConfigObj.ReadConfig;
 
-  Kind := Backend.List.ListProperties.ChannelsKind;
+  Kind := Backend.List.ListProperties.ChannelKind;
   cbChannelsKind.ItemIndex := Ord(kind);
   cbChannelsKind.OnChange(cbChannelsKind);
-  edtChannelsFileName.Text := Backend.List.ListProperties.ChannelsFileName;
   edtChannelsUrl.Text := Backend.List.ListProperties.ChannelsUrl;
 
   Kind := Backend.EpgData.EpgProperties.EpgKind;
@@ -137,8 +136,7 @@ var
   ListProperties: TListProperties;
 begin
 
-  Backend.List.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
-  Backend.List.ListProperties.ChannelsFileName := edtChannelsFileName.Text;
+//  Backend.List.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
   Backend.List.ListProperties.ChannelsUrl := edtChannelsUrl.Text;
   Backend.List.ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
   Backend.List.ListProperties.UseChno := cbUseChno.Checked;

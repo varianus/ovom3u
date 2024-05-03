@@ -6,6 +6,7 @@ object fConfig: TfConfig
   Caption = 'Config'
   ClientHeight = 439
   ClientWidth = 767
+  LCLVersion = '3.99.0.0'
   OnShow = FormShow
   object pcSettings: TPageControl
     Left = 185
@@ -19,7 +20,7 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object cbChannelsKind: TComboBox
         AnchorSideLeft.Control = lb
@@ -36,9 +37,9 @@ object fConfig: TfConfig
           'Local File'
           'URL'
         )
-        OnChange = cbChannelsKindChange
         TabOrder = 0
         Text = 'cbChannelsKind'
+        OnChange = cbChannelsKindChange
       end
       object lb: TLabel
         AnchorSideLeft.Control = tsChannels
@@ -187,9 +188,9 @@ object fConfig: TfConfig
           'Local File'
           'URL'
         )
-        OnChange = cbEpgKindChange
         TabOrder = 5
         Text = 'cbEpgKind'
+        OnChange = cbEpgKindChange
       end
       object Label5: TLabel
         AnchorSideTop.Control = edtEpgFileName
@@ -245,7 +246,7 @@ object fConfig: TfConfig
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -299,7 +300,7 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object cbLibCEC: TCheckBox
         Left = 12

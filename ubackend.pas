@@ -156,17 +156,17 @@ procedure TBackend.LoadList;
 var
   CacheDir, IPTVList: string;
   Kind: TProviderKind;
-
 begin
 
-  Kind := List.ListProperties.ChannelsKind;
+  Kind := List.ListProperties.ChannelKind;
+  EpgData.CurrentList:=List.CurrentList;
 
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
     IPTVList := List.ListProperties.ChannelsUrl;
     try
-      if (epgData.LastScan('channels') + 12 / 24 < now) or List.ListProperties.Dirty then
+      if (epgData.LastScan('channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
       begin
         try
           OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
@@ -187,7 +187,7 @@ begin
     end;
   end
   else
-    IPTVList := list.ListProperties.ChannelsFileName;
+    IPTVList := list.ListProperties.ChannelsUrl;
 
   if FileExists(IPTVList) then
     list.Load(IPTVList);
@@ -327,6 +327,7 @@ begin
   PluginsProperties:= TPluginsProperties.Create(ConfigObj);
 
   List := TM3ULoader.Create;
+  List.CurrentList:=2;
   EpgData := TEpg.Create;
 
   if PluginsProperties.EnableCEC then

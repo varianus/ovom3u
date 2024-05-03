@@ -23,7 +23,7 @@ unit epg;
 interface
 
 uses
-  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqlite3dyn, sqlite3conn, sqldb, um3uloader, BaseTypes, AppConsts, Config, Generics.Collections;
+  Classes, SysUtils, DateUtils, laz2_XMLRead, Laz2_DOM, sqldb, um3uloader, BaseTypes, AppConsts, Config, Generics.Collections;
 
 type
   TEpg = class;
@@ -37,6 +37,7 @@ type
 
   TEpgScanner = class(TThread)
   private
+    FCurrentList: integer;
     FOnEndWork: TNotifyEvent;
     FScanEvent: PRTLEvent;
     XMLDoc: TXMLDocument;
@@ -46,6 +47,7 @@ type
     FStopped: boolean;
     function FindChannelIdByEPGName(Channel: string): integer;
     function FindChannelIdByName(Channel: string): integer;
+    procedure SetCurrentList(AValue: integer);
     procedure SetOnEndWork(AValue: TNotifyEvent);
 
   protected
@@ -58,6 +60,7 @@ type
     procedure Stop;
     property OnEndWork: TNotifyEvent read FOnEndWork write SetOnEndWork;
     property ScanEvent: PRTLEvent read FScanEvent;
+    property CurrentList: integer read FCurrentList write SetCurrentList;
     constructor Create(Owner: TEpg); reintroduce;
     destructor Destroy; override;
   end;
@@ -66,7 +69,7 @@ type
 
   { TEpgProperties }
 
-  TEpgProperties = Class(TConfigParam)
+  TEpgProperties = class(TConfigParam)
   private
     FEpgFileName: string;
     FEpgKind: TProviderKind;
@@ -74,37 +77,34 @@ type
     procedure SetEpgFileName(AValue: string);
     procedure SetEpgKind(AValue: TProviderKind);
     procedure SetEPGUrl(AValue: string);
-  Protected
-    Procedure InternalSave; Override;
+  protected
+    procedure InternalSave; override;
   public
-    Property EpgFileName: string read FEpgFileName write SetEpgFileName;
-    Property EpgKind: TProviderKind read FEpgKind write SetEpgKind;
-    Property EPGUrl: string read FEPGUrl write SetEPGUrl;
-    Procedure Load; override;
+    property EpgFileName: string read FEpgFileName write SetEpgFileName;
+    property EpgKind: TProviderKind read FEpgKind write SetEpgKind;
+    property EPGUrl: string read FEPGUrl write SetEPGUrl;
+    procedure Load; override;
   end;
 
   TEpg = class
   private
-    fDB: TSQLite3Connection;
+    FCurrentList: integer;
     fEpgAvailable: boolean;
     fEpgProperties: TEpgProperties;
-    fTR: TSQLTransaction;
     FOnScanComplete: TNotifyEvent;
     FOnScanStart: TNotifyEvent;
     fScanning: boolean;
     Scanner: TEpgScanner;
     procedure AfterScan;
-    procedure CheckDBStructure;
     procedure EndScan(AObject: TObject);
-    function GetDbVersion: integer;
-    procedure SetupDBConnection;
-    procedure UpgradeDBStructure(LoadedDBVersion: integer);
+    procedure SetCurrentList(AValue: integer);
   public
-    Property EpgProperties: TEpgProperties read fEpgProperties;
+    property EpgProperties: TEpgProperties read fEpgProperties;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
     property Scanning: boolean read fScanning;
+    property CurrentList: integer read FCurrentList write SetCurrentList;
     constructor Create;
     destructor Destroy; override;
     function LastScan(const ScanType: string): TDateTime;
@@ -124,147 +124,55 @@ implementation
 
 uses GeneralFunc, LoggerUnit, ZStream;
 
-{ TEpg }
 const
-  PRAGMAS_COUNT = 3;
-  PRAGMAS: array [1..PRAGMAS_COUNT] of string =
-    (
-    //            'PRAGMA locking_mode = EXCLUSIVE;',
-    'PRAGMA temp_store = MEMORY;',
-    'PRAGMA count_changes = 0;',
-    'PRAGMA encoding = "UTF-8";'
-    );
-  CURRENTDBVERSION = 2;
+  INSERTPROGRAMME = 'INSERT INTO "programme"("List","idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")' + ' values  (:list, NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
 
-  CREATECONFIGTABLE1 = 'CREATE TABLE config ('
-                     + '"Version" INTEGER COLLATE NOCASE'
-                     + ');';
-
-  CREATECONFIGTABLE2 = ' INSERT INTO config (Version) VALUES(1);';
-  UPDATECONFIG = 'UPDATE config SET Version = %d;';
-
-  CREATESCANTABLE1 = 'CREATE TABLE scans ('
-                   + ' "Epg" DATETIME'
-                   + ' ,"Channels" DATETIME'
-                   + ',ChannelsMd5 VARCHAR );';
-  CREATESCANTABLE2 = 'insert into  scans select 0,0,null where not EXISTS (select * from scans);';
-
-  CREATECHANNELTABLE = 'CREATE TABLE channels ('
-                     + ' "ID" INTEGER primary key'
-                     + ',"Name" VARCHAR COLLATE NOCASE'
-                     + ',"ChannelNo" VARCHAR COLLATE NOCASE'
-                     + ',"EpgName" VARCHAR COLLATE NOCASE'
-                     + ')';
-  CREATECHANNELINDEX1 = 'CREATE INDEX "idx_Channels_Name" on channels (Name ASC);';
-  CREATECHANNELINDEX2 = 'CREATE INDEX "idx_Channels_EpgName" on channels (EpgName ASC);';
-
-  CREATEPROGRAMMETABLE = 'CREATE TABLE programme ('
-                       + ' idProgram    integer primary key'
-                       + ',idChannel    integer'
-                       + ',sTitle       VARCHAR(128)'
-                       + ',sPlot        VARCHAR'
-                       + ',dStartTime   DATETIME'
-                       + ',dEndTime     DATETIME'
-                       + ');';
-  CREATEPROGRAMMEINDEX1 = 'CREATE INDEX "idx_programme_Channel" on programme (idChannel, dStartTime ASC);';
-  CREATEPROGRAMMEINDEX2 = 'CREATE INDEX "idx_programme_iStartTime" on programme (dStartTime ASC);';
-
-  INSERTPROGRAMME = 'INSERT INTO "programme"("idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")'
-                 + ' values  (NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
-
-{ TEpgProperties }
+  { TEpgProperties }
 
 procedure TEpgProperties.SetEpgFileName(AValue: string);
 begin
-  if FEpgFileName=AValue then Exit;
-  FEpgFileName:=AValue;
-  Dirty:=true;
+  if FEpgFileName = AValue then Exit;
+  FEpgFileName := AValue;
+  Dirty := True;
 
 end;
 
 procedure TEpgProperties.SetEpgKind(AValue: TProviderKind);
 begin
-  if FEpgKind=AValue then Exit;
-  FEpgKind:=AValue;
-  Dirty:=true;
+  if FEpgKind = AValue then Exit;
+  FEpgKind := AValue;
+  Dirty := True;
 
 end;
 
 procedure TEpgProperties.SetEPGUrl(AValue: string);
 begin
-  if FEPGUrl=AValue then Exit;
-  FEPGUrl:=AValue;
-  Dirty:=true;
+  if FEPGUrl = AValue then Exit;
+  FEPGUrl := AValue;
+  Dirty := True;
 
 end;
 
 
 procedure TEpgProperties.InternalSave;
 begin
-  Owner.WriteString('EPG/ProviderKind',TEnum<TProviderKind>.ToString(EPGKind));
-  Owner.WriteString('EPG/FileName',EPGFileName);
-  Owner.WriteString('EPG/Url',EPGUrl)
+  Owner.WriteString('EPG/ProviderKind', TEnum<TProviderKind>.ToString(EPGKind));
+  Owner.WriteString('EPG/FileName', EPGFileName);
+  Owner.WriteString('EPG/Url', EPGUrl);
 end;
 
 procedure TEpgProperties.Load;
 begin
-  EpgKind:= TEnum<TProviderKind>.FromString(Owner.ReadString('EPG/ProviderKind',''), Local);
-  EpgFileName:= Owner.ReadString('EPG/FileName','');
-  EpgUrl:= Owner.ReadString('EPG/Url','');
-  Dirty:=false;
+  EpgKind := TEnum<TProviderKind>.FromString(Owner.ReadString('EPG/ProviderKind', ''), Local);
+  EpgFileName := Owner.ReadString('EPG/FileName', '');
+  EpgUrl := Owner.ReadString('EPG/Url', '');
+  Dirty := False;
 end;
 
-procedure TEpg.SetupDBConnection;
-var
-  i: integer;
+procedure TEpg.SetCurrentList(AValue: integer);
 begin
-  OvoLogger.Log(llINFO, 'Setup EPG database');
-  fDB := TSQLite3Connection.Create(nil);
-  fDB.OpenFlags := [sofReadWrite, sofCreate, sofFullMutex, sofSharedCache];
-  fDB.DatabaseName := ConfigObj.ConfigDir + EPGLibraryName;
-
-  ftr := TSQLTransaction.Create(nil);
-
-  fTR.DataBase := fDB;
-
-  for i := 1 to PRAGMAS_COUNT do
-    fdb.ExecuteDirect(PRAGMAS[i]);
-
-  fdb.Connected := True;
-
-  fTR.Active := True;
-
-end;
-
-function TEpg.GetDbVersion: integer;
-var
-  TableList: TStringList;
-  tmpQuery: TSQLQuery;
-begin
-  TableList := TStringList.Create;
-  try
-    fDB.GetTableNames(TableList, False);
-    if TableList.IndexOf('Config') < 0 then
-    begin
-      Result := 1;
-      fDB.ExecuteDirect(CREATECONFIGTABLE1);
-      fDB.ExecuteDirect(CREATECONFIGTABLE2);
-      ftr.CommitRetaining;
-    end
-    else
-    begin
-      tmpQuery := TSQLQuery.Create(fDB);
-      tmpQuery.DataBase := fDB;
-      tmpQuery.Transaction := fTR;
-      tmpQuery.SQL.Text := 'SELECT Version FROM Config';
-      tmpQuery.Open;
-      Result := tmpQuery.Fields[0].AsInteger;
-      tmpQuery.Free;
-    end;
-  finally
-    TableList.Free;
-  end;
-
+  if FCurrentList = AValue then Exit;
+  FCurrentList := AValue;
 end;
 
 function TEpg.LastChannelMd5: string;
@@ -272,9 +180,9 @@ var
   tmpQuery: TSQLQuery;
 begin
   try
-    tmpQuery := TSQLQuery.Create(fDB);
-    tmpQuery.DataBase := fDB;
-    tmpQuery.Transaction := fTR;
+    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
+    tmpQuery.DataBase := ConfigObj.DB;
+    tmpQuery.Transaction := ConfigObj.TR;
     tmpQuery.SQL.Text := 'SELECT ChannelsMd5  FROM Scans';
     tmpQuery.Open;
     if not tmpQuery.EOF then
@@ -289,7 +197,7 @@ end;
 
 procedure TEpg.SetLastChannelMd5(const ComputedMD5: string);
 begin
-  fDB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5));
+  ConfigObj.DB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5) + ' where list = ' + IntToStr(FCurrentList));
 end;
 
 function TEpg.LastScan(const ScanType: string): TDateTime;
@@ -297,10 +205,11 @@ var
   tmpQuery: TSQLQuery;
 begin
   try
-    tmpQuery := TSQLQuery.Create(fDB);
-    tmpQuery.DataBase := fDB;
-    tmpQuery.Transaction := fTR;
-    tmpQuery.SQL.Text := 'SELECT ' + ScanType + ' FROM Scans';
+    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
+    tmpQuery.DataBase := ConfigObj.DB;
+    tmpQuery.Transaction := ConfigObj.TR;
+    tmpQuery.SQL.Text := 'SELECT ' + ScanType + ' FROM Scans where list =:list';
+    tmpQuery.ParamByName('list').AsInteger := FCurrentList;
     tmpQuery.Open;
     if not tmpQuery.EOF then
       Result := tmpQuery.Fields[0].AsDateTime
@@ -318,96 +227,16 @@ var
   tmpQuery: TSQLQuery;
 begin
   try
-    tmpQuery := TSQLQuery.Create(fDB);
-    tmpQuery.DataBase := fDB;
-    tmpQuery.Transaction := fTR;
+    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
+    tmpQuery.DataBase := ConfigObj.DB;
+    tmpQuery.Transaction := ConfigObj.TR;
     tmpQuery.SQL.Text := 'UPDATE scans set ' + ScanType + ' =:date';
     tmpQuery.parambyname('date').AsDateTime := Date;
     tmpQuery.ExecSQL;
-    fTR.CommitRetaining;
+    ConfigObj.TR.CommitRetaining;
   finally
     tmpQuery.Free;
   end;
-
-end;
-
-
-procedure TEpg.CheckDBStructure;
-var
-  TableList: TStringList;
-  LoadedDBVersion: integer;
-begin
-  OvoLogger.Log(llINFO, 'Check EPG database');
-  try
-    TableList := TStringList.Create;
-    try
-      fDB.GetTableNames(TableList, False);
-      if TableList.IndexOf('config') < 0 then
-      begin
-        OvoLogger.Log(llDEBUG, 'Creating config table');
-        fDB.ExecuteDirect(CREATECONFIGTABLE1);
-        fDB.ExecuteDirect(CREATECONFIGTABLE2);
-        fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
-        ftr.CommitRetaining;
-      end;
-      if TableList.IndexOf('scans') < 0 then
-      begin
-        OvoLogger.Log(llDEBUG, 'Creating scans table');
-        fDB.ExecuteDirect(CREATESCANTABLE1);
-        ftr.CommitRetaining;
-      end;
-      // Make sure table contains a row
-      fDB.ExecuteDirect(CREATESCANTABLE2);
-      ftr.CommitRetaining;
-      if TableList.IndexOf('channels') < 0 then
-      begin
-        OvoLogger.Log(llDEBUG, 'Creating channel table');
-        fDB.ExecuteDirect(CREATECHANNELTABLE);
-        fDB.ExecuteDirect(CREATECHANNELINDEX1);
-        fDB.ExecuteDirect(CREATECHANNELINDEX2);
-        ftr.CommitRetaining;
-      end;
-      if TableList.IndexOf('programme') < 0 then
-      begin
-        OvoLogger.Log(llDEBUG, 'Creating programme table');
-        fDB.ExecuteDirect(CREATEPROGRAMMETABLE);
-        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX1);
-        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX2);
-        ftr.CommitRetaining;
-      end;
-
-    finally
-      TableList.Free;
-    end;
-
-  except
-    on e: Exception do
-      OvoLogger.Log(llERROR, 'Error initializing EPG Database : %s', [e.Message]);
-  end;
-
-  LoadedDBVersion := GetDbVersion;
-  if LoadedDBVersion < CURRENTDBVERSION then
-    UpgradeDBStructure(LoadedDBVersion);
-
-end;
-
-procedure TEpg.UpgradeDBStructure(LoadedDBVersion: integer);
-const
-   ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
-   UPDATESTATUS = 'UPDATE confid SET Version = %d;';
-var
-  MustUpdate: Boolean;
-begin
-  MustUpdate := false;
-  OvoLogger.Log(llINFO, 'Upgrading db version from %d to %d:',[LoadedDBVersion, CURRENTDBVERSION]);
-  if LoadedDBVersion < 2 then
-     begin
-       Fdb.ExecuteDirect(ToV2_1) ;
-       MustUpdate := true;
-     end;
-
-  if MustUpdate then
-    fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
 
 end;
 
@@ -428,7 +257,7 @@ end;
 
 procedure TEpg.AfterScan;
 begin
-  fTR.CommitRetaining;
+  ConfigObj.TR.CommitRetaining;
   fEpgAvailable := True;
   fScanning := False;
 end;
@@ -459,12 +288,13 @@ function TEpg.GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo;
 var
   qSearch: TSQLQuery;
 begin
-  qSearch := TSQLQuery.Create(fDB);
+  qSearch := TSQLQuery.Create(ConfigObj.DB);
   try
-    qSearch.Transaction := fTR;
-    qSearch.SQL.Text := 'select * from programme p where p.idChannel = :id  ' + ' and dStartTime < :time and dEndTime > :time ';
+    qSearch.Transaction := ConfigObj.TR;
+    qSearch.SQL.Text := 'select * from programme p where p.idChannel = :id  ' + ' and dStartTime < :time and dEndTime > :time and list =:list ';
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('time').AsDateTime := CurrTime;
+    qSearch.ParamByName('list').AsInteger := FCurrentList;
     qSearch.Open;
     if qSearch.EOF then
       Result := Default(REpgInfo)
@@ -487,11 +317,15 @@ var
   qSearch: TSQLQuery;
   i: longint;
 begin
-  qSearch := TSQLQuery.Create(fDB);
+  qSearch := TSQLQuery.Create(ConfigObj.DB);
   try
-    qSearch.Transaction := fTR;
-    qSearch.SQL.Text := 'select c.name as sChannelName, p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p' + ' JOIN channels c on c.ID = p.idChannel' + ' where stitle like :search or sPlot like :search' + ' order by p.dStartTime';
+    qSearch.Transaction := ConfigObj.TR;
+    qSearch.SQL.Text := 'select c.name as sChannelName, p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p'
+      + ' JOIN channels c on c.ID = p.idChannel'
+      + ' where stitle like :search or sPlot like :search and list = :list'
+      + ' order by p.dStartTime';
     qSearch.ParamByName('search').AsString := '%' + SearchTerm + '%';
+    qSearch.ParamByName('list').AsInteger := FCurrentList;
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -520,17 +354,19 @@ var
   qSearch: TSQLQuery;
   i: integer;
 begin
-  qSearch := TSQLQuery.Create(fDB);
+  qSearch := TSQLQuery.Create(ConfigObj.DB);
   try
-    qSearch.Transaction := fTR;
+    qSearch.Transaction := ConfigObj.TR;
     qSearch.SQL.Text := 'select distinct p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p where p.idChannel = :id  ' +
       ' and ((dStartTime >= :stime and dEndTime <= :etime) ' +
       '  or  (dStartTime <= :stime and dEndTime >= :stime) ' +
       '  or  (dStartTime <= :etime and dEndTime >= :etime)) ' +
+      ' and  list =:list ' +
       ' order by dStartTime';
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('stime').AsDateTime := StartTime;
     qSearch.ParamByName('etime').AsDateTime := EndTime;
+    qSearch.ParamByName('list').AsInteger := FCurrentList;
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -557,8 +393,6 @@ constructor TEpg.Create;
 begin
   fEpgProperties := TEpgProperties.Create(ConfigObj);
   fEpgAvailable := False;
-  SetupDBConnection;
-  CheckDBStructure;
   Scanner := TEpgScanner.Create(self);
   Scanner.OnEndWork := EndScan;
   Scanner.Start;
@@ -568,18 +402,19 @@ procedure TEpg.LoadChannelList(List: TM3ULoader);
 var
   item: TM3UItem;
   qinsert: TSQLQuery;
-  i:integer;
+  i: integer;
 begin
   OvoLogger.Log(llINFO, 'Updating EPG channels list');
-  qinsert := TSQLQuery.Create(fDB);
+  qinsert := TSQLQuery.Create(ConfigObj.DB);
   try
-    fdb.ExecuteDirect('delete from channels;');
-    qinsert.Transaction := fTR;
-    qinsert.SQL.Text := 'insert into channels values (:id, :name, :ChannelNo, :EpgName);';
-    i:=0;
-    for i:= 0 to List.count -1 do
+    ConfigObj.DB.ExecuteDirect('delete from channels;');
+    qinsert.Transaction := ConfigObj.TR;
+    qinsert.SQL.Text := 'insert into channels values (:list, :id, :name, :ChannelNo, :EpgName);';
+    i := 0;
+    for i := 0 to List.Count - 1 do
     begin
       Item := List[i];
+      qinsert.ParamByName('list').AsInteger := FCurrentList;
       qinsert.ParamByName('id').AsInteger := i;
       qinsert.ParamByName('name').AsString := item.Title;
       qinsert.ParamByName('EpgName').AsString := item.tvg_name;
@@ -589,7 +424,7 @@ begin
   finally
     qinsert.Free;
   end;
-  fTR.CommitRetaining;
+  ConfigObj.TR.CommitRetaining;
 
 end;
 
@@ -601,11 +436,11 @@ begin
     Scanner.Terminate;
     Scanner.Free;
   end;
-  ftr.Commit;
-  fDB.Transaction := nil;
-  fDB.Connected := False;
-  fTR.Free;
-  fDB.Free;
+  ConfigObj.TR.Commit;
+  ConfigObj.DB.Transaction := nil;
+  ConfigObj.DB.Connected := False;
+  ConfigObj.TR.Free;
+  ConfigObj.DB.Free;
   inherited Destroy;
 end;
 
@@ -631,7 +466,7 @@ begin
     try
       Success := False;
       fOwner.fScanning := True;
-      fOwner.fDB.ExecuteDirect('delete from programme');
+      ConfigObj.DB.ExecuteDirect('delete from programme');
       OvoLogger.Log(llINFO, 'EPG update thread started');
       if fOwner.EpgProperties.EpgKind = Url then
       begin
@@ -687,11 +522,12 @@ function TEpgScanner.FindChannelIdByName(Channel: string): integer;
 var
   qFind: TSQLQuery;
 begin
-  qFind := TSQLQuery.Create(fOwner.fDB);
+  qFind := TSQLQuery.Create(ConfigObj.DB);
   try
-    qFind.Transaction := fOwner.fTR;
-    qFind.SQL.Text := 'select id from Channels where name = :name;';
+    qFind.Transaction := ConfigObj.TR;
+    qFind.SQL.Text := 'select id from Channels where name = :name and list = :list;';
     qFind.ParamByName('name').AsString := Channel;
+    qFind.ParamByName('list').AsInteger := FCurrentList;
     qFind.Open;
     if qFind.EOF then
       Result := -1
@@ -703,15 +539,22 @@ begin
   end;
 end;
 
+procedure TEpgScanner.SetCurrentList(AValue: integer);
+begin
+  if FCurrentList = AValue then Exit;
+  FCurrentList := AValue;
+end;
+
 function TEpgScanner.FindChannelIdByEPGName(Channel: string): integer;
 var
   qFind: TSQLQuery;
 begin
-  qFind := TSQLQuery.Create(fOwner.fDB);
+  qFind := TSQLQuery.Create(ConfigObj.DB);
   try
-    qFind.Transaction := fOwner.fTR;
-    qFind.SQL.Text := 'select id from Channels where epgname = :name;';
+    qFind.Transaction := ConfigObj.TR;
+    qFind.SQL.Text := 'select id from Channels where epgname = :name and list = :list ;';
     qFind.ParamByName('name').AsString := Channel;
+    qFind.ParamByName('list').AsInteger := FCurrentList;
     qFind.Open;
     if qFind.EOF then
       Result := -1
@@ -757,7 +600,6 @@ var
     Channel: TChannelData;
     Child: TDomNode;
     j, k: integer;
-
   begin
     Channel := TChannelData.Create;
     Channel.EpgId := Node.Attributes.GetNamedItem('id').NodeValue;
@@ -785,7 +627,7 @@ var
 
   function FindChannelIdInList(ChannelEpgId: string): integer;
   var
-   Channel: TChannelData;
+    Channel: TChannelData;
   begin
     Result := -1;
     for channel in ChannelList do
@@ -807,9 +649,9 @@ begin
     //  writeln(Root.NodeName, '  ', Root.ChildNodes.Count);
     OldName := '';
     idChannel := -1;
-    qInsert := TSQLQuery.Create(fOwner.Fdb);
+    qInsert := TSQLQuery.Create(ConfigObj.DB);
     try
-      qInsert.Transaction := fOwner.fTR;
+      qInsert.Transaction := ConfigObj.TR;
       qInsert.SQL.Text := INSERTPROGRAMME;
 
       for i := 0 to Root.ChildNodes.Count - 1 do
@@ -839,6 +681,7 @@ begin
           s2 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('stop').NodeValue);
           qInsert.ParamByName('dStartTime').AsDateTime := s1;
           qInsert.ParamByName('dEndTime').AsDateTime := s2;
+          qInsert.ParamByName('list').AsInteger := FCurrentList;
           qInsert.ExecSQL;
         end;
       end;

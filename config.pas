@@ -23,7 +23,7 @@ unit Config;
 interface
 
 uses
-  Classes, SysUtils, Graphics, JsonTools, typinfo, Generics.collections;
+  Classes, SysUtils, Graphics, JsonTools, typinfo, sqlite3dyn, sqlite3conn, sqldb, Generics.collections;
 
 type
   { TEnum }
@@ -34,7 +34,7 @@ type
     class function FromString(const aEnumString: string; const aDefault: T): T;
   end;
 
-{ TConfig }
+  { TConfig }
   TConfig = class;
 
   { TConfigParam }
@@ -43,22 +43,22 @@ type
     FDirty: boolean;
     fOwner: TConfig;
     procedure SetDirty(AValue: boolean);
-  Protected
-    Procedure InternalSave; virtual; abstract;
+  protected
+    procedure InternalSave; virtual; abstract;
   public
     property Dirty: boolean read FDirty write SetDirty;
     property Owner: TConfig read fOwner;
-    Constructor Create(aOwner:TConfig); virtual;
-    Destructor Destroy; override;
-    Procedure Save;
-    Procedure Load; virtual; abstract;
+    constructor Create(aOwner: TConfig); virtual;
+    destructor Destroy; override;
+    procedure Save;
+    procedure Load; virtual; abstract;
   end;
 
-  TConfigList= TObjectList<TConfigParam>;
+  TConfigList = TObjectList<TConfigParam>;
 
   TConfig = class
   private
-    fConfigList:  TConfigList;
+    fConfigList: TConfigList;
     fDirty: boolean;
     fCacheDir: string;
     FConfigFile: string;
@@ -67,29 +67,36 @@ type
     ResourcesPath: string;
     fConfigHolder: TJsonNode;
     fExecutableDir: string;
+    fDB: TSQLite3Connection;
+    fTR: TSQLTransaction;
+
+    procedure CheckDBStructure;
     function GetCacheDir: string;
     function GetConfigDir: string;
+    function GetDbVersion: integer;
     procedure SetDirty(AValue: boolean);
     procedure Attach(cfgobject: TConfigParam);
     procedure Remove(cfgobject: TConfigParam);
+    procedure SetupDBConnection;
+    procedure UpgradeDBStructure(LoadedDBVersion: integer);
 
   public
     property PortableMode: boolean read FPortableMode;
 
-    Property Dirty: boolean read FDirty write SetDirty;
+    property Dirty: boolean read FDirty write SetDirty;
 
     // Used to signal changes, not saved
     procedure ReadConfig;
     procedure SaveConfig;
     procedure WriteStrings(const APath: string; Values: TStrings);
     function ReadStrings(const APath: string; Values: TStrings): integer;
-    procedure WriteString(const APath: string; const  Value: String);
-    function ReadString(const APath: string; const  ADefault: String): string;
+    procedure WriteString(const APath: string; const Value: string);
+    function ReadString(const APath: string; const ADefault: string): string;
     function GetResourcesPath: string;
-    procedure WriteBoolean(const APath: string; Value: Boolean);
-    function ReadBoolean(const APath: string; ADefault: Boolean): Boolean;
-    procedure WriteInteger(const APath: string; Value: Integer);
-    function ReadInteger(const APath: string; ADefault: Integer): Integer;
+    procedure WriteBoolean(const APath: string; Value: boolean);
+    function ReadBoolean(const APath: string; ADefault: boolean): boolean;
+    procedure WriteInteger(const APath: string; Value: integer);
+    function ReadInteger(const APath: string; ADefault: integer): integer;
     procedure WriteRect(const APath: string; Value: TRect);
     function ReadRect(const APath: string; ADefault: TRect): TRect;
 
@@ -100,26 +107,28 @@ type
     property ConfigDir: string read fConfigDir;
     property CacheDir: string read fCacheDir;
     property ConfigFile: string read FConfigFile;
+    property DB: TSQLite3Connection read fDB;
+    property TR: TSQLTransaction read fTR;
   end;
 
   { TSimpleHistory }
 
   TSimpleHistory = class
   private
-    FMax: Integer;
+    FMax: integer;
     IntList: TStringList;
     function GetCount: integer;
-    procedure SetMax(AValue: Integer);
+    procedure SetMax(AValue: integer);
   public
-    function Add(const S: string): Integer;
-    Constructor Create;
-    Destructor Destroy; override;
-    Procedure SetList(List: TStrings);
+    function Add(const S: string): integer;
+    constructor Create;
+    destructor Destroy; override;
+    procedure SetList(List: TStrings);
 
-    Procedure LoadFromConfig(Config: TConfig; APath: string);
-    Procedure WriteToConfig(Config: TConfig; APath: string);
-    Property Max: Integer read FMax write SetMax;
-    Property Count: integer read GetCount;
+    procedure LoadFromConfig(Config: TConfig; APath: string);
+    procedure WriteToConfig(Config: TConfig; APath: string);
+    property Max: integer read FMax write SetMax;
+    property Count: integer read GetCount;
   end;
 
 
@@ -129,44 +138,125 @@ implementation
 
 { TConfig }
 uses
-  Fileutil
+  Fileutil, AppConsts, LoggerUnit
   // only for default font !
-{$ifdef Darwin}
+  {$ifdef Darwin}
   , MacOSAll
-{$endif}  ;
+  {$endif}  ;
 
 var
   FConfigObj: TConfig;
+
+const
+  PRAGMAS_COUNT = 3;
+  PRAGMAS: array [1..PRAGMAS_COUNT] of string =
+    (
+    //            'PRAGMA locking_mode = EXCLUSIVE;',
+    'PRAGMA temp_store = MEMORY;',
+    'PRAGMA count_changes = 0;',
+    'PRAGMA encoding = "UTF-8";'
+    );
+  CURRENTDBVERSION = 3;
+
+  CREATECONFIGTABLE1 =
+    'CREATE TABLE config ('
+    + 'Version INTEGER COLLATE NOCASE'
+    + ');';
+
+  CREATELISTTABLE =
+    'CREATE TABLE "Lists" ('
+    + 'ID INTEGER'
+    + ',Name NUMERIC'
+    + ',Position VARCHAR'
+    + ',UseNumber INTEGER'
+    + ',GetLogo INTEGER'
+    + ',EPG VARCHAR'
+    + ',PRIMARY KEY("ID" AUTOINCREMENT))';
+  CREATECONFIGTABLE2 =
+    ' INSERT INTO config (Version) VALUES(1);';
+  UPDATECONFIG =
+    'UPDATE config SET Version = %d;';
+
+  CREATESCANTABLE1 =
+    'CREATE TABLE scans ('
+    + ' List Integer'
+    + ' ,Epg DATETIME'
+    + ' ,Channels DATETIME'
+    + ',ChannelsMd5 VARCHAR  '
+    + ',PRIMARY KEY("List"))';
+  CREATESCANTABLE2 =
+    'insert into  scans select 0,0,0,null where not EXISTS (select * from scans);';
+
+  CREATECHANNELTABLE =
+    'CREATE TABLE channels ('
+    + ' List Integer '
+    + ',ID INTEGER'
+    + ',Name VARCHAR COLLATE NOCASE'
+    + ',ChannelNo VARCHAR COLLATE NOCASE'
+    + ',EpgName VARCHAR COLLATE NOCASE'
+    + ', primary key (ID AUTOINCREMENT) '
+    + ')';
+  CREATECHANNELINDEX1 =
+    'CREATE INDEX "idx_Channels_Name" on channels (Name ASC);';
+  CREATECHANNELINDEX2 =
+    'CREATE INDEX "idx_Channels_EpgName" on channels (EpgName ASC);';
+  CREATECHANNELINDEX3 =
+'  CREATE UNIQUE INDEX idx_Channels_List ON channels (List, ID);';
+
+
+  CREATEPROGRAMMETABLE =
+    'CREATE TABLE programme ('
+    + ' List Integer '
+    + ',idProgram    integer '
+    + ',idChannel    integer'
+    + ',sTitle       VARCHAR(128)'
+    + ',sPlot        VARCHAR'
+    + ',dStartTime   DATETIME'
+    + ',dEndTime     DATETIME'
+    + ', primary key (idProgram AUTOINCREMENT) '
+    + ');';
+  CREATEPROGRAMMEINDEX1 =
+    'CREATE INDEX "idx_programme_Channel" on programme (idChannel, dStartTime ASC);';
+  CREATEPROGRAMMEINDEX2 =
+    'CREATE INDEX "idx_programme_iStartTime" on programme (dStartTime ASC);';
+  CREATEPROGRAMMEINDEX3 =
+'  CREATE UNIQUE INDEX idx_programme_List ON programme (List, idProgram);';
 
 const
   SectionUnix = 'UNIX';
   IdentResourcesPath = 'ResourcesPath';
   ResourceSubDirectory = 'Resources';
 
- {$ifdef UNIX}
+  {$ifdef UNIX}
   DefaultDirectory = '/usr/share/ovom3u/';
   {$DEFINE NEEDCFGSUBDIR}
- {$endif}
+  {$endif}
 
- {$ifdef DARWIN}
+  {$ifdef DARWIN}
   BundleResourcesDirectory = '/Contents/Resources/';
- {$endif}
+  {$endif}
 
-function NextToken(const S: string; var SeekPos: Integer;
-  const TokenDelim: Char): string;
+function NextToken(const S: string; var SeekPos: integer;
+  const TokenDelim: char): string;
 var
-  TokStart: Integer;
+  TokStart: integer;
 begin
   repeat
-    if SeekPos > Length(s) then begin Result := ''; Exit end;
-    if S[SeekPos] = TokenDelim then Inc(SeekPos) else Break;
-  until false;
+    if SeekPos > Length(s) then
+    begin
+      Result := '';
+      Exit;
+    end;
+    if S[SeekPos] = TokenDelim then Inc(SeekPos)
+    else
+      Break;
+  until False;
   TokStart := SeekPos; { TokStart := first character not in TokenDelims }
 
-  while (SeekPos <= Length(s)) and not(S[SeekPos] = TokenDelim) do Inc(SeekPos);
+  while (SeekPos <= Length(s)) and not (S[SeekPos] = TokenDelim) do Inc(SeekPos);
 
   { Calculate result := s[TokStart, ... , SeekPos-1] }
-  result := Copy(s, TokStart, SeekPos-TokStart);
+  Result := Copy(s, TokStart, SeekPos - TokStart);
 
   { We don't have to do Inc(seekPos) below. But it's obvious that searching
     for next token can skip SeekPos, since we know S[SeekPos] is TokenDelim. }
@@ -189,7 +279,7 @@ end;
 
 class function TEnum<T>.FromString(const aEnumString: string; const aDefault: T): T;
 var
-  OrdValue: Integer;
+  OrdValue: integer;
 begin
   OrdValue := GetEnumValue(TypeInfo(T), aEnumString);
   if OrdValue < 0 then
@@ -202,17 +292,17 @@ end;
 
 procedure TConfigParam.SetDirty(AValue: boolean);
 begin
-  if FDirty=AValue then Exit;
-  FDirty:=AValue;
+  if FDirty = AValue then Exit;
+  FDirty := AValue;
   if FDirty then
-    fOwner.Dirty:=true;
+    fOwner.Dirty := True;
 end;
 
 constructor TConfigParam.Create(aOwner: TConfig);
 begin
   fOwner := AOwner;
   fOwner.Attach(Self);
-  FDirty:=False;
+  FDirty := False;
 end;
 
 destructor TConfigParam.Destroy;
@@ -232,34 +322,34 @@ end;
 
 { TSimpleHistory }
 
-procedure TSimpleHistory.SetMax(AValue: Integer);
+procedure TSimpleHistory.SetMax(AValue: integer);
 begin
-  if FMax=AValue then Exit;
-  FMax:=AValue;
+  if FMax = AValue then Exit;
+  FMax := AValue;
 
   while IntList.Count > FMax do
-    IntList.Delete(IntList.Count-1);           // -1 since its 0 indexed
+    IntList.Delete(IntList.Count - 1);           // -1 since its 0 indexed
 
 end;
 
 function TSimpleHistory.GetCount: integer;
 begin
-  Result := IntList.count;
+  Result := IntList.Count;
 end;
 
-function TSimpleHistory.Add(const S: string): Integer;
+function TSimpleHistory.Add(const S: string): integer;
 var
-   i : integer;
+  i: integer;
 begin
-   i := IntList.IndexOf(S);
-   if i<>-1 then
-     IntList.Delete(i);
+  i := IntList.IndexOf(S);
+  if i <> -1 then
+    IntList.Delete(i);
 
-   IntList.Insert(0, S);
+  IntList.Insert(0, S);
 
-   // Trim the oldest files if more than NumFiles
-   while IntList.Count > FMax do
-     IntList.Delete(IntList.Count-1);           // -1 since its 0 indexed
+  // Trim the oldest files if more than NumFiles
+  while IntList.Count > FMax do
+    IntList.Delete(IntList.Count - 1);           // -1 since its 0 indexed
   Result := IntList.Count;
 end;
 
@@ -303,35 +393,38 @@ end;
 
 constructor TConfig.Create;
 begin
-  fDirty:= False;
-  fConfigList:= TConfigList.Create(True);
+  fDirty := False;
+  fConfigList := TConfigList.Create(True);
 
-  fExecutableDir:= IncludeTrailingPathDelimiter(ProgramDirectory);
+  fExecutableDir := IncludeTrailingPathDelimiter(ProgramDirectory);
 
-   if FileExists(fExecutableDir+'portable.txt') then
+  if FileExists(fExecutableDir + 'portable.txt') then
     fPortableMode := True;
 
   fConfigDir := GetConfigDir;
-  fCacheDir  := GetCacheDir;
+  fCacheDir := GetCacheDir;
 
 
   if FPortableMode then
-     begin
-       FConfigFile:=fConfigDir+ApplicationName+ConfigExtension
-     end
+  begin
+    FConfigFile := fConfigDir + ApplicationName + ConfigExtension;
+  end
   else
-    begin
-      FConfigFile := GetAppConfigFile(False
-    {$ifdef NEEDCFGSUBDIR}
-        , True
-    {$ENDIF}
-        );
+  begin
+    FConfigFile := GetAppConfigFile(False
+      {$ifdef NEEDCFGSUBDIR}
+      , True
+      {$ENDIF}
+      );
 
-    end;
+  end;
   fConfigHolder := TJsonNode.Create;
-  if NOT FileExists(FConfigFile) then
+  if not FileExists(FConfigFile) then
     SaveConfig;
   ReadConfig;
+
+  SetupDBConnection;
+  CheckDBStructure;
 
 end;
 
@@ -349,7 +442,7 @@ var
   Path: string;
 begin
   if fPortableMode then
-    Path:= fExecutableDir + 'config'
+    Path := fExecutableDir + 'config'
   else
     Path := GetAppConfigDir(False);
   ForceDirectories(Path);
@@ -359,40 +452,40 @@ end;
 
 procedure TConfig.SetDirty(AValue: boolean);
 begin
-  if FDirty=AValue then Exit;
-  FDirty:=AValue;
+  if FDirty = AValue then Exit;
+  FDirty := AValue;
 
 end;
 
 function TConfig.GetCacheDir: string;
 begin
   if FPortableMode then
-    begin
-      Result := fExecutableDir+'cache';
-      Result:=IncludeTrailingPathDelimiter(Result);
-    end
+  begin
+    Result := fExecutableDir + 'cache';
+    Result := IncludeTrailingPathDelimiter(Result);
+  end
   else
   begin
-  {$ifdef UNIX}
-    Result:=GetEnvironmentVariable('XDG_CONFIG_HOME');
-    if (Result='') then
-      begin
-        Result:= GetEnvironmentVariable('HOME');
-        if result <> '' then
-          result:=IncludeTrailingPathDelimiter(result)+ '.cache/'
-      end
+    {$ifdef UNIX}
+    Result := GetEnvironmentVariable('XDG_CONFIG_HOME');
+    if (Result = '') then
+    begin
+      Result := GetEnvironmentVariable('HOME');
+      if Result <> '' then
+        Result := IncludeTrailingPathDelimiter(Result) + '.cache/';
+    end
     else
-      Result:=IncludeTrailingPathDelimiter(Result);
+      Result := IncludeTrailingPathDelimiter(Result);
 
-   Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
-  {$endif}
-  {$ifdef WINDOWS}
-    Result:=GetEnvironmentVariable('LOCALAPPDATA');
-    if result <> '' then
-      result:=IncludeTrailingPathDelimiter(result)+ 'Caches\';
+    Result := IncludeTrailingPathDelimiter(Result + ApplicationName);
+    {$endif}
+    {$ifdef WINDOWS}
+    Result := GetEnvironmentVariable('LOCALAPPDATA');
+    if Result <> '' then
+      Result := IncludeTrailingPathDelimiter(Result) + 'Caches\';
 
-    Result:=IncludeTrailingPathDelimiter(Result+ApplicationName);
-  {$endif}
+    Result := IncludeTrailingPathDelimiter(Result + ApplicationName);
+    {$endif}
   end;
   ForceDirectories(Result);
 end;
@@ -401,21 +494,21 @@ procedure TConfig.SaveConfig;
 var
   i: integer;
 begin
-  fDirty:= false;
+  fDirty := False;
   for i := 0 to Pred(fConfigList.Count) do
     if fConfigList[i].Dirty then
-       begin
-         fConfigList[i].Save;
-         fConfigList[i].Dirty:=false;
-         FDirty:= true;
-       end;
-  if fDirty then
     begin
-      WriteString(SectionUnix+'/'+IdentResourcesPath, ResourcesPath);
-      fConfigHolder.SaveToFile(FConfigFile, true);
+      fConfigList[i].Save;
+      fConfigList[i].Dirty := False;
+      FDirty := True;
     end;
+  if fDirty then
+  begin
+    WriteString(SectionUnix + '/' + IdentResourcesPath, ResourcesPath);
+    fConfigHolder.SaveToFile(FConfigFile, True);
+  end;
 
-  fDirty := false;
+  fDirty := False;
 
 end;
 
@@ -423,159 +516,159 @@ procedure TConfig.ReadConfig;
 begin
 
   fConfigHolder.LoadFromFile(FConfigFile);
-{$ifdef WINDOWS}
+  {$ifdef WINDOWS}
   ResourcesPath := ReadString(SectionUnix + '/' + IdentResourcesPath,
     ExtractFilePath(ExtractFilePath(ParamStr(0))));
-{$else}
+  {$else}
   {$ifndef DARWIN}
   ResourcesPath := ReadString(SectionUnix + '/' + IdentResourcesPath, DefaultDirectory);
   {$endif}
-{$endif}
+  {$endif}
 
 end;
 
 procedure TConfig.WriteStrings(const APath: string; Values: TStrings);
 var
   Node: TJsonNode;
-  i: Integer;
+  i: integer;
 begin
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-    begin
-     Node.Clear;
-     for i := 0 to Values.Count -1 do
-       node.Add('',Values[i]);
-    end
+  begin
+    Node.Clear;
+    for i := 0 to Values.Count - 1 do
+      node.Add('', Values[i]);
+  end
   else
-    begin
-      Node := fConfigHolder.find(APath, true);  // fConfigHolder.Add(APath, nkArray);
-      node.Kind:=nkArray;
-      for i := 0 to Values.Count -1 do
-        node.Add('',Values[i]);
+  begin
+    Node := fConfigHolder.find(APath, True);  // fConfigHolder.Add(APath, nkArray);
+    node.Kind := nkArray;
+    for i := 0 to Values.Count - 1 do
+      node.Add('', Values[i]);
 
-    end;
+  end;
 end;
 
 function TConfig.ReadStrings(const APath: string; Values: TStrings): integer;
 var
   Node: TJsonNode;
-  i: Integer;
+  i: integer;
 begin
   Values.Clear;
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-    begin
-      for i := 0 to node.Count -1 do
-       Values.Add(Node.Child(i).AsString);
-    end;
+  begin
+    for i := 0 to node.Count - 1 do
+      Values.Add(Node.Child(i).AsString);
+  end;
 
   Result := Values.Count;
 end;
 
-procedure TConfig.WriteString(const APath: string; const Value: String);
+procedure TConfig.WriteString(const APath: string; const Value: string);
 var
   Node: TJsonNode;
 begin
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-     Node.AsString := Value
+    Node.AsString := Value
   else
-     begin
-       fConfigHolder.find(APath, true).AsString := Value;
-     end;
+  begin
+    fConfigHolder.find(APath, True).AsString := Value;
+  end;
 
 end;
 
-function TConfig.ReadString(const APath: string; const ADefault: String): string;
+function TConfig.ReadString(const APath: string; const ADefault: string): string;
 var
   Node: TJsonNode;
 begin
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-     Result :=  Node.AsString
+    Result := Node.AsString
   else
-     Result :=  ADefault;
+    Result := ADefault;
 end;
 
-procedure TConfig.WriteBoolean(const APath: string; Value: Boolean);
+procedure TConfig.WriteBoolean(const APath: string; Value: boolean);
 var
   Node: TJsonNode;
 begin
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-     Node.AsBoolean := Value
+    Node.AsBoolean := Value
   else
-     fConfigHolder.find(APath, true).AsBoolean := Value;
+    fConfigHolder.find(APath, True).AsBoolean := Value;
 
 end;
 
-function TConfig.ReadBoolean(const APath: string; ADefault: Boolean): Boolean;
+function TConfig.ReadBoolean(const APath: string; ADefault: boolean): boolean;
 var
   Node: TJsonNode;
 begin
-  Node := fConfigHolder.find(APath, true);
+  Node := fConfigHolder.find(APath, True);
   if Assigned(Node) then
-     Result :=  Node.AsBoolean
+    Result := Node.AsBoolean
   else
-    Result :=  ADefault;
+    Result := ADefault;
 end;
 
-procedure TConfig.WriteInteger(const APath: string; Value: Integer);
-var
-  Node: TJsonNode;
-begin
-  Node := fConfigHolder.find(APath);
-  if Assigned(Node) then
-     Node.AsInteger := Value
-  else
-     begin
-       fConfigHolder.find(APath, true).AsInteger := Value;
-     end;
-
-end;
-
-function TConfig.ReadInteger(const APath: string; ADefault: Integer): Integer;
+procedure TConfig.WriteInteger(const APath: string; Value: integer);
 var
   Node: TJsonNode;
 begin
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-     Result :=  Node.AsInteger
+    Node.AsInteger := Value
   else
-     Result :=  ADefault;
+  begin
+    fConfigHolder.find(APath, True).AsInteger := Value;
+  end;
+
+end;
+
+function TConfig.ReadInteger(const APath: string; ADefault: integer): integer;
+var
+  Node: TJsonNode;
+begin
+  Node := fConfigHolder.find(APath);
+  if Assigned(Node) then
+    Result := Node.AsInteger
+  else
+    Result := ADefault;
 end;
 
 procedure TConfig.WriteRect(const APath: string; Value: TRect);
 begin
-  WriteInteger(APath+'/Top',Value.Top);
-  WriteInteger(APath+'/Left',Value.Left);
-  WriteInteger(APath+'/Heigth',Value.Height);
-  WriteInteger(APath+'/Width',Value.Width);
+  WriteInteger(APath + '/Top', Value.Top);
+  WriteInteger(APath + '/Left', Value.Left);
+  WriteInteger(APath + '/Heigth', Value.Height);
+  WriteInteger(APath + '/Width', Value.Width);
 end;
 
 function TConfig.ReadRect(const APath: string; ADefault: TRect): TRect;
 begin
-  Result.Top:= ReadInteger(APath+'/Top',ADefault.Top);
-  Result.Left:= ReadInteger(APath+'/Left',ADefault.Left);
-  Result.Height:= ReadInteger(APath+'/Heigth',ADefault.Height);
-  Result.Width:= ReadInteger(APath+'/Width',ADefault.Width);
+  Result.Top := ReadInteger(APath + '/Top', ADefault.Top);
+  Result.Left := ReadInteger(APath + '/Left', ADefault.Left);
+  Result.Height := ReadInteger(APath + '/Heigth', ADefault.Height);
+  Result.Width := ReadInteger(APath + '/Width', ADefault.Width);
 end;
 
 procedure TConfig.Flush;
 begin
-  fConfigHolder.SaveToFile(FConfigFile, true);
+  fConfigHolder.SaveToFile(FConfigFile, True);
 end;
 
 function TConfig.GetResourcesPath: string;
-{$ifdef DARWIN}
+  {$ifdef DARWIN}
 var
   pathRef: CFURLRef;
   pathCFStr: CFStringRef;
   pathStr: shortstring;
-{$endif}
+  {$endif}
 begin
-{$ifdef UNIX}
-{$ifdef DARWIN}
+  {$ifdef UNIX}
+  {$ifdef DARWIN}
   pathRef := CFBundleCopyBundleURL(CFBundleGetMainBundle());
   pathCFStr := CFURLCopyFileSystemPath(pathRef, kCFURLPOSIXPathStyle);
   CFStringGetPascalString(pathCFStr, @pathStr, 255, CFStringGetSystemEncoding());
@@ -583,16 +676,152 @@ begin
   CFRelease(pathCFStr);
 
   Result := pathStr + BundleResourcesDirectory;
-{$else}
+  {$else}
   Result := ResourcesPath;
-{$endif}
-{$endif}
+  {$endif}
+  {$endif}
 
-{$ifdef WINDOWS}
+  {$ifdef WINDOWS}
   Result := ExtractFilePath(ExtractFilePath(ParamStr(0))) + ResourceSubDirectory + PathDelim;
-{$endif}
+  {$endif}
 
 end;
+
+
+procedure TConfig.SetupDBConnection;
+var
+  i: integer;
+begin
+  OvoLogger.Log(llINFO, 'Setup EPG database');
+  fDB := TSQLite3Connection.Create(nil);
+  fDB.OpenFlags := [sofReadWrite, sofCreate, sofFullMutex, sofSharedCache];
+  fDB.DatabaseName := FConfigDir + EPGLibraryName;
+
+  ftr := TSQLTransaction.Create(nil);
+
+  fTR.DataBase := fDB;
+
+  for i := 1 to PRAGMAS_COUNT do
+    fdb.ExecuteDirect(PRAGMAS[i]);
+
+  fdb.Connected := True;
+
+  fTR.Active := True;
+
+end;
+
+function TConfig.GetDbVersion: integer;
+var
+  TableList: TStringList;
+  tmpQuery: TSQLQuery;
+begin
+  TableList := TStringList.Create;
+  try
+    fDB.GetTableNames(TableList, False);
+    if TableList.IndexOf('Config') < 0 then
+    begin
+      Result := 1;
+      fDB.ExecuteDirect(CREATECONFIGTABLE1);
+      fDB.ExecuteDirect(CREATECONFIGTABLE2);
+      ftr.CommitRetaining;
+    end
+    else
+    begin
+      tmpQuery := TSQLQuery.Create(fDB);
+      tmpQuery.DataBase := fDB;
+      tmpQuery.Transaction := fTR;
+      tmpQuery.SQL.Text := 'SELECT Version FROM Config';
+      tmpQuery.Open;
+      Result := tmpQuery.Fields[0].AsInteger;
+      tmpQuery.Free;
+    end;
+  finally
+    TableList.Free;
+  end;
+
+end;
+
+procedure TConfig.CheckDBStructure;
+var
+  TableList: TStringList;
+  LoadedDBVersion: integer;
+begin
+  OvoLogger.Log(llINFO, 'Check EPG database');
+  try
+    TableList := TStringList.Create;
+    try
+      fDB.GetTableNames(TableList, False);
+      if TableList.IndexOf('config') < 0 then
+      begin
+        OvoLogger.Log(llDEBUG, 'Creating config table');
+        fDB.ExecuteDirect(CREATECONFIGTABLE1);
+        fDB.ExecuteDirect(CREATECONFIGTABLE2);
+        fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+        fTR.CommitRetaining;
+      end;
+      if TableList.IndexOf('scans') < 0 then
+      begin
+        OvoLogger.Log(llDEBUG, 'Creating scans table');
+        fDB.ExecuteDirect(CREATESCANTABLE1);
+        fTR.CommitRetaining;
+      end;
+      // Make sure table contains a row
+      fDB.ExecuteDirect(CREATESCANTABLE2);
+      fTR.CommitRetaining;
+      if TableList.IndexOf('channels') < 0 then
+      begin
+        OvoLogger.Log(llDEBUG, 'Creating channel table');
+        fDB.ExecuteDirect(CREATECHANNELTABLE);
+        fDB.ExecuteDirect(CREATECHANNELINDEX1);
+        fDB.ExecuteDirect(CREATECHANNELINDEX2);
+        fDB.ExecuteDirect(CREATECHANNELINDEX3);
+        fTR.CommitRetaining;
+      end;
+      if TableList.IndexOf('programme') < 0 then
+      begin
+        OvoLogger.Log(llDEBUG, 'Creating programme table');
+        fDB.ExecuteDirect(CREATEPROGRAMMETABLE);
+        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX1);
+        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX2);
+        fDB.ExecuteDirect(CREATEPROGRAMMEINDEX3);
+        fTR.CommitRetaining;
+      end;
+
+    finally
+      TableList.Free;
+    end;
+
+  except
+    on e: Exception do
+      OvoLogger.Log(llERROR, 'Error initializing EPG Database : %s', [e.Message]);
+  end;
+
+  LoadedDBVersion := GetDbVersion;
+  if LoadedDBVersion < CURRENTDBVERSION then
+    UpgradeDBStructure(LoadedDBVersion);
+
+end;
+
+procedure TConfig.UpgradeDBStructure(LoadedDBVersion: integer);
+const
+  ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
+  UPDATESTATUS = 'UPDATE confid SET Version = %d;';
+var
+  MustUpdate: boolean;
+begin
+  MustUpdate := False;
+  OvoLogger.Log(llINFO, 'Upgrading db version from %d to %d:', [LoadedDBVersion, CURRENTDBVERSION]);
+  if LoadedDBVersion < 2 then
+  begin
+    fDB.ExecuteDirect(ToV2_1);
+    MustUpdate := True;
+  end;
+
+  if MustUpdate then
+    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+
+end;
+
 
 initialization
   FConfigObj := nil;
@@ -603,6 +832,5 @@ finalization
     FConfigObj.SaveConfig;
     FConfigObj.Free;
   end;
-
 
 end.

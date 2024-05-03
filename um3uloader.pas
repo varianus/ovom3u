@@ -23,10 +23,40 @@ unit um3uloader;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections, StrUtils, Config, Nullable;
+  Classes, SysUtils, Generics.Collections, SQLDB, StrUtils, Config, Nullable;
 
 type
   TProviderKind = (Local, URL);
+
+  { TM3UList }
+
+  TM3UList = class
+  private
+    FChannelsDownloadLogo: boolean;
+    FChannelsFileName: string;
+    FChannelsUrl: string;
+    FEPGUrl: string;
+    FListID: Integer;
+    FName: string;
+    FUseChno: boolean;
+    procedure SetChannelsDownloadLogo(AValue: boolean);
+    procedure SetChannelsFileName(AValue: string);
+    procedure SetChannelsUrl(AValue: string);
+    procedure SetEPGUrl(AValue: string);
+    procedure SetListID(AValue: Integer);
+    procedure SetName(AValue: string);
+    procedure SetUseChno(AValue: boolean);
+  public
+    property ListID: Integer read FListID write SetListID;
+    Property Name: string read FName write SetName;
+    Property EPGUrl: string read FEPGUrl write SetEPGUrl;
+    property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
+    property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
+    property UseChno: boolean read FUseChno write SetUseChno;
+    Function ChannelKind: TProviderKind;
+    procedure Load(List: integer); overload;
+    procedure Load; overload;
+  end;
 
   TM3UItem = class
   public
@@ -57,63 +87,54 @@ type
     FFilterArray: array of integer;
     function GetItem(idx: integer): TM3UItem;
   public
-    property Item[idx:integer]:TM3UItem read GetItem; default;
-    Function Count: integer;
-    function Map(idx:integer):integer;
-    function IndexOf(value:integer):integer;
+    property Item[idx: integer]: TM3UItem read GetItem; default;
+    function Count: integer;
+    function Map(idx: integer): integer;
+    function IndexOf(Value: integer): integer;
   end;
 
 
   { TListProperties }
 
-  TListProperties = Class(TConfigParam)
+  TListProperties = class(TConfigParam)
   private
-    FChannelsDownloadLogo: boolean;
-    FChannelsFileName: string;
-    FChannelsKind: TProviderKind;
-    FChannelsUrl: string;
-    FUseChno: boolean;
-    procedure SetChannelsDownloadLogo(AValue: boolean);
-    procedure SetChannelsFileName(AValue: string);
-    procedure SetChannelsKind(AValue: TProviderKind);
-    procedure SetChannelsUrl(AValue: string);
-    procedure SetUseChno(AValue: boolean);
-  Protected
-    Procedure InternalSave; Override;
+    FCurrentList: integer;
+    procedure SetCurrentList(AValue: integer);
+  protected
+    procedure InternalSave; override;
   public
-    Property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
-    Property ChannelsFileName: string read FChannelsFileName write SetChannelsFileName;
-    Property ChannelsKind: TProviderKind read FChannelsKind write SetChannelsKind;
-    Property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
-    Property UseChno: boolean read FUseChno write SetUseChno;
-    Procedure Load; Override;
+    property CurrentList: integer read FCurrentList write SetCurrentList;
+    procedure Load; override;
   end;
   { TM3ULoader }
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
+    FCurrentList: Integer;
     fLastMessage: string;
     fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
+    InternalList: TM3UList;
+    procedure SetCurrentList(AValue: Integer);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(const Left, Right: TM3UItem): integer;
-
   public
 
     ListMd5: string;
     Groups: TStringList;
-    Property ListProperties: TListProperties read fListProperties;
+    property ListConfig: TListProperties read fListProperties;
+    Property ListProperties: TM3UList read InternalList;
     procedure DoListChanged;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
+    Property CurrentList: Integer read FCurrentList write SetCurrentList;
     constructor Create;
     destructor Destroy; override;
-    function Load(const ListName: string): boolean;
     function ItemByChno(chno: integer): integer;
-    Function Filter(aFilter:TFilterParam): TFilteredList;
-
+    function Filter(aFilter: TFilterParam): TFilteredList;
     procedure FixChannelNumbering;
     procedure UpdateLogo;
+    function Load(const ListName: string): boolean;
 
   end;
 
@@ -142,64 +163,26 @@ const
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
 
-{ TListProperties }
+  { TListProperties }
 
-procedure TListProperties.SetChannelsDownloadLogo(AValue: boolean);
+
+procedure TListProperties.SetCurrentList(AValue: integer);
 begin
-  if FChannelsDownloadLogo=AValue then Exit;
-  FChannelsDownloadLogo:=AValue;
-  Dirty:=true;
+  if FCurrentList = AValue then Exit;
+  FCurrentList := AValue;
+  Dirty := True;
 end;
 
-procedure TListProperties.SetChannelsFileName(AValue: string);
-begin
-  if FChannelsFileName=AValue then Exit;
-  FChannelsFileName:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.SetChannelsKind(AValue: TProviderKind);
-begin
-  if FChannelsKind=AValue then Exit;
-  FChannelsKind:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.SetChannelsUrl(AValue: string);
-begin
-  if FChannelsUrl=AValue then Exit;
-  FChannelsUrl:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.SetUseChno(AValue: boolean);
-begin
-  if FUseChno=AValue then Exit;
-  FUseChno:=AValue;
-  Dirty:=true;
-
-end;
 
 procedure TListProperties.InternalSave;
 begin
-  Owner.WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(ChannelsKind));
-  Owner.WriteString('m3u/FileName',ChannelsFileName);
-  Owner.WriteString('m3u/Url',ChannelsUrl);
-  Owner.WriteBoolean('m3u/UseChno', UseChno);
-  Owner.WriteBoolean('m3u/DownloadLogo', ChannelsDownloadLogo);
+  Owner.WriteInteger('m3u/CurrentList', CurrentList);
 end;
 
 procedure TListProperties.Load;
 begin
-  ChannelsKind:= TEnum<TProviderKind>.FromString(Owner.ReadString('m3u/ProviderKind',''), Local);
-  ChannelsFileName:= Owner.ReadString('m3u/FileName','');
-  ChannelsUrl:= Owner.ReadString('m3u/Url','');
-  UseChno := Owner.ReadBoolean('m3u/UseChno', false);
-  ChannelsDownloadLogo := Owner.ReadBoolean('m3u/DownloadLogo', false);
-  Dirty:=false;
+  CurrentList := Owner.ReadInteger('m3u/CurrentList', 0);
+  Dirty := False;
 end;
 
 { TFilteredList }
@@ -209,16 +192,16 @@ begin
   Result := FFilterArray[idx];
 end;
 
-function TFilteredList.IndexOf(value: integer): integer;
+function TFilteredList.IndexOf(Value: integer): integer;
 var
-  i: Integer;
+  i: integer;
 begin
-  for i :=0 to Length(FFilterArray) -1 do
-    if FFilterArray[i] = value then
-      begin
-        Result := i;
-        exit;
-      end;
+  for i := 0 to Length(FFilterArray) - 1 do
+    if FFilterArray[i] = Value then
+    begin
+      Result := i;
+      exit;
+    end;
   Result := -1;
 end;
 
@@ -273,20 +256,103 @@ begin
   fOwner := Owner;
 end;
 
+{ TM3UList }
+
+procedure TM3UList.SetChannelsDownloadLogo(AValue: boolean);
+begin
+  if FChannelsDownloadLogo = AValue then Exit;
+  FChannelsDownloadLogo := AValue;
+end;
+
+procedure TM3UList.SetChannelsFileName(AValue: string);
+begin
+  if FChannelsFileName = AValue then Exit;
+  FChannelsFileName := AValue;
+end;
+
+procedure TM3UList.SetChannelsUrl(AValue: string);
+begin
+  if FChannelsUrl = AValue then Exit;
+  FChannelsUrl := AValue;
+end;
+
+procedure TM3UList.SetEPGUrl(AValue: string);
+begin
+  if FEPGUrl=AValue then Exit;
+  FEPGUrl:=AValue;
+end;
+
+procedure TM3UList.SetListID(AValue: Integer);
+begin
+  if FListID=AValue then Exit;
+  FListID:=AValue;
+end;
+
+procedure TM3UList.SetName(AValue: string);
+begin
+  if FName=AValue then Exit;
+  FName:=AValue;
+end;
+
+procedure TM3UList.SetUseChno(AValue: boolean);
+begin
+  if FUseChno = AValue then Exit;
+  FUseChno := AValue;
+end;
+
+function TM3UList.ChannelKind: TProviderKind;
+begin
+  if FChannelsUrl.ToLower.StartsWith('http://') or FChannelsUrl.ToLower.StartsWith('https://')  then
+    Result := URL
+  else
+    Result := Local;
+end;
+
+procedure TM3UList.Load(List: integer);
+var
+  qList: TSQLQuery;
+begin
+  FListId := List;
+  qList := TSQLQuery.Create(ConfigObj.DB);
+  try
+    qList.Transaction := ConfigObj.TR;
+    qList.SQL.Text := 'SELECT ID,Name,Position,UseNumber,GetLogo,EPG from lists where ID = :list;';
+    qList.ParamByName('list').AsInteger := List;
+    qList.Open;
+    if not qList.EOF then
+    begin
+      FChannelsUrl := qList.FieldByName('Position').AsString;
+      FChannelsDownloadLogo:= qList.FieldByName('GetLogo').AsBoolean;
+      FUseChno:= qList.FieldByName('UseNumber').AsBoolean;
+      FName:= qList.FieldByName('Name').AsString;
+      FEPGUrl:= qList.FieldByName('EPG').AsString;
+    end;
+  finally
+    qList.Free;
+  end;
+end;
+
+procedure TM3UList.Load;
+begin
+  Load(FListID);
+end;
+
 { TM3ULoader }
 
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
+  InternalList := TM3UList.Create;
   fListProperties := TListProperties.Create(ConfigObj);
   Groups := TStringList.Create;
-  Groups.Sorted:=true;
-  Groups.Duplicates:=dupIgnore;
+  Groups.Sorted := True;
+  Groups.Duplicates := dupIgnore;
 end;
 
 destructor TM3ULoader.Destroy;
 begin
-  Groups.free;
+  Groups.Free;
+  InternalList.Free;
   inherited Destroy;
 end;
 
@@ -316,7 +382,7 @@ var
       Result := ExtractSubstr(St, TagStart, ['"']);
     end
     else
-      result := EmptyStr;
+      Result := EmptyStr;
   end;
 
 begin
@@ -422,24 +488,25 @@ begin
 end;
 
 function TM3ULoader.Filter(aFilter: TFilterParam): TFilteredList;
-var i,j:Integer;
-    Item: TM3UItem;
+var
+  i, j: integer;
+  Item: TM3UItem;
 begin
   Result.OriginalList := self;
   SetLength(Result.FFilterArray, Count);
-  i:= 0;
-  for j:= 0 to count -1 do
+  i := 0;
+  for j := 0 to Count - 1 do
+  begin
+    Item := FItems[j];
+    if ((not aFilter.Group.HasValue) or (Item.Group = Afilter.Group.Value)) and
+      ((not aFilter.Title.HasValue) or (AnsiContainsText(Item.Title, AFilter.Title.Value))) then
     begin
-      Item := FItems[j];
-      if ((not aFilter.Group.HasValue) or (Item.Group = Afilter.Group.Value)) and
-         ((not aFilter.Title.HasValue) or (AnsiContainsText(Item.Title, AFilter.Title.value))) then
-        begin
-          Result.FFilterArray[i]:=j;
-          inc(i);
-        end;
-
+      Result.FFilterArray[i] := j;
+      Inc(i);
     end;
-  SetLength(Result.FFilterArray,i);
+
+  end;
+  SetLength(Result.FFilterArray, i);
 
 end;
 
@@ -457,6 +524,14 @@ end;
 procedure TM3ULoader.SetOnListChange(AValue: TNotifyEvent);
 begin
   FOnListChanged := AValue;
+end;
+
+procedure TM3ULoader.SetCurrentList(AValue: Integer);
+begin
+  if FCurrentList=AValue then Exit;
+  FCurrentList:=AValue;
+  InternalList.Load(AValue);
+
 end;
 
 procedure TM3ULoader.FixChannelNumbering;
