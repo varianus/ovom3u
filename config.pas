@@ -131,6 +131,39 @@ type
     property Count: integer read GetCount;
   end;
 
+type
+  TProviderKind = (Local, URL);
+
+  { TM3UList }
+
+  TM3UList = class
+  private
+    FChannelsDownloadLogo: boolean;
+    FChannelsFileName: string;
+    FChannelsUrl: string;
+    FEPGUrl: string;
+    FListID: Integer;
+    FName: string;
+    FUseChno: boolean;
+    procedure SetChannelsDownloadLogo(AValue: boolean);
+    procedure SetChannelsFileName(AValue: string);
+    procedure SetChannelsUrl(AValue: string);
+    procedure SetEPGUrl(AValue: string);
+    procedure SetListID(AValue: Integer);
+    procedure SetName(AValue: string);
+    procedure SetUseChno(AValue: boolean);
+  public
+    property ListID: Integer read FListID write SetListID;
+    Property Name: string read FName write SetName;
+    Property EPGUrl: string read FEPGUrl write SetEPGUrl;
+    property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
+    property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
+    property UseChno: boolean read FUseChno write SetUseChno;
+    Function ChannelKind: TProviderKind;
+    function EpgKind: TProviderKind;
+    procedure Load(List: integer); overload;
+    procedure Load; overload;
+  end;
 
 function ConfigObj: TConfig;
 
@@ -817,10 +850,113 @@ begin
     MustUpdate := True;
   end;
 
+  if LoadedDBVersion < 3 then
+  begin
+    fDB.ExecuteDirect('Drop table channels');
+    fDB.ExecuteDirect('Drop table programme');
+    fDB.ExecuteDirect('Drop table scans');
+    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+    CheckDBStructure;
+
+    MustUpdate := True;
+  end;
+
+
   if MustUpdate then
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
 
 end;
+
+{ TM3UList }
+
+procedure TM3UList.SetChannelsDownloadLogo(AValue: boolean);
+begin
+  if FChannelsDownloadLogo = AValue then Exit;
+  FChannelsDownloadLogo := AValue;
+end;
+
+procedure TM3UList.SetChannelsFileName(AValue: string);
+begin
+  if FChannelsFileName = AValue then Exit;
+  FChannelsFileName := AValue;
+end;
+
+procedure TM3UList.SetChannelsUrl(AValue: string);
+begin
+  if FChannelsUrl = AValue then Exit;
+  FChannelsUrl := AValue;
+end;
+
+procedure TM3UList.SetEPGUrl(AValue: string);
+begin
+  if FEPGUrl=AValue then Exit;
+  FEPGUrl:=AValue;
+end;
+
+procedure TM3UList.SetListID(AValue: Integer);
+begin
+  if FListID=AValue then Exit;
+  FListID:=AValue;
+end;
+
+procedure TM3UList.SetName(AValue: string);
+begin
+  if FName=AValue then Exit;
+  FName:=AValue;
+end;
+
+procedure TM3UList.SetUseChno(AValue: boolean);
+begin
+  if FUseChno = AValue then Exit;
+  FUseChno := AValue;
+end;
+
+function TM3UList.ChannelKind: TProviderKind;
+begin
+  if FChannelsUrl.ToLower.StartsWith('http://') or FChannelsUrl.ToLower.StartsWith('https://')  then
+    Result := URL
+  else
+    Result := Local;
+end;
+
+function TM3UList.EpgKind: TProviderKind;
+begin
+  if FEPGUrl.ToLower.StartsWith('http://') or FEPGUrl.ToLower.StartsWith('https://')  then
+    Result := URL
+  else
+    Result := Local;
+end;
+
+procedure TM3UList.Load(List: integer);
+var
+  qList: TSQLQuery;
+begin
+  FListId := List;
+  qList := TSQLQuery.Create(ConfigObj.DB);
+  try
+    qList.Transaction := ConfigObj.TR;
+    qList.SQL.Text := 'SELECT ID,Name,Position,UseNumber,GetLogo,EPG from lists where ID = :list;';
+    qList.ParamByName('list').AsInteger := List;
+    qList.Open;
+    if not qList.EOF then
+    begin
+      FChannelsUrl := qList.FieldByName('Position').AsString;
+      FChannelsDownloadLogo:= qList.FieldByName('GetLogo').AsBoolean;
+      FUseChno:= qList.FieldByName('UseNumber').AsBoolean;
+      FName:= qList.FieldByName('Name').AsString;
+      FEPGUrl:= qList.FieldByName('EPG').AsString;
+    end;
+  finally
+    qList.Free;
+  end;
+end;
+
+procedure TM3UList.Load;
+begin
+  Load(FListID);
+end;
+
+
 
 
 initialization

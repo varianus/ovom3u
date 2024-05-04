@@ -65,9 +65,9 @@ type
     procedure CecKey(Sender: TObject; var Key: word);
     procedure SetOnPlay(AValue: TNotifyEvent);
   public
-    List: TM3ULoader;
+    M3ULoader: TM3ULoader;
     EpgData: TEpg;
-
+    M3UList: TM3UList;
     HDMI_CEC: THDMI_CEC;
     mmkey: TMultimediaKeys;
     {$IFDEF LINUX}
@@ -83,7 +83,7 @@ type
     PluginsProperties: TPluginsProperties;
     procedure ShowEpg;
     procedure OsdMessage(Message: string; TimeOut: boolean=True);
-    procedure LoadList;
+    procedure LoadList(List:integer);
     function InitializeEngine(Renderer: TOpenGLControl): boolean;
     procedure Play(index:integer);
     Procedure SwapChannel;
@@ -152,19 +152,20 @@ begin
 end;
 
 { TBackend }
-procedure TBackend.LoadList;
+procedure TBackend.LoadList(List: integer);
 var
   CacheDir, IPTVList: string;
   Kind: TProviderKind;
 begin
 
-  Kind := List.ListProperties.ChannelKind;
-  EpgData.CurrentList:=List.CurrentList;
+  M3UList.Load(List);
+
+  Kind := M3UList.ChannelKind;
 
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
-    IPTVList := List.ListProperties.ChannelsUrl;
+    IPTVList := M3UList.ChannelsUrl;
     try
       if (epgData.LastScan('channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
       begin
@@ -187,31 +188,31 @@ begin
     end;
   end
   else
-    IPTVList := list.ListProperties.ChannelsUrl;
+    IPTVList := M3UList.ChannelsUrl;
 
   if FileExists(IPTVList) then
-    list.Load(IPTVList);
+    M3ULoader.Load(IPTVList);
 
-  OvoLogger.Log(llINFO, 'Found %d channels', [BackEnd.List.Count]);
+  OvoLogger.Log(llINFO, 'Found %d channels', [M3ULoader.Count]);
 
-  if List.ListProperties.UseChno then
+  if M3UList.UseChno then
   begin
-    List.FixChannelNumbering;
+    M3ULoader.FixChannelNumbering;
     OvoLogger.Log(llINFO, 'Renumber channels using tvg-chno');
   end;
 
-  if BackEnd.List.ListMd5 <> BackEnd.epgData.LastChannelMd5 then
+  if M3ULoader.ListMd5 <> epgData.LastChannelMd5 then
   begin
     OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
-    epgData.LoadChannelList(List);
-    epgData.SetLastChannelMd5(List.ListMd5);
+    epgData.LoadChannelList(M3ULoader);
+    epgData.SetLastChannelMd5(M3ULoader.ListMd5);
     epgData.SetLastScan('epg', 0);
   end;
 
-  if List.ListProperties.ChannelsDownloadLogo then
-    List.UpdateLogo;
+  if M3UList.ChannelsDownloadLogo then
+    M3ULoader.UpdateLogo;
 
-  if not EpgData.EpgProperties.EPGUrl.IsEmpty or not EpgData.EpgProperties.EpgFileName.IsEmpty then
+  if not M3UList.EPGUrl.IsEmpty then
     epgData.Scan
   else
     OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
@@ -241,7 +242,7 @@ var
   fLastMessage: String;
 begin
 
-    if (Index > List.Count) or (Index < 0) then
+    if (Index > M3ULoader.Count) or (Index < 0) then
     begin
       OsdMessage('No Channel', True);
       exit;
@@ -250,19 +251,19 @@ begin
     if (CurrentIndex = Index) and not mpvengine.IsIdle then
       exit;
 
-    if list[Index].Mrl.IsEmpty then
+    if M3ULoader[Index].Mrl.IsEmpty then
     begin
       OsdMessage('Missing Channel Address', True);
       exit;
     end;
 
-    OvoLogger.Log(llINFO, 'Tuning to %s',[list[Index].Title]);
+    OvoLogger.Log(llINFO, 'Tuning to %s',[M3ULoader[Index].Title]);
 
     PreviousIndex := CurrentIndex;
     CurrentIndex := Index;
-    mpvengine.Play(BackEnd.list[CurrentIndex].Mrl);
+    mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
     Loading := True;
-    fLastMessage := 'Loading: ' + BackEnd.list[CurrentIndex].title;
+    fLastMessage := 'Loading: ' + BackEnd.M3ULoader[CurrentIndex].title;
     OsdMessage(fLastMessage);
     if Assigned(FOnPlay) then
       FOnPlay(Self);
@@ -282,7 +283,7 @@ begin
   if not ShowingInfo and (currentIndex <> -1) then
   begin
     Info := epgData.GetEpgInfo(CurrentIndex, now);
-    mpvengine.OsdEpg(Format('%3.3d: %s', [List[CurrentIndex].Number, BackEnd.List[CurrentIndex].title]), info, True);
+    mpvengine.OsdEpg(Format('%3.3d: %s', [M3ULoader[CurrentIndex].Number, BackEnd.M3ULoader[CurrentIndex].title]), info, True);
     ShowingInfo := True;
     OSDTimer.Enabled := True;
   end
@@ -325,10 +326,13 @@ end;
 constructor TBackend.Create;
 begin
   PluginsProperties:= TPluginsProperties.Create(ConfigObj);
+  M3UList := TM3UList.Create;
 
-  List := TM3ULoader.Create;
-  List.CurrentList:=2;
+  M3ULoader := TM3ULoader.Create;
+  M3ULoader.ListProperties := M3UList;
   EpgData := TEpg.Create;
+  EpgData.ListProperties := M3UList;
+
 
   if PluginsProperties.EnableCEC then
     try
@@ -389,7 +393,7 @@ begin
   MpvEngine.Free;
   OsdTimer.Free;
   EpgData.Free;
-  List.Free;
+  M3ULoader.Free;
   HDMI_CEC.free;
   mmkey.Free;
 

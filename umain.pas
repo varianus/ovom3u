@@ -270,13 +270,7 @@ begin
 
 
   Result := True;
-  Kind := BackEnd.List.ListProperties.ChannelKind;
-  case Kind of
-    Local:
-      IPTVList := BackEnd.List.ListProperties.ChannelsUrl;
-    URL:
-      IPTVList := BackEnd.List.ListProperties.ChannelsUrl;
-  end;
+  IPTVList := BackEnd.M3UList.ChannelsUrl;
 
   if IPTVList.IsEmpty then
     case ShowMyDialog(mtWarning, 'Welcome to OvoM3U',
@@ -301,21 +295,21 @@ var
   CacheDir: string;
 begin
 
-  BackEnd.LoadList;
-  fFilteredList := BackEnd.List.Filter(Default(TFilterParam));
+  BackEnd.LoadList(2);
+  fFilteredList := BackEnd.M3ULoader.Filter(Default(TFilterParam));
 
-  if (BackEnd.list.Groups.Count > 1) then
+  if (BackEnd.M3ULoader.Groups.Count > 1) then
   begin
     cbGroups.Items.Clear;
     cbGroups.items.add(um3uloader.RSAnyGroup);
-    cbGroups.Items.AddStrings(BackEnd.List.Groups, False);
+    cbGroups.Items.AddStrings(BackEnd.M3ULoader.Groups, False);
     cbGroups.ItemIndex := 0;
     cbGroups.Visible := True;
   end
   else
     cbGroups.Visible := False;
 
-  ChannelList.RowCount := BackEnd.List.Count;
+  ChannelList.RowCount := BackEnd.M3ULoader.Count;
 
 end;
 
@@ -352,13 +346,15 @@ begin
   OvoLogger.Log(llINFO, 'Create main GUI');
   BackEnd.OnExternalInput := ExternalInput;
   BackEnd.OnPlay := OnPlay;
-  BackEnd.list.OnListChanged := OnListChanged;
+  BackEnd.M3ULoader.OnListChanged := OnListChanged;
   ChannelList.RowCount := 0;
 
   ChannelSelecting := False;
   fLoading := False;
   ChannelSelected := 0;
   Application.QueueAsyncCall(InitializeGui, 0);
+
+  BackEnd.LoadList(2);
 
   if CheckConfigAndSystem then
   begin
@@ -464,8 +460,8 @@ begin
       VK_RETURN:
         if ChannelSelecting then
         begin
-          if BackEnd.List.ListProperties.UseChno then
-            ChannelSelected := BackEnd.List.ItemByChno(ChannelSelected)
+          if BackEnd.M3ULoader.ListProperties.UseChno then
+            ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
           else
             ChannelSelected := ChannelSelected - 1;
           play(ChannelSelected);
@@ -700,8 +696,8 @@ procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
   begin
-    if BackEnd.List.ListProperties.UseChno then
-      ChannelSelected := BackEnd.List.ItemByChno(ChannelSelected)
+    if BackEnd.M3ULoader.ListProperties.UseChno then
+      ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
     else
       ChannelSelected := ChannelSelected - 1;
 
@@ -799,7 +795,7 @@ begin
   if cbGroups.ItemIndex <> 0 then
     Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
 
-  fFilteredList := BackEnd.List.Filter(Filter);
+  fFilteredList := BackEnd.M3ULoader.Filter(Filter);
 
   ChannelList.RowCount := fFilteredList.Count;
   ChannelList.Invalidate;
@@ -855,18 +851,18 @@ procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
   if fConfig.ModalResult = mrOk then
   begin
- {mcmcmcmcmcmc    if BackEnd.List.ListProperties.Dirty then
+ {mcmcmcmcmcmc    if BackEnd.M3ULoader.ListProperties.Dirty then
     begin
       OvoLogger.Log(llINFO, 'List configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('Channels', 0);
       LoadList;
-    end; }
+    end;
     if BackEnd.EpgData.EpgProperties.Dirty then
     begin
       OvoLogger.Log(llINFO, 'EPG configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('epg', 0);
       BackEnd.EpgData.Scan;
-    end;
+    end;    }
 
   end;
 
@@ -905,7 +901,7 @@ begin
   GuiProperties.ViewLogo := actViewLogo.Checked;
   ComputeGridCellSize;
   if actViewLogo.Checked then
-    BackEnd.list.UpdateLogo;
+    BackEnd.M3ULoader.UpdateLogo;
 end;
 
 procedure TfPlayer.InitializeGui(Data: ptrint);
@@ -941,7 +937,7 @@ procedure TfPlayer.Play(Row: integer);
 begin
   BackEnd.Play(Row);
   ChannelList.Invalidate;
-  Caption := BackEnd.list[Backend.CurrentIndex].title;
+  Caption := BackEnd.M3ULoader[Backend.CurrentIndex].title;
   if pnlEpg.Visible then
   begin
     LoadDailyEpg;

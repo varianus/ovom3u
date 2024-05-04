@@ -106,20 +106,20 @@ var
   Kind: TProviderKind;
 begin
   ConfigObj.ReadConfig;
-
-  Kind := Backend.List.ListProperties.ChannelKind;
+  { mcmcmcmcmcmcmc
+  Kind := Backend.M3ULoader.ListProperties.ChannelKind;
   cbChannelsKind.ItemIndex := Ord(kind);
   cbChannelsKind.OnChange(cbChannelsKind);
-  edtChannelsUrl.Text := Backend.List.ListProperties.ChannelsUrl;
+  edtChannelsUrl.Text := Backend.M3ULoader.ListProperties.ChannelsUrl;
 
   Kind := Backend.EpgData.EpgProperties.EpgKind;
   cbEpgKind.ItemIndex := Ord(kind);
   cbEpgKind.OnChange(cbChannelsKind);
   edtEpgFileName.Text := Backend.EpgData.EpgProperties.EpgFileName;
-  edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;
+  edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;              }
 
-  cbUseChno.Checked := Backend.List.ListProperties.UseChno;
-  cbDownloadLogo.Checked := Backend.List.ListProperties.ChannelsDownloadLogo;
+  cbUseChno.Checked := Backend.M3ULoader.ListProperties.UseChno;
+  cbDownloadLogo.Checked := Backend.M3ULoader.ListProperties.ChannelsDownloadLogo;
 
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
@@ -136,14 +136,15 @@ var
   ListProperties: TListProperties;
 begin
 
-//  Backend.List.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
-  Backend.List.ListProperties.ChannelsUrl := edtChannelsUrl.Text;
-  Backend.List.ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
-  Backend.List.ListProperties.UseChno := cbUseChno.Checked;
+//  Backend.M3ULoader.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
+{ mcmcmcmcmcmcmcmcm
+  Backend.M3ULoader.ListProperties.ChannelsUrl := edtChannelsUrl.Text;
+  Backend.M3ULoader.ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
+  Backend.M3ULoader.ListProperties.UseChno := cbUseChno.Checked;
 
   Backend.EpgData.EpgProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
   Backend.EpgData.EpgProperties.EpgFileName := edtEpgFileName.Text;
-  Backend.EpgData.EpgProperties.EpgUrl := edtEpgUrl.Text;
+  Backend.EpgData.EpgProperties.EpgUrl := edtEpgUrl.Text;                }
 
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);

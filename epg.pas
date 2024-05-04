@@ -37,7 +37,6 @@ type
 
   TEpgScanner = class(TThread)
   private
-    FCurrentList: integer;
     FOnEndWork: TNotifyEvent;
     FScanEvent: PRTLEvent;
     XMLDoc: TXMLDocument;
@@ -47,9 +46,7 @@ type
     FStopped: boolean;
     function FindChannelIdByEPGName(Channel: string): integer;
     function FindChannelIdByName(Channel: string): integer;
-    procedure SetCurrentList(AValue: integer);
     procedure SetOnEndWork(AValue: TNotifyEvent);
-
   protected
     procedure Execute; override;
     function Load(EPGFile: string): integer;
@@ -60,51 +57,26 @@ type
     procedure Stop;
     property OnEndWork: TNotifyEvent read FOnEndWork write SetOnEndWork;
     property ScanEvent: PRTLEvent read FScanEvent;
-    property CurrentList: integer read FCurrentList write SetCurrentList;
     constructor Create(Owner: TEpg); reintroduce;
     destructor Destroy; override;
   end;
 
-  { TListProperties }
-
-  { TEpgProperties }
-
-  TEpgProperties = class(TConfigParam)
-  private
-    FEpgFileName: string;
-    FEpgKind: TProviderKind;
-    FEPGUrl: string;
-    procedure SetEpgFileName(AValue: string);
-    procedure SetEpgKind(AValue: TProviderKind);
-    procedure SetEPGUrl(AValue: string);
-  protected
-    procedure InternalSave; override;
-  public
-    property EpgFileName: string read FEpgFileName write SetEpgFileName;
-    property EpgKind: TProviderKind read FEpgKind write SetEpgKind;
-    property EPGUrl: string read FEPGUrl write SetEPGUrl;
-    procedure Load; override;
-  end;
-
   TEpg = class
   private
-    FCurrentList: integer;
     fEpgAvailable: boolean;
-    fEpgProperties: TEpgProperties;
+    FM3UList: TM3UList;
     FOnScanComplete: TNotifyEvent;
     FOnScanStart: TNotifyEvent;
     fScanning: boolean;
     Scanner: TEpgScanner;
     procedure AfterScan;
     procedure EndScan(AObject: TObject);
-    procedure SetCurrentList(AValue: integer);
   public
-    property EpgProperties: TEpgProperties read fEpgProperties;
+    Property ListProperties: TM3UList read FM3UList write FM3UList;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
     property Scanning: boolean read fScanning;
-    property CurrentList: integer read FCurrentList write SetCurrentList;
     constructor Create;
     destructor Destroy; override;
     function LastScan(const ScanType: string): TDateTime;
@@ -127,53 +99,6 @@ uses GeneralFunc, LoggerUnit, ZStream;
 const
   INSERTPROGRAMME = 'INSERT INTO "programme"("List","idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")' + ' values  (:list, NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
 
-  { TEpgProperties }
-
-procedure TEpgProperties.SetEpgFileName(AValue: string);
-begin
-  if FEpgFileName = AValue then Exit;
-  FEpgFileName := AValue;
-  Dirty := True;
-
-end;
-
-procedure TEpgProperties.SetEpgKind(AValue: TProviderKind);
-begin
-  if FEpgKind = AValue then Exit;
-  FEpgKind := AValue;
-  Dirty := True;
-
-end;
-
-procedure TEpgProperties.SetEPGUrl(AValue: string);
-begin
-  if FEPGUrl = AValue then Exit;
-  FEPGUrl := AValue;
-  Dirty := True;
-
-end;
-
-
-procedure TEpgProperties.InternalSave;
-begin
-  Owner.WriteString('EPG/ProviderKind', TEnum<TProviderKind>.ToString(EPGKind));
-  Owner.WriteString('EPG/FileName', EPGFileName);
-  Owner.WriteString('EPG/Url', EPGUrl);
-end;
-
-procedure TEpgProperties.Load;
-begin
-  EpgKind := TEnum<TProviderKind>.FromString(Owner.ReadString('EPG/ProviderKind', ''), Local);
-  EpgFileName := Owner.ReadString('EPG/FileName', '');
-  EpgUrl := Owner.ReadString('EPG/Url', '');
-  Dirty := False;
-end;
-
-procedure TEpg.SetCurrentList(AValue: integer);
-begin
-  if FCurrentList = AValue then Exit;
-  FCurrentList := AValue;
-end;
 
 function TEpg.LastChannelMd5: string;
 var
@@ -197,7 +122,7 @@ end;
 
 procedure TEpg.SetLastChannelMd5(const ComputedMD5: string);
 begin
-  ConfigObj.DB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5) + ' where list = ' + IntToStr(FCurrentList));
+  ConfigObj.DB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5) + ' where list = ' + IntToStr(FM3UList.ListID));
 end;
 
 function TEpg.LastScan(const ScanType: string): TDateTime;
@@ -209,7 +134,7 @@ begin
     tmpQuery.DataBase := ConfigObj.DB;
     tmpQuery.Transaction := ConfigObj.TR;
     tmpQuery.SQL.Text := 'SELECT ' + ScanType + ' FROM Scans where list =:list';
-    tmpQuery.ParamByName('list').AsInteger := FCurrentList;
+    tmpQuery.ParamByName('list').AsInteger := FM3UList.ListID;
     tmpQuery.Open;
     if not tmpQuery.EOF then
       Result := tmpQuery.Fields[0].AsDateTime
@@ -294,7 +219,7 @@ begin
     qSearch.SQL.Text := 'select * from programme p where p.idChannel = :id  ' + ' and dStartTime < :time and dEndTime > :time and list =:list ';
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('time').AsDateTime := CurrTime;
-    qSearch.ParamByName('list').AsInteger := FCurrentList;
+    qSearch.ParamByName('list').AsInteger := FM3UList.ListID;
     qSearch.Open;
     if qSearch.EOF then
       Result := Default(REpgInfo)
@@ -325,7 +250,7 @@ begin
       + ' where stitle like :search or sPlot like :search and list = :list'
       + ' order by p.dStartTime';
     qSearch.ParamByName('search').AsString := '%' + SearchTerm + '%';
-    qSearch.ParamByName('list').AsInteger := FCurrentList;
+    qSearch.ParamByName('list').AsInteger := FM3UList.ListID;
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -366,7 +291,7 @@ begin
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('stime').AsDateTime := StartTime;
     qSearch.ParamByName('etime').AsDateTime := EndTime;
-    qSearch.ParamByName('list').AsInteger := FCurrentList;
+    qSearch.ParamByName('list').AsInteger := FM3UList.ListID;
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -391,7 +316,6 @@ end;
 
 constructor TEpg.Create;
 begin
-  fEpgProperties := TEpgProperties.Create(ConfigObj);
   fEpgAvailable := False;
   Scanner := TEpgScanner.Create(self);
   Scanner.OnEndWork := EndScan;
@@ -414,7 +338,7 @@ begin
     for i := 0 to List.Count - 1 do
     begin
       Item := List[i];
-      qinsert.ParamByName('list').AsInteger := FCurrentList;
+      qinsert.ParamByName('list').AsInteger := FM3UList.ListID;
       qinsert.ParamByName('id').AsInteger := i;
       qinsert.ParamByName('name').AsString := item.Title;
       qinsert.ParamByName('EpgName').AsString := item.tvg_name;
@@ -468,16 +392,16 @@ begin
       fOwner.fScanning := True;
       ConfigObj.DB.ExecuteDirect('delete from programme');
       OvoLogger.Log(llINFO, 'EPG update thread started');
-      if fOwner.EpgProperties.EpgKind = Url then
+      if fOwner.FM3UList.EpgKind = Url then
       begin
-        OvoLogger.Log(llINFO, 'Downloading EPG from %s', [fOwner.EpgProperties.EPGUrl]);
+        OvoLogger.Log(llINFO, 'Downloading EPG from %s', [fOwner.FM3UList.EPGUrl]);
         SourceEpg := CacheDir + TempEPGFile;
-        DownloadFromUrl(fOwner.EpgProperties.EPGUrl, SourceEpg, StoppedCheck);
+        DownloadFromUrl(fOwner.FM3UList.EPGUrl, SourceEpg, StoppedCheck);
       end
       else
       begin
-        SourceEpg := fOwner.EpgProperties.EpgFileName;
-        OvoLogger.Log(llINFO, 'Load EPG from local file %s', [fOwner.EpgProperties.EpgFileName]);
+        SourceEpg := fOwner.FM3UList.EPGUrl;
+        OvoLogger.Log(llINFO, 'Load EPG from local file %s', [fOwner.FM3UList.EPGUrl]);
       end;
       if StoppedCheck then
         Continue;
@@ -527,7 +451,7 @@ begin
     qFind.Transaction := ConfigObj.TR;
     qFind.SQL.Text := 'select id from Channels where name = :name and list = :list;';
     qFind.ParamByName('name').AsString := Channel;
-    qFind.ParamByName('list').AsInteger := FCurrentList;
+    qFind.ParamByName('list').AsInteger := fOwner.FM3UList.ListID;
     qFind.Open;
     if qFind.EOF then
       Result := -1
@@ -539,11 +463,6 @@ begin
   end;
 end;
 
-procedure TEpgScanner.SetCurrentList(AValue: integer);
-begin
-  if FCurrentList = AValue then Exit;
-  FCurrentList := AValue;
-end;
 
 function TEpgScanner.FindChannelIdByEPGName(Channel: string): integer;
 var
@@ -554,7 +473,7 @@ begin
     qFind.Transaction := ConfigObj.TR;
     qFind.SQL.Text := 'select id from Channels where epgname = :name and list = :list ;';
     qFind.ParamByName('name').AsString := Channel;
-    qFind.ParamByName('list').AsInteger := FCurrentList;
+    qFind.ParamByName('list').AsInteger := fOwner.FM3UList.ListID;
     qFind.Open;
     if qFind.EOF then
       Result := -1
@@ -681,7 +600,7 @@ begin
           s2 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('stop').NodeValue);
           qInsert.ParamByName('dStartTime').AsDateTime := s1;
           qInsert.ParamByName('dEndTime').AsDateTime := s2;
-          qInsert.ParamByName('list').AsInteger := FCurrentList;
+          qInsert.ParamByName('list').AsInteger := fOwner.FM3UList.ListID;
           qInsert.ExecSQL;
         end;
       end;

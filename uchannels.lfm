@@ -8,6 +8,7 @@ object fChannels: TfChannels
   ClientHeight = 452
   ClientWidth = 894
   KeyPreview = True
+  LCLVersion = '3.99.0.0'
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   object Panel1: TPanel
@@ -32,10 +33,10 @@ object fChannels: TfChannels
       Top = 10
       Width = 153
       BorderSpacing.Around = 9
+      TabOrder = 1
       OnChange = FilterChange
       OnEnter = GotFocus
       OnExit = LostFocus
-      TabOrder = 1
     end
     object cbViewLogo: TCheckBox
       AnchorSideLeft.Control = Edit1
@@ -49,11 +50,11 @@ object fChannels: TfChannels
       BorderSpacing.Around = 9
       Caption = 'Logo'
       Color = clDefault
+      ParentColor = False
+      TabOrder = 2
       OnChange = cbViewLogoChange
       OnEnter = GotFocus
       OnExit = LostFocus
-      ParentColor = False
-      TabOrder = 2
     end
     object cbViewEPG: TCheckBox
       AnchorSideLeft.Control = cbViewLogo
@@ -66,10 +67,10 @@ object fChannels: TfChannels
       Width = 118
       BorderSpacing.Around = 9
       Caption = 'Current program'
+      TabOrder = 3
       OnChange = cbViewLogoChange
       OnEnter = GotFocus
       OnExit = LostFocus
-      TabOrder = 3
     end
     object Label1: TLabel
       AnchorSideLeft.Control = cbGroups
@@ -94,12 +95,12 @@ object fChannels: TfChannels
       Width = 205
       BorderSpacing.Around = 10
       ItemHeight = 0
-      OnChange = FilterChange
-      OnEnter = GotFocus
-      OnExit = LostFocus
       Style = csDropDownList
       TabOrder = 0
       Visible = False
+      OnChange = FilterChange
+      OnEnter = GotFocus
+      OnExit = LostFocus
     end
   end
   object ChannelList: TDrawGrid
@@ -135,10 +136,10 @@ object fChannels: TfChannels
     OnDrawCell = ChannelListDrawCell
     OnSelectCell = ChannelListSelectCell
     ColWidths = (
-      220
-      219
-      219
-      219
+      224
+      224
+      223
+      223
     )
   end
 end

@@ -26,37 +26,6 @@ uses
   Classes, SysUtils, Generics.Collections, SQLDB, StrUtils, Config, Nullable;
 
 type
-  TProviderKind = (Local, URL);
-
-  { TM3UList }
-
-  TM3UList = class
-  private
-    FChannelsDownloadLogo: boolean;
-    FChannelsFileName: string;
-    FChannelsUrl: string;
-    FEPGUrl: string;
-    FListID: Integer;
-    FName: string;
-    FUseChno: boolean;
-    procedure SetChannelsDownloadLogo(AValue: boolean);
-    procedure SetChannelsFileName(AValue: string);
-    procedure SetChannelsUrl(AValue: string);
-    procedure SetEPGUrl(AValue: string);
-    procedure SetListID(AValue: Integer);
-    procedure SetName(AValue: string);
-    procedure SetUseChno(AValue: boolean);
-  public
-    property ListID: Integer read FListID write SetListID;
-    Property Name: string read FName write SetName;
-    Property EPGUrl: string read FEPGUrl write SetEPGUrl;
-    property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
-    property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
-    property UseChno: boolean read FUseChno write SetUseChno;
-    Function ChannelKind: TProviderKind;
-    procedure Load(List: integer); overload;
-    procedure Load; overload;
-  end;
 
   TM3UItem = class
   public
@@ -114,7 +83,7 @@ type
     fLastMessage: string;
     fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
-    InternalList: TM3UList;
+    FM3uList: TM3UList;
     procedure SetCurrentList(AValue: Integer);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(const Left, Right: TM3UItem): integer;
@@ -123,7 +92,7 @@ type
     ListMd5: string;
     Groups: TStringList;
     property ListConfig: TListProperties read fListProperties;
-    Property ListProperties: TM3UList read InternalList;
+    Property ListProperties: TM3UList read FM3uList write FM3uList;
     procedure DoListChanged;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
@@ -256,93 +225,11 @@ begin
   fOwner := Owner;
 end;
 
-{ TM3UList }
-
-procedure TM3UList.SetChannelsDownloadLogo(AValue: boolean);
-begin
-  if FChannelsDownloadLogo = AValue then Exit;
-  FChannelsDownloadLogo := AValue;
-end;
-
-procedure TM3UList.SetChannelsFileName(AValue: string);
-begin
-  if FChannelsFileName = AValue then Exit;
-  FChannelsFileName := AValue;
-end;
-
-procedure TM3UList.SetChannelsUrl(AValue: string);
-begin
-  if FChannelsUrl = AValue then Exit;
-  FChannelsUrl := AValue;
-end;
-
-procedure TM3UList.SetEPGUrl(AValue: string);
-begin
-  if FEPGUrl=AValue then Exit;
-  FEPGUrl:=AValue;
-end;
-
-procedure TM3UList.SetListID(AValue: Integer);
-begin
-  if FListID=AValue then Exit;
-  FListID:=AValue;
-end;
-
-procedure TM3UList.SetName(AValue: string);
-begin
-  if FName=AValue then Exit;
-  FName:=AValue;
-end;
-
-procedure TM3UList.SetUseChno(AValue: boolean);
-begin
-  if FUseChno = AValue then Exit;
-  FUseChno := AValue;
-end;
-
-function TM3UList.ChannelKind: TProviderKind;
-begin
-  if FChannelsUrl.ToLower.StartsWith('http://') or FChannelsUrl.ToLower.StartsWith('https://')  then
-    Result := URL
-  else
-    Result := Local;
-end;
-
-procedure TM3UList.Load(List: integer);
-var
-  qList: TSQLQuery;
-begin
-  FListId := List;
-  qList := TSQLQuery.Create(ConfigObj.DB);
-  try
-    qList.Transaction := ConfigObj.TR;
-    qList.SQL.Text := 'SELECT ID,Name,Position,UseNumber,GetLogo,EPG from lists where ID = :list;';
-    qList.ParamByName('list').AsInteger := List;
-    qList.Open;
-    if not qList.EOF then
-    begin
-      FChannelsUrl := qList.FieldByName('Position').AsString;
-      FChannelsDownloadLogo:= qList.FieldByName('GetLogo').AsBoolean;
-      FUseChno:= qList.FieldByName('UseNumber').AsBoolean;
-      FName:= qList.FieldByName('Name').AsString;
-      FEPGUrl:= qList.FieldByName('EPG').AsString;
-    end;
-  finally
-    qList.Free;
-  end;
-end;
-
-procedure TM3UList.Load;
-begin
-  Load(FListID);
-end;
-
 { TM3ULoader }
 
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
-  InternalList := TM3UList.Create;
   fListProperties := TListProperties.Create(ConfigObj);
   Groups := TStringList.Create;
   Groups.Sorted := True;
@@ -352,7 +239,6 @@ end;
 destructor TM3ULoader.Destroy;
 begin
   Groups.Free;
-  InternalList.Free;
   inherited Destroy;
 end;
 
@@ -530,7 +416,7 @@ procedure TM3ULoader.SetCurrentList(AValue: Integer);
 begin
   if FCurrentList=AValue then Exit;
   FCurrentList:=AValue;
-  InternalList.Load(AValue);
+  FM3uList.Load(AValue);
 
 end;
 
