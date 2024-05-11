@@ -27,7 +27,7 @@ uses
   lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
   um3uloader, OpenGLContext, Types, Math, SysUtils, MPV_Engine, Config,
   {$IFDEF LINUX} clocale,{$endif}
-  GeneralFunc,  epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput;
+  GeneralFunc, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput;
 
 type
 
@@ -55,7 +55,7 @@ type
   end;
 
 
-{ TfPlayer }
+  { TfPlayer }
 type
 
   TfPlayer = class(TForm)
@@ -68,8 +68,8 @@ type
     ApplicationProperties1: TApplicationProperties;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
-    cbGroups: TComboBox;
     EPGList: TDrawGrid;
+    lvLists: TListView;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     N1: TMenuItem;
@@ -78,6 +78,7 @@ type
     mnuVideo: TMenuItem;
     GLRenderer: TOpenGLControl;
     ChannelTimer: TTimer;
+    pcLists: TPageControl;
     Panel1: TPanel;
     pnlEpg: TPanel;
     pnlSubForm: TPanel;
@@ -88,6 +89,10 @@ type
     LoadingTimer: TTimer;
     pmuView: TPopupMenu;
     ChannelSplitter: TSplitter;
+    tsList: TTabSheet;
+    cbGroups: TListBox;
+    tsGroups: TTabSheet;
+    tsChannels: TTabSheet;
     ToolButton1: TSpeedButton;
     ToolButton2: TSpeedButton;
     ToolButton5: TSpeedButton;
@@ -98,7 +103,8 @@ type
     procedure actViewCurrentProgramExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
-    procedure cbGroupsChange(Sender: TObject);
+    procedure cbGroupsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState
+      );
     procedure ChannelListDblClick(Sender: TObject);
     procedure ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
     procedure ChannelListGetCellHint(Sender: TObject; ACol, ARow: integer; var HintText: string);
@@ -112,6 +118,9 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure GLRendererChangeBounds(Sender: TObject);
+    procedure lvListsDblClick(Sender: TObject);
+    procedure lvListsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState
+      );
     procedure LoadingTimerStartTimer(Sender: TObject);
     procedure LoadingTimerTimer(Sender: TObject);
     procedure GLRendererDblClick(Sender: TObject);
@@ -143,6 +152,7 @@ type
     procedure EmbedSubForm(AForm: TForm);
     procedure ExternalInput(Sender: TObject; var Key: word);
     procedure InitializeGui(Data: ptrint);
+    procedure InitializeLists;
     procedure LoadDailyEpg;
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
@@ -176,9 +186,9 @@ uses uconfig, LoggerUnit, AppConsts, uChannels, LazUTF8, LazLogger;
 var
   f: Text;
 
-{$R *.lfm}
+  {$R *.lfm}
 
-{ TGuiProperties }
+  { TGuiProperties }
 
 procedure TGuiProperties.SetChannelGridWidth(AValue: integer);
 begin
@@ -270,9 +280,9 @@ begin
 
 
   Result := True;
-  IPTVList := BackEnd.M3UList.ChannelsUrl;
+  BackEnd.ListManager.Load;
 
-  if IPTVList.IsEmpty then
+  if BackEnd.ListManager.Count = 0 then
     case ShowMyDialog(mtWarning, 'Welcome to OvoM3U',
         'No list configured' + #10 +
         'Message for configuration', [mbClose],
@@ -295,7 +305,6 @@ var
   CacheDir: string;
 begin
 
-  BackEnd.LoadList(2);
   fFilteredList := BackEnd.M3ULoader.Filter(Default(TFilterParam));
 
   if (BackEnd.M3ULoader.Groups.Count > 1) then
@@ -354,8 +363,6 @@ begin
   ChannelSelected := 0;
   Application.QueueAsyncCall(InitializeGui, 0);
 
-  BackEnd.LoadList(2);
-
   if CheckConfigAndSystem then
   begin
     backend.InitializeEngine(GLRenderer);
@@ -408,12 +415,12 @@ var
 begin
   Pass := False;
   Application.ProcessMessages;
-  if (key and $300) =$300 then
-   begin
-     hide;
-     application.ProcessMessages;
-     Application.Terminate;
-   end;
+  if (key and $300) = $300 then
+  begin
+    hide;
+    application.ProcessMessages;
+    Application.Terminate;
+  end;
 
   if (Key and $200) <> 0 then
   begin
@@ -438,14 +445,14 @@ begin
 
     VK_MEDIA_NEXT_TRACK:
     begin
-        channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
-        play(fFilteredList.Map(channel + 1));
+      channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
+      play(fFilteredList.Map(channel + 1));
     end;
     VK_MEDIA_PREV_TRACK:
     begin
-        channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
-        play(fFilteredList.Map(channel - 1));
-     end;
+      channel := fFilteredList.IndexOf(BackEnd.CurrentIndex);
+      play(fFilteredList.Map(channel - 1));
+    end;
     VK_MEDIA_STOP:
     begin
       backend.mpvengine.Stop;
@@ -476,7 +483,8 @@ begin
         ChannelSplitter.Visible := pnlChannel.Visible;
         HideMouse.Enabled := (not pnlChannel.Visible) and flgFullScreen;
         if pnlChannel.Visible then
-          ChannelList.SetFocus;;
+          ChannelList.SetFocus;
+        ;
       end;
 
       VK_I:
@@ -530,10 +538,12 @@ begin
       VK_RIGHT:
       begin
         backend.mpvengine.Seek(5);
+        pass := True;
       end;
       VK_LEFT:
       begin
         backend.mpvengine.Seek(-5);
+        pass := True;
       end;
 
       VK_0..VK_9, VK_NUMPAD0..VK_NUMPAD9:
@@ -562,12 +572,33 @@ begin
   else
     Pass := True;
   if not pass then
-    key := 0
+    key := 0;
 end;
 
 procedure TfPlayer.GLRendererChangeBounds(Sender: TObject);
 begin
   BackEnd.MpvEngine.Refresh;
+end;
+
+procedure TfPlayer.lvListsDblClick(Sender: TObject);
+begin
+  BackEnd.LoadList(PtrInt(lvLists.Selected.Data));
+  LoadList;
+end;
+
+procedure TfPlayer.lvListsKeyDown(Sender: TObject; var Key: word;
+  Shift: TShiftState);
+begin
+
+  if (key) = VK_RETURN then
+  begin
+    BackEnd.LoadList(PtrInt(lvLists.Selected.Data));
+    LoadList;
+  end;
+
+  if key = VK_RIGHT then
+    pcLists.ActivePage := tsGroups;
+
 end;
 
 procedure TfPlayer.LoadingTimerStartTimer(Sender: TObject);
@@ -685,6 +716,10 @@ procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TSh
 begin
   if (key) = VK_RETURN then
     Play(fFilteredList.Map(ChannelList.Row));
+  if key = VK_LEFT then
+  begin
+    pcLists.ActivePage := tsGroups;
+  end;
 end;
 
 procedure TfPlayer.ChannelSplitterMoved(Sender: TObject);
@@ -787,18 +822,25 @@ begin
   end;
 end;
 
-procedure TfPlayer.cbGroupsChange(Sender: TObject);
+procedure TfPlayer.cbGroupsKeyDown(Sender: TObject; var Key: word;
+  Shift: TShiftState);
 var
   Filter: TFilterParam;
 begin
-  Filter := Default(TFilterParam);
-  if cbGroups.ItemIndex <> 0 then
-    Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
+  if (key) = VK_RETURN then
+  begin
+    Filter := Default(TFilterParam);
+    if cbGroups.ItemIndex <> 0 then
+      Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
+    fFilteredList := BackEnd.M3ULoader.Filter(Filter);
+    ChannelList.RowCount := fFilteredList.Count;
+    ChannelList.Invalidate;
+  end;
 
-  fFilteredList := BackEnd.M3ULoader.Filter(Filter);
-
-  ChannelList.RowCount := fFilteredList.Count;
-  ChannelList.Invalidate;
+  if key = VK_LEFT then
+    pcLists.ActivePage := tsList;
+  if key = VK_RIGHT then
+    pcLists.ActivePage := tsChannels;
 
 end;
 
@@ -910,6 +952,19 @@ begin
   ChannelSplitter.Left := Scale96ToScreen(GuiProperties.ChannelGridWidth);
   BoundsRect := GuiProperties.BoundsRect;
   ComputeGridCellSize;
+  InitializeLists;
+end;
+
+procedure TfPlayer.InitializeLists;
+var
+  item: TM3UList;
+begin
+  lvLists.Clear;
+  BackEnd.ListManager.Load;
+  for item in BackEnd.ListManager do
+  begin
+    lvLists.AddItem(Item.Name, TObject(PtrInt(item.ListID)));
+  end;
 
 end;
 

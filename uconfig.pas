@@ -23,9 +23,9 @@ unit uconfig;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls, Config, uBackEnd,
-  LoggerUnit;
+  Classes, SysUtils, SQLDB, SQLite3Conn, DB, Forms, Controls, Graphics, Dialogs,
+  StdCtrls, ComCtrls, EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls,
+  DBGrids, DBCtrls, Config, uBackEnd, LoggerUnit;
 
 type
 
@@ -34,38 +34,40 @@ type
   TfConfig = class(TForm)
   published
     bpConfig: TButtonPanel;
-    cbChannelsKind: TComboBox;
-    cbEpgKind: TComboBox;
     cbMpris2: TCheckBox;
     cbMMkeys: TCheckBox;
-    cbUseChno: TCheckBox;
-    cbDownloadLogo: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
     cbLibCEC: TCheckBox;
-    edtChannelsFileName: TFileNameEdit;
-    edtEpgFileName: TFileNameEdit;
-    edtChannelsUrl: TEdit;
-    edtEpgUrl: TEdit;
+    DBCheckBox1: TDBCheckBox;
+    DBCheckBox2: TDBCheckBox;
+    dbeName: TDBEdit;
+    dbeName1: TDBEdit;
+    dbeName2: TDBEdit;
+    DBGrid1: TDBGrid;
+    DBNavigator1: TDBNavigator;
+    dsList: TDataSource;
     GroupBox1: TGroupBox;
-    Label5: TLabel;
-    lb: TLabel;
+    Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
-    Label4: TLabel;
-    lb1: TLabel;
     pcSettings: TPageControl;
+    qListsEPG: TStringField;
+    qListsGetLogo: TLongintField;
+    qListsID: TAutoIncField;
+    qListsName: TStringField;
+    qListsPosition: TStringField;
+    qListsUseNumber: TLongintField;
     rgKeyCaptureMode: TRadioGroup;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     lbWarning: TLabel;
     SpeedButton3: TSpeedButton;
+    qLists: TSQLQuery;
     tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
     vleCustomOptions: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
-    procedure cbChannelsKindChange(Sender: TObject);
-    procedure cbEpgKindChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure OKButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -106,6 +108,10 @@ var
   Kind: TProviderKind;
 begin
   ConfigObj.ReadConfig;
+
+  qLists.DataBase := ConfigObj.DB;
+  qLists.Transaction := ConfigObj.TR;;
+  qLists.Open;
   { mcmcmcmcmcmcmc
   Kind := Backend.M3ULoader.ListProperties.ChannelKind;
   cbChannelsKind.ItemIndex := Ord(kind);
@@ -116,10 +122,10 @@ begin
   cbEpgKind.ItemIndex := Ord(kind);
   cbEpgKind.OnChange(cbChannelsKind);
   edtEpgFileName.Text := Backend.EpgData.EpgProperties.EpgFileName;
-  edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;              }
+  edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;
 
   cbUseChno.Checked := Backend.M3ULoader.ListProperties.UseChno;
-  cbDownloadLogo.Checked := Backend.M3ULoader.ListProperties.ChannelsDownloadLogo;
+  cbDownloadLogo.Checked := Backend.M3ULoader.ListProperties.ChannelsDownloadLogo;       }
 
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
@@ -136,15 +142,8 @@ var
   ListProperties: TListProperties;
 begin
 
-//  Backend.M3ULoader.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
-{ mcmcmcmcmcmcmcmcm
-  Backend.M3ULoader.ListProperties.ChannelsUrl := edtChannelsUrl.Text;
-  Backend.M3ULoader.ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
-  Backend.M3ULoader.ListProperties.UseChno := cbUseChno.Checked;
-
-  Backend.EpgData.EpgProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
-  Backend.EpgData.EpgProperties.EpgFileName := edtEpgFileName.Text;
-  Backend.EpgData.EpgProperties.EpgUrl := edtEpgUrl.Text;                }
+  if qLists.State in dsEditModes then
+    qLists.Post;
 
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
@@ -184,39 +183,6 @@ begin
 
   FOnWorkDone := AValue;
 end;
-
-procedure TfConfig.cbChannelsKindChange(Sender: TObject);
-begin
-  case cbChannelsKind.ItemIndex of
-    0:
-    begin
-      edtChannelsFileName.Enabled := True;
-      edtChannelsUrl.Enabled := False;
-    end;
-    1:
-    begin
-      edtChannelsFileName.Enabled := False;
-      edtChannelsUrl.Enabled := True;
-    end;
-  end;
-end;
-
-procedure TfConfig.cbEpgKindChange(Sender: TObject);
-begin
-  case cbEpgKind.ItemIndex of
-    0:
-    begin
-      edtEpgFileName.Enabled := True;
-      edtEpgUrl.Enabled := False;
-    end;
-    1:
-    begin
-      edtEpgFileName.Enabled := False;
-      edtEpgUrl.Enabled := True;
-    end;
-  end;
-end;
-
 
 procedure TfConfig.CancelButtonClick(Sender: TObject);
 begin

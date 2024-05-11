@@ -81,9 +81,10 @@ type
 
   public
     PluginsProperties: TPluginsProperties;
+    ListManager : TListsManager;
     procedure ShowEpg;
     procedure OsdMessage(Message: string; TimeOut: boolean=True);
-    procedure LoadList(List:integer);
+    procedure LoadList(List:intptr);
     function InitializeEngine(Renderer: TOpenGLControl): boolean;
     procedure Play(index:integer);
     Procedure SwapChannel;
@@ -152,7 +153,7 @@ begin
 end;
 
 { TBackend }
-procedure TBackend.LoadList(List: integer);
+procedure TBackend.LoadList(List: intptr);
 var
   CacheDir, IPTVList: string;
   Kind: TProviderKind;
@@ -327,7 +328,7 @@ constructor TBackend.Create;
 begin
   PluginsProperties:= TPluginsProperties.Create(ConfigObj);
   M3UList := TM3UList.Create;
-
+  ListManager := TListsManager.Create;
   M3ULoader := TM3ULoader.Create;
   M3ULoader.ListProperties := M3UList;
   EpgData := TEpg.Create;
@@ -396,6 +397,7 @@ begin
   M3ULoader.Free;
   HDMI_CEC.free;
   mmkey.Free;
+  ListManager.Free;
 
  {$IFDEF LINUX} Mpris.Free; {$ENDIF}
   inherited Destroy;
