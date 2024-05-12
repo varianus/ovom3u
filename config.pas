@@ -207,7 +207,7 @@ const
     + ');';
 
   CREATELISTTABLE =
-    'CREATE TABLE "Lists" ('
+    'CREATE TABLE "m3ulists" ('
     + 'ID INTEGER'
     + ',Name VARCHAR'
     + ',Position VARCHAR'
@@ -802,6 +802,12 @@ begin
         fDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
         fTR.CommitRetaining;
       end;
+      if TableList.IndexOf('m3ulists') < 0 then
+      begin
+        OvoLogger.Log(llDEBUG, 'Creating m3ulists table');
+        fDB.ExecuteDirect(CREATELISTTABLE);
+        fTR.CommitRetaining;
+      end;
       if TableList.IndexOf('scans') < 0 then
       begin
         OvoLogger.Log(llDEBUG, 'Creating scans table');
@@ -889,7 +895,7 @@ begin
   try
     tmpQuery.DataBase := ConfigObj.fDB;
     tmpQuery.Transaction := ConfigObj.fTR;
-    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM Lists;';
+    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM m3ulists;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
     begin
@@ -979,7 +985,7 @@ begin
   qList := TSQLQuery.Create(ConfigObj.DB);
   try
     qList.Transaction := ConfigObj.TR;
-    qList.SQL.Text := 'SELECT ID,Name,Position,UseNumber,GetLogo,EPG from lists where ID = :list;';
+    qList.SQL.Text := 'SELECT ID,Name,Position,UseNumber,GetLogo,EPG from m3ulists where ID = :list;';
     qList.ParamByName('list').AsInteger := List;
     qList.Open;
     if not qList.EOF then

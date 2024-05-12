@@ -19,8 +19,8 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 386
-      ClientWidth = 576
+      ClientHeight = 388
+      ClientWidth = 578
       object DBGrid1: TDBGrid
         AnchorSideTop.Control = tsChannels
         Left = 0
@@ -33,7 +33,7 @@ object fConfig: TfConfig
         Columns = <        
           item
             Title.Caption = 'Name'
-            Width = 531
+            Width = 525
             FieldName = 'Name'
           end>
         DataSource = dsList
@@ -56,6 +56,7 @@ object fConfig: TfConfig
         ChildSizing.ControlsPerLine = 100
         ClientHeight = 25
         ClientWidth = 241
+        DataSource = dsList
         Options = []
         TabOrder = 1
         VisibleButtons = [nbInsert, nbDelete, nbEdit]
@@ -68,9 +69,9 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 126
-        Height = 27
-        Top = 195
-        Width = 442
+        Height = 25
+        Top = 196
+        Width = 444
         DataField = 'Name'
         DataSource = dsList
         Alignment = taRightJustify
@@ -116,9 +117,9 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 126
-        Height = 27
-        Top = 223
-        Width = 442
+        Height = 25
+        Top = 224
+        Width = 444
         DataField = 'Position'
         DataSource = dsList
         Anchors = [akTop, akLeft, akRight]
@@ -188,9 +189,9 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 126
-        Height = 27
-        Top = 281
-        Width = 442
+        Height = 25
+        Top = 282
+        Width = 444
         DataField = 'EPG'
         DataSource = dsList
         Anchors = [akTop, akLeft, akRight]
@@ -201,8 +202,8 @@ object fConfig: TfConfig
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 386
-      ClientWidth = 576
+      ClientHeight = 388
+      ClientWidth = 578
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
         AnchorSideTop.Control = lbWarning
@@ -212,9 +213,9 @@ object fConfig: TfConfig
         AnchorSideBottom.Control = tsMpv
         AnchorSideBottom.Side = asrBottom
         Left = 9
-        Height = 277
+        Height = 279
         Top = 100
-        Width = 558
+        Width = 560
         AlternateColor = clBtnFace
         Anchors = [akTop, akLeft, akRight, akBottom]
         BorderSpacing.Around = 9
@@ -227,7 +228,7 @@ object fConfig: TfConfig
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
         ColWidths = (
           150
-          407
+          409
         )
       end
       object cbHardwareAcceleration: TCheckBox
@@ -255,8 +256,8 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 386
-      ClientWidth = 576
+      ClientHeight = 388
+      ClientWidth = 578
       object cbLibCEC: TCheckBox
         Left = 12
         Height = 21
@@ -403,7 +404,7 @@ object fConfig: TfConfig
         Size = 255
       end>
     SQL.Strings = (
-      'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM Lists;'
+      'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM m3ulists;'
       ''
     )
     Left = 304
