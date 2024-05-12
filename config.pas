@@ -56,6 +56,40 @@ type
 
   TConfigList = TObjectList<TConfigParam>;
 
+
+  TProviderKind = (Local, URL);
+
+  { TM3UList }
+
+  TM3UList = class
+  private
+    FChannelsDownloadLogo: boolean;
+    FChannelsFileName: string;
+    FChannelsUrl: string;
+    FEPGUrl: string;
+    FListID: integer;
+    FName: string;
+    FUseChno: boolean;
+    procedure SetChannelsDownloadLogo(AValue: boolean);
+    procedure SetChannelsFileName(AValue: string);
+    procedure SetChannelsUrl(AValue: string);
+    procedure SetEPGUrl(AValue: string);
+    procedure SetListID(AValue: integer);
+    procedure SetName(AValue: string);
+    procedure SetUseChno(AValue: boolean);
+  public
+    property ListID: integer read FListID write SetListID;
+    property Name: string read FName write SetName;
+    property EPGUrl: string read FEPGUrl write SetEPGUrl;
+    property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
+    property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
+    property UseChno: boolean read FUseChno write SetUseChno;
+    function ChannelKind: TProviderKind;
+    function EpgKind: TProviderKind;
+    procedure Load(List: integer); overload;
+    procedure Load; overload;
+  end;
+
   TConfig = class
   private
     fConfigList: TConfigList;
@@ -111,6 +145,15 @@ type
     property TR: TSQLTransaction read fTR;
   end;
 
+  { TListsManager }
+
+  TListsManager = class(TObjectList<TM3UList>)
+  public
+    procedure Load;
+
+
+  end;
+
   { TSimpleHistory }
 
   TSimpleHistory = class
@@ -131,39 +174,6 @@ type
     property Count: integer read GetCount;
   end;
 
-type
-  TProviderKind = (Local, URL);
-
-  { TM3UList }
-
-  TM3UList = class
-  private
-    FChannelsDownloadLogo: boolean;
-    FChannelsFileName: string;
-    FChannelsUrl: string;
-    FEPGUrl: string;
-    FListID: Integer;
-    FName: string;
-    FUseChno: boolean;
-    procedure SetChannelsDownloadLogo(AValue: boolean);
-    procedure SetChannelsFileName(AValue: string);
-    procedure SetChannelsUrl(AValue: string);
-    procedure SetEPGUrl(AValue: string);
-    procedure SetListID(AValue: Integer);
-    procedure SetName(AValue: string);
-    procedure SetUseChno(AValue: boolean);
-  public
-    property ListID: Integer read FListID write SetListID;
-    Property Name: string read FName write SetName;
-    Property EPGUrl: string read FEPGUrl write SetEPGUrl;
-    property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
-    property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
-    property UseChno: boolean read FUseChno write SetUseChno;
-    Function ChannelKind: TProviderKind;
-    function EpgKind: TProviderKind;
-    procedure Load(List: integer); overload;
-    procedure Load; overload;
-  end;
 
 function ConfigObj: TConfig;
 
@@ -199,7 +209,7 @@ const
   CREATELISTTABLE =
     'CREATE TABLE "Lists" ('
     + 'ID INTEGER'
-    + ',Name NUMERIC'
+    + ',Name VARCHAR'
     + ',Position VARCHAR'
     + ',UseNumber INTEGER'
     + ',GetLogo INTEGER'
@@ -234,7 +244,7 @@ const
   CREATECHANNELINDEX2 =
     'CREATE INDEX "idx_Channels_EpgName" on channels (EpgName ASC);';
   CREATECHANNELINDEX3 =
-'  CREATE UNIQUE INDEX idx_Channels_List ON channels (List, ID);';
+    '  CREATE UNIQUE INDEX idx_Channels_List ON channels (List, ID);';
 
 
   CREATEPROGRAMMETABLE =
@@ -253,7 +263,7 @@ const
   CREATEPROGRAMMEINDEX2 =
     'CREATE INDEX "idx_programme_iStartTime" on programme (dStartTime ASC);';
   CREATEPROGRAMMEINDEX3 =
-'  CREATE UNIQUE INDEX idx_programme_List ON programme (List, idProgram);';
+    '  CREATE UNIQUE INDEX idx_programme_List ON programme (List, idProgram);';
 
 const
   SectionUnix = 'UNIX';
@@ -867,6 +877,40 @@ begin
 
 end;
 
+{ TListsManager }
+
+procedure TListsManager.Load;
+var
+  tmpQuery: TSQLQuery;
+  wItem: TM3UList;
+begin
+  Clear;
+  tmpQuery := TSQLQuery.Create(ConfigObj.fDB);
+  try
+    tmpQuery.DataBase := ConfigObj.fDB;
+    tmpQuery.Transaction := ConfigObj.fTR;
+    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM Lists;';
+    tmpQuery.Open;
+    while not tmpQuery.EOF do
+    begin
+      wItem := TM3UList.Create;
+      wItem.ListID := tmpQuery.FieldByName('ID').AsInteger;
+      wItem.Name := tmpQuery.FieldByName('Name').AsString;
+      wItem.ChannelsUrl := tmpQuery.FieldByName('Position').AsString;
+      wItem.UseChno := tmpQuery.FieldByName('UseNumber').AsBoolean;
+      wItem.ChannelsDownloadLogo := tmpQuery.FieldByName('GetLogo').AsBoolean;
+      wItem.EPGUrl := tmpQuery.FieldByName('EPG').AsString;
+      Add(wItem);
+      tmpQuery.Next;
+    end;
+
+
+  finally
+    tmpQuery.Free;
+  end;
+
+end;
+
 { TM3UList }
 
 procedure TM3UList.SetChannelsDownloadLogo(AValue: boolean);
@@ -889,20 +933,20 @@ end;
 
 procedure TM3UList.SetEPGUrl(AValue: string);
 begin
-  if FEPGUrl=AValue then Exit;
-  FEPGUrl:=AValue;
+  if FEPGUrl = AValue then Exit;
+  FEPGUrl := AValue;
 end;
 
-procedure TM3UList.SetListID(AValue: Integer);
+procedure TM3UList.SetListID(AValue: integer);
 begin
-  if FListID=AValue then Exit;
-  FListID:=AValue;
+  if FListID = AValue then Exit;
+  FListID := AValue;
 end;
 
 procedure TM3UList.SetName(AValue: string);
 begin
-  if FName=AValue then Exit;
-  FName:=AValue;
+  if FName = AValue then Exit;
+  FName := AValue;
 end;
 
 procedure TM3UList.SetUseChno(AValue: boolean);
@@ -913,7 +957,7 @@ end;
 
 function TM3UList.ChannelKind: TProviderKind;
 begin
-  if FChannelsUrl.ToLower.StartsWith('http://') or FChannelsUrl.ToLower.StartsWith('https://')  then
+  if FChannelsUrl.ToLower.StartsWith('http://') or FChannelsUrl.ToLower.StartsWith('https://') then
     Result := URL
   else
     Result := Local;
@@ -921,7 +965,7 @@ end;
 
 function TM3UList.EpgKind: TProviderKind;
 begin
-  if FEPGUrl.ToLower.StartsWith('http://') or FEPGUrl.ToLower.StartsWith('https://')  then
+  if FEPGUrl.ToLower.StartsWith('http://') or FEPGUrl.ToLower.StartsWith('https://') then
     Result := URL
   else
     Result := Local;
@@ -941,10 +985,10 @@ begin
     if not qList.EOF then
     begin
       FChannelsUrl := qList.FieldByName('Position').AsString;
-      FChannelsDownloadLogo:= qList.FieldByName('GetLogo').AsBoolean;
-      FUseChno:= qList.FieldByName('UseNumber').AsBoolean;
-      FName:= qList.FieldByName('Name').AsString;
-      FEPGUrl:= qList.FieldByName('EPG').AsString;
+      FChannelsDownloadLogo := qList.FieldByName('GetLogo').AsBoolean;
+      FUseChno := qList.FieldByName('UseNumber').AsBoolean;
+      FName := qList.FieldByName('Name').AsString;
+      FEPGUrl := qList.FieldByName('EPG').AsString;
     end;
   finally
     qList.Free;
