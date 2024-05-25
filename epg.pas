@@ -72,20 +72,15 @@ type
     procedure AfterScan;
     procedure EndScan(AObject: TObject);
   public
-    Property ListProperties: TM3UList read FM3UList write FM3UList;
+    Property ActiveList: TM3UList read FM3UList write FM3UList;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
     property Scanning: boolean read fScanning;
     constructor Create;
     destructor Destroy; override;
-    function LastScan(const ScanType: string): TDateTime;
-    function LastChannelMd5: string;
     procedure LoadChannelList(List: TM3ULoader);
     procedure Scan;
-    procedure SetLastScan(ScanType: string; Date: TdateTime);
-    procedure SetLastChannelMd5(const ComputedMD5: string);
-
     function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
     function GetEpgInfo(const SearchTerm: string): AREpgInfo; overload;
@@ -99,71 +94,6 @@ uses GeneralFunc, LoggerUnit, ZStream;
 const
   INSERTPROGRAMME = 'INSERT INTO "programme"("List","idProgram","idChannel","sTitle","sPlot","dStartTime","dEndTime")' + ' values  (:list, NULL,:idChannel,:sTitle,:sPlot,:dStartTime,:dEndTime);';
 
-
-function TEpg.LastChannelMd5: string;
-var
-  tmpQuery: TSQLQuery;
-begin
-  try
-    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
-    tmpQuery.DataBase := ConfigObj.DB;
-    tmpQuery.Transaction := ConfigObj.TR;
-    tmpQuery.SQL.Text := 'SELECT ChannelsMd5  FROM Scans';
-    tmpQuery.Open;
-    if not tmpQuery.EOF then
-      Result := tmpQuery.Fields[0].AsString
-    else
-      Result := '';
-
-  finally
-    tmpQuery.Free;
-  end;
-end;
-
-procedure TEpg.SetLastChannelMd5(const ComputedMD5: string);
-begin
-  ConfigObj.DB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5) + ' where list = ' + IntToStr(FM3UList.ListID));
-end;
-
-function TEpg.LastScan(const ScanType: string): TDateTime;
-var
-  tmpQuery: TSQLQuery;
-begin
-  try
-    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
-    tmpQuery.DataBase := ConfigObj.DB;
-    tmpQuery.Transaction := ConfigObj.TR;
-    tmpQuery.SQL.Text := 'SELECT ' + ScanType + ' FROM Scans where list =:list';
-    tmpQuery.ParamByName('list').AsInteger := FM3UList.ListID;
-    tmpQuery.Open;
-    if not tmpQuery.EOF then
-      Result := tmpQuery.Fields[0].AsDateTime
-    else
-      Result := 0;
-
-  finally
-    tmpQuery.Free;
-  end;
-
-end;
-
-procedure TEpg.SetLastScan(ScanType: string; Date: TdateTime);
-var
-  tmpQuery: TSQLQuery;
-begin
-  try
-    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
-    tmpQuery.DataBase := ConfigObj.DB;
-    tmpQuery.Transaction := ConfigObj.TR;
-    tmpQuery.SQL.Text := 'UPDATE scans set ' + ScanType + ' =:date';
-    tmpQuery.parambyname('date').AsDateTime := Date;
-    tmpQuery.ExecSQL;
-    ConfigObj.TR.CommitRetaining;
-  finally
-    tmpQuery.Free;
-  end;
-
-end;
 
 procedure TEpg.EndScan(AObject: TObject);
 begin
@@ -195,7 +125,7 @@ begin
     Scanner.Stop;
   end;
 
-  if LastScan('epg') + 12 / 24 > now then
+  if ConfigObj.ListManager.LastScan(FM3UList.ListID, 'epg') + 12 / 24 > now then
   begin
     OvoLogger.Log(llINFO, 'Skipping EPG update, used cache');
     AfterScan;
@@ -431,7 +361,7 @@ begin
         Continue;
       if Load(EpgFile) > 0 then
       begin
-        fOwner.setlastscan('epg', now);
+        ConfigObj.ListManager.setlastscan(fOwner.FM3UList.ListID, 'epg', now);
         Success := True;
       end;
     except

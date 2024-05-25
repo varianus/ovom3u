@@ -174,10 +174,12 @@ object fPlayer: TfPlayer
             item
               AutoSize = True
               Caption = 'Title'
+              Width = 1
             end          
             item
               Caption = 'Index'
               Visible = False
+              Width = 190
             end>
           ReadOnly = True
           TabOrder = 0
@@ -200,6 +202,7 @@ object fPlayer: TfPlayer
           ParentFont = False
           TabOrder = 0
           TopIndex = -1
+          OnDblClick = cbGroupsDblClick
           OnKeyDown = cbGroupsKeyDown
         end
       end
@@ -233,7 +236,7 @@ object fPlayer: TfPlayer
           OnGetCellHint = ChannelListGetCellHint
           OnKeyDown = ChannelListKeyDown
           ColWidths = (
-            190
+            200
           )
         end
       end

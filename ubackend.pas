@@ -25,15 +25,15 @@ interface
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
   GeneralFunc, BaseTypes, OpenGLContext, cec_intf, MultimediaKeys
-    {$IFDEF LINUX}, mpris2{$ENDIF}
+  {$IFDEF LINUX}, mpris2{$ENDIF}
   ;
 
 type
-  ExternalInput = procedure(Sender: TObject; var Key: Word) of Object;
+  ExternalInput = procedure(Sender: TObject; var Key: word) of object;
 
   { TPluginsProperties }
 
-  TPluginsProperties = Class(TConfigParam)
+  TPluginsProperties = class(TConfigParam)
   private
     FEnableCEC: boolean;
     FEnableMMKeys: boolean;
@@ -43,14 +43,14 @@ type
     procedure SetEnableMMKeys(AValue: boolean);
     procedure SetEnableMPRIS2(AValue: boolean);
     procedure SetMMKeysMode(AValue: integer);
-  Protected
-    Procedure InternalSave; override;
+  protected
+    procedure InternalSave; override;
   public
-    Property EnableCEC: boolean read FEnableCEC write SetEnableCEC;
-    Property EnableMPRIS2: boolean read FEnableMPRIS2 write SetEnableMPRIS2;
-    Property EnableMMKeys: boolean read FEnableMMKeys write SetEnableMMKeys;
-    Property MMKeysMode: integer read FMMKeysMode write SetMMKeysMode;
-    Procedure Load; override;
+    property EnableCEC: boolean read FEnableCEC write SetEnableCEC;
+    property EnableMPRIS2: boolean read FEnableMPRIS2 write SetEnableMPRIS2;
+    property EnableMMKeys: boolean read FEnableMMKeys write SetEnableMMKeys;
+    property MMKeysMode: integer read FMMKeysMode write SetMMKeysMode;
+    procedure Load; override;
 
   end;
 
@@ -60,6 +60,7 @@ type
   private
     FOnExternalInput: ExternalInput;
     FOnPlay: TNotifyEvent;
+    procedure OnListChangedPlay(Sender: TObject);
     procedure OSDTimerTimer(Sender: TObject);
     procedure SetOnExternalInput(AValue: ExternalInput);
     procedure CecKey(Sender: TObject; var Key: word);
@@ -76,21 +77,21 @@ type
     MpvEngine: TMPVEngine;
     OSDTimer: TFPTimer;
     Loading: boolean;
-    PreviousIndex, CurrentIndex:integer;
+    PreviousIndex, CurrentIndex: integer;
     ShowingInfo: boolean;
 
   public
     PluginsProperties: TPluginsProperties;
-    ListManager : TListsManager;
+    ListManager: TListsManager;
     procedure ShowEpg;
-    procedure OsdMessage(Message: string; TimeOut: boolean=True);
-    procedure LoadList(List:intptr);
+    procedure OsdMessage(Message: string; TimeOut: boolean = True);
+    procedure LoadList(List: intptr);
     function InitializeEngine(Renderer: TOpenGLControl): boolean;
-    procedure Play(index:integer);
-    Procedure SwapChannel;
+    procedure Play(index: integer);
+    procedure SwapChannel;
   public
-    Property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
-    Property OnPlay: TNotifyEvent read FOnPlay write SetOnPlay;
+    property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
+    property OnPlay: TNotifyEvent read FOnPlay write SetOnPlay;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -112,111 +113,52 @@ end;
 
 procedure TPluginsProperties.SetEnableCEC(AValue: boolean);
 begin
-  if FEnableCEC=AValue then Exit;
-  FEnableCEC:=AValue;
-  Dirty := true;
+  if FEnableCEC = AValue then Exit;
+  FEnableCEC := AValue;
+  Dirty := True;
 end;
 
 procedure TPluginsProperties.SetEnableMMKeys(AValue: boolean);
 begin
-  if FEnableMMKeys=AValue then Exit;
-  FEnableMMKeys:=AValue;
+  if FEnableMMKeys = AValue then Exit;
+  FEnableMMKeys := AValue;
 end;
 
 procedure TPluginsProperties.SetEnableMPRIS2(AValue: boolean);
 begin
-  if FEnableMPRIS2=AValue then Exit;
-  FEnableMPRIS2:=AValue;
+  if FEnableMPRIS2 = AValue then Exit;
+  FEnableMPRIS2 := AValue;
 end;
 
 procedure TPluginsProperties.SetMMKeysMode(AValue: integer);
 begin
-  if FMMKeysMode=AValue then Exit;
-  FMMKeysMode:=AValue;
+  if FMMKeysMode = AValue then Exit;
+  FMMKeysMode := AValue;
 end;
 
 procedure TPluginsProperties.InternalSave;
 begin
- Owner.WriteBoolean('Plugins/HDMI-CEC/Enabled', EnableCEC);
- Owner.WriteBoolean('Plugins/MPRIS2/Enabled', EnableMPRIS2);
- Owner.WriteBoolean('Plugins/MMKeys/Enabled', EnableMMKeys);
- Owner.WriteInteger('Plugins/MMKeys/Mode', MMKeysMode);
+  Owner.WriteBoolean('Plugins/HDMI-CEC/Enabled', EnableCEC);
+  Owner.WriteBoolean('Plugins/MPRIS2/Enabled', EnableMPRIS2);
+  Owner.WriteBoolean('Plugins/MMKeys/Enabled', EnableMMKeys);
+  Owner.WriteInteger('Plugins/MMKeys/Mode', MMKeysMode);
 end;
 
 procedure TPluginsProperties.Load;
 begin
- EnableCEC := Owner.ReadBoolean('Plugins/HDMI-CEC/Enabled', false);
- EnableMPRIS2 := Owner.ReadBoolean('Plugins/MPRIS2/Enabled', false);
- EnableMMKeys := Owner.ReadBoolean('Plugins/MMKeys/Enabled', false);
- MMKeysMode := Owner.ReadInteger('Plugins/MMKeys/Mode', 1);
- Dirty:=false;
+  EnableCEC := Owner.ReadBoolean('Plugins/HDMI-CEC/Enabled', False);
+  EnableMPRIS2 := Owner.ReadBoolean('Plugins/MPRIS2/Enabled', False);
+  EnableMMKeys := Owner.ReadBoolean('Plugins/MMKeys/Enabled', False);
+  MMKeysMode := Owner.ReadInteger('Plugins/MMKeys/Mode', 1);
+  Dirty := False;
 end;
 
 { TBackend }
 procedure TBackend.LoadList(List: intptr);
-var
-  CacheDir, IPTVList: string;
-  Kind: TProviderKind;
 begin
 
   M3UList.Load(List);
-
-  Kind := M3UList.ChannelKind;
-
-  if Kind = URL then
-  begin
-    CacheDir := ConfigObj.CacheDir;
-    IPTVList := M3UList.ChannelsUrl;
-    try
-      if (epgData.LastScan('channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
-      begin
-        try
-          OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
-          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
-          epgData.SetLastScan('channels', now);
-        except
-          on e: Exception do
-            OvoLogger.Log(llERROR, 'Can''t download list at: ' +
-              IPTVList + ' error:' +
-              E.Message);
-        end;
-      end
-      else
-        OvoLogger.Log(llINFO, 'Using cached channels list');
-
-      IPTVList := CacheDir + 'current-iptv.m3u';
-    finally
-    end;
-  end
-  else
-    IPTVList := M3UList.ChannelsUrl;
-
-  if FileExists(IPTVList) then
-    M3ULoader.Load(IPTVList);
-
-  OvoLogger.Log(llINFO, 'Found %d channels', [M3ULoader.Count]);
-
-  if M3UList.UseChno then
-  begin
-    M3ULoader.FixChannelNumbering;
-    OvoLogger.Log(llINFO, 'Renumber channels using tvg-chno');
-  end;
-
-  if M3ULoader.ListMd5 <> epgData.LastChannelMd5 then
-  begin
-    OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
-    epgData.LoadChannelList(M3ULoader);
-    epgData.SetLastChannelMd5(M3ULoader.ListMd5);
-    epgData.SetLastScan('epg', 0);
-  end;
-
-  if M3UList.ChannelsDownloadLogo then
-    M3ULoader.UpdateLogo;
-
-  if not M3UList.EPGUrl.IsEmpty then
-    epgData.Scan
-  else
-    OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
+  M3ULoader.ActiveList := M3UList;
 
 end;
 
@@ -240,40 +182,40 @@ end;
 
 procedure TBackend.Play(index: integer);
 var
-  fLastMessage: String;
+  fLastMessage: string;
 begin
 
-    if (Index > M3ULoader.Count) or (Index < 0) then
-    begin
-      OsdMessage('No Channel', True);
-      exit;
-    end;
+  if (Index > M3ULoader.Count) or (Index < 0) then
+  begin
+    OsdMessage('No Channel', True);
+    exit;
+  end;
 
-    if (CurrentIndex = Index) and not mpvengine.IsIdle then
-      exit;
+  if (CurrentIndex = Index) and not mpvengine.IsIdle then
+    exit;
 
-    if M3ULoader[Index].Mrl.IsEmpty then
-    begin
-      OsdMessage('Missing Channel Address', True);
-      exit;
-    end;
+  if M3ULoader[Index].Mrl.IsEmpty then
+  begin
+    OsdMessage('Missing Channel Address', True);
+    exit;
+  end;
 
-    OvoLogger.Log(llINFO, 'Tuning to %s',[M3ULoader[Index].Title]);
+  OvoLogger.Log(llINFO, 'Tuning to %s', [M3ULoader[Index].Title]);
 
-    PreviousIndex := CurrentIndex;
-    CurrentIndex := Index;
-    mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
-    Loading := True;
-    fLastMessage := 'Loading: ' + BackEnd.M3ULoader[CurrentIndex].title;
-    OsdMessage(fLastMessage);
-    if Assigned(FOnPlay) then
-      FOnPlay(Self);
+  PreviousIndex := CurrentIndex;
+  CurrentIndex := Index;
+  mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
+  Loading := True;
+  fLastMessage := 'Loading: ' + BackEnd.M3ULoader[CurrentIndex].title;
+  OsdMessage(fLastMessage);
+  if Assigned(FOnPlay) then
+    FOnPlay(Self);
 end;
 
 procedure TBackend.SwapChannel;
 begin
-    if PreviousIndex <> -1 then
-      Play(PreviousIndex);
+  if PreviousIndex <> -1 then
+    Play(PreviousIndex);
 end;
 
 
@@ -302,84 +244,104 @@ begin
   begin
     mpvengine.OsdEpg('', Default(REpgInfo), False);
     mpvengine.OsdMessage();
-    ShowingInfo:= false;
+    ShowingInfo := False;
   end;
   OSDTimer.Enabled := False;
 end;
 
 procedure TBackend.SetOnExternalInput(AValue: ExternalInput);
 begin
-  FOnExternalInput:=AValue;
+  FOnExternalInput := AValue;
 end;
 
 procedure TBackend.CecKey(Sender: TObject; var Key: word);
 begin
   if Assigned(FOnExternalInput) then
-   FOnExternalInput(Sender, key);
+    FOnExternalInput(Sender, key);
 end;
 
 procedure TBackend.SetOnPlay(AValue: TNotifyEvent);
 begin
-  FOnPlay:=AValue;
+  FOnPlay := AValue;
+end;
+
+procedure TBackend.OnListChangedPlay(Sender: TObject);
+begin
+
+  if M3ULoader.ListMd5 <> ConfigObj.ListManager.LastChannelMd5(M3ULoader.ActiveList.ListID) then
+  begin
+    OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
+    EpgData.LoadChannelList(M3ULoader);
+    ConfigObj.ListManager.SetLastChannelMd5(M3ULoader.ActiveList.ListID, M3ULoader.ListMd5);
+    ConfigObj.ListManager.SetLastScan(M3ULoader.ActiveList.ListID, 'epg', 0);
+  end;
+
+  if not M3UList.EPGUrl.IsEmpty then
+    epgData.Scan
+  else
+    OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
+
 end;
 
 
 constructor TBackend.Create;
 begin
-  PluginsProperties:= TPluginsProperties.Create(ConfigObj);
+  PluginsProperties := TPluginsProperties.Create(ConfigObj);
   M3UList := TM3UList.Create;
   ListManager := TListsManager.Create;
   M3ULoader := TM3ULoader.Create;
-  M3ULoader.ListProperties := M3UList;
+  M3ULoader.ActiveList := M3UList;
+  M3ULoader.OnListChanged := OnListChangedPlay;
+
   EpgData := TEpg.Create;
-  EpgData.ListProperties := M3UList;
+  EpgData.ActiveList := M3UList;
 
 
   if PluginsProperties.EnableCEC then
-    try
-      HDMI_CEC:= THDMI_CEC.create;
-      HDMI_CEC.OnCecKey:= CecKey;
-    Except
-      on e: exception do
-        begin
-          OvoLogger.Log(llERROR, 'CEC ->'+ e.Message);
-          HDMI_CEC := nil;
-        end;
-    end
+  try
+    HDMI_CEC := THDMI_CEC.Create;
+    HDMI_CEC.OnCecKey := CecKey;
+  except
+    on e: Exception do
+    begin
+      OvoLogger.Log(llERROR, 'CEC ->' + e.Message);
+      HDMI_CEC := nil;
+    end;
+  end
   else
     HDMI_CEC := nil;
 
-  if  PluginsProperties.EnableMMKeys then
-    try
-      mmkey:= TMultimediaKeys.create(PluginsProperties.MMKeysMode);
-      mmkey.OnMmKey:= CecKey;
-    Except
-      on e: exception do
-        begin
-          OvoLogger.Log(llERROR, 'MultimediaKeys ->'+ e.Message);
-          mmkey := nil;
-        end;
-    end
+  if PluginsProperties.EnableMMKeys then
+  try
+    mmkey := TMultimediaKeys.Create(PluginsProperties.MMKeysMode);
+    mmkey.OnMmKey := CecKey;
+  except
+    on e: Exception do
+    begin
+      OvoLogger.Log(llERROR, 'MultimediaKeys ->' + e.Message);
+      mmkey := nil;
+    end;
+  end
   else
     mmkey := nil;
   {$IFDEF LINUX}
-  if  PluginsProperties.EnableMPRIS2 then
-    try
-      Mpris:= TMpris2.create();
-      Mpris.Activate();
-      Mpris.OnMmKey:= CecKey;
-    Except
-      on e: exception do
-        begin
-          OvoLogger.Log(llERROR, 'MPRIS2 ->'+ e.Message);
-          mmkey := nil;
-        end;
-    end
+  if PluginsProperties.EnableMPRIS2 then
+  try
+    Mpris := TMpris2.Create();
+    Mpris.Activate();
+    Mpris.OnMmKey := CecKey;
+  except
+    on e: Exception do
+    begin
+      OvoLogger.Log(llERROR, 'MPRIS2 ->' + e.Message);
+      mmkey := nil;
+    end;
+  end
   else
     Mpris := nil;
-   {$ENDIF}
+  {$ENDIF}
 
-  OSDTimer:= TFPTimer.Create(nil);
+  OSDTimer := TFPTimer.Create(nil);
   OSDTimer.Enabled := False;
   OSDTimer.Interval := 8000;
   OSDTimer.OnTimer := OSDTimerTimer;
@@ -395,11 +357,13 @@ begin
   OsdTimer.Free;
   EpgData.Free;
   M3ULoader.Free;
-  HDMI_CEC.free;
+  HDMI_CEC.Free;
   mmkey.Free;
   ListManager.Free;
 
- {$IFDEF LINUX} Mpris.Free; {$ENDIF}
+  {$IFDEF LINUX}
+  Mpris.Free;
+  {$ENDIF}
   inherited Destroy;
 end;
 

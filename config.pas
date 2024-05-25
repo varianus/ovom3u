@@ -90,6 +90,21 @@ type
     procedure Load; overload;
   end;
 
+  { TListsManager }
+
+  TListsManager = class(TObjectList<TM3UList>)
+  Private
+    fOwner:TConfig;
+  public
+    procedure Load;
+    Constructor Create(Owner:TConfig); overload;
+    function LastChannelMd5(ListID: Int64): string;
+    function LastScan(ListID: Int64; const ScanType: string): TDateTime;
+    procedure SetLastChannelMd5(ListID: Int64; const ComputedMD5: string);
+    procedure SetLastScan(ListID: Int64; ScanType: string; Date: TdateTime);
+
+  end;
+
   TConfig = class
   private
     fConfigList: TConfigList;
@@ -97,6 +112,7 @@ type
     fCacheDir: string;
     FConfigFile: string;
     fConfigDir: string;
+    FListManager: TListsManager;
     FPortableMode: boolean;
     ResourcesPath: string;
     fConfigHolder: TJsonNode;
@@ -134,6 +150,8 @@ type
     procedure WriteRect(const APath: string; Value: TRect);
     function ReadRect(const APath: string; ADefault: TRect): TRect;
 
+    property ListManager: TListsManager read FListManager write FListManager;
+
     procedure Flush;
     constructor Create;
     destructor Destroy; override;
@@ -143,15 +161,6 @@ type
     property ConfigFile: string read FConfigFile;
     property DB: TSQLite3Connection read fDB;
     property TR: TSQLTransaction read fTR;
-  end;
-
-  { TListsManager }
-
-  TListsManager = class(TObjectList<TM3UList>)
-  public
-    procedure Load;
-
-
   end;
 
   { TSimpleHistory }
@@ -469,6 +478,9 @@ begin
   SetupDBConnection;
   CheckDBStructure;
 
+  FListManager:= TListsManager.Create();
+  FListManager.Load;
+
 end;
 
 destructor TConfig.Destroy;
@@ -476,6 +488,7 @@ begin
   SaveConfig;
   fConfigList.Free;
   fConfigHolder.Free;
+  FListManager.Free;
   inherited Destroy;
 end;
 
@@ -911,6 +924,81 @@ begin
     end;
 
 
+  finally
+    tmpQuery.Free;
+  end;
+
+end;
+
+constructor TListsManager.Create(Owner: TConfig);
+begin
+  inherited Create(True);
+  FOwner:= Owner;
+
+end;
+
+
+function TListsManager.LastChannelMd5(ListID:Int64): string;
+var
+  tmpQuery: TSQLQuery;
+begin
+  try
+    tmpQuery := TSQLQuery.Create(FOwner.DB);
+    tmpQuery.DataBase := FOwner.DB;
+    tmpQuery.Transaction := FOwner.TR;
+    tmpQuery.ParamByName('list').AsInteger := ListID;
+    tmpQuery.SQL.Text := 'SELECT ChannelsMd5  FROM Scans  where list =:list';
+    tmpQuery.Open;
+    if not tmpQuery.EOF then
+      Result := tmpQuery.Fields[0].AsString
+    else
+      Result := '';
+
+  finally
+    tmpQuery.Free;
+  end;
+end;
+
+procedure TListsManager.SetLastChannelMd5(ListID:Int64; const ComputedMD5: string);
+begin
+  FOwner.DB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5) + ' where list = ' + IntToStr(ListID));
+end;
+
+function TListsManager.LastScan(ListID:Int64; const ScanType: string): TDateTime;
+var
+  tmpQuery: TSQLQuery;
+begin
+  try
+    tmpQuery := TSQLQuery.Create(FOwner.DB);
+    tmpQuery.DataBase := FOwner.DB;
+    tmpQuery.Transaction := FOwner.TR;
+    tmpQuery.SQL.Text := 'SELECT ' + ScanType + ' FROM Scans where list =:list';
+    tmpQuery.ParamByName('list').AsInteger := ListID;
+    tmpQuery.Open;
+    if not tmpQuery.EOF then
+      Result := tmpQuery.Fields[0].AsDateTime
+    else
+      Result := 0;
+
+  finally
+    tmpQuery.Free;
+  end;
+
+end;
+
+procedure TListsManager.SetLastScan(ListID:Int64; ScanType: string; Date: TdateTime);
+var
+  tmpQuery: TSQLQuery;
+begin
+  try
+    tmpQuery := TSQLQuery.Create(ConfigObj.DB);
+    tmpQuery.DataBase := ConfigObj.DB;
+    tmpQuery.Transaction := ConfigObj.TR;
+    tmpQuery.SQL.Text := 'UPDATE scans set ' + ScanType + ' =:date  where list =:list';
+    tmpQuery.parambyname('date').AsDateTime := Date;
+    tmpQuery.ParamByName('list').AsInteger := ListID;
+    tmpQuery.ExecSQL;
+    ConfigObj.TR.CommitRetaining;
   finally
     tmpQuery.Free;
   end;

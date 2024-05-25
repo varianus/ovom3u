@@ -6,6 +6,7 @@ object fConfig: TfConfig
   Caption = 'Config'
   ClientHeight = 439
   ClientWidth = 767
+  LCLVersion = '3.99.0.0'
   OnShow = FormShow
   object pcSettings: TPageControl
     Left = 185
@@ -19,8 +20,8 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 388
-      ClientWidth = 578
+      ClientHeight = 357
+      ClientWidth = 576
       object DBGrid1: TDBGrid
         AnchorSideTop.Control = tsChannels
         Left = 0
@@ -33,7 +34,7 @@ object fConfig: TfConfig
         Columns = <        
           item
             Title.Caption = 'Name'
-            Width = 525
+            Width = 548
             FieldName = 'Name'
           end>
         DataSource = dsList
@@ -202,8 +203,8 @@ object fConfig: TfConfig
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 388
-      ClientWidth = 578
+      ClientHeight = 357
+      ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
         AnchorSideTop.Control = lbWarning
@@ -256,8 +257,8 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 388
-      ClientWidth = 578
+      ClientHeight = 357
+      ClientWidth = 576
       object cbLibCEC: TCheckBox
         Left = 12
         Height = 21

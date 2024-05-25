@@ -103,6 +103,7 @@ type
     procedure actViewCurrentProgramExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
+    procedure cbGroupsDblClick(Sender: TObject);
     procedure cbGroupsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState
       );
     procedure ChannelListDblClick(Sender: TObject);
@@ -158,6 +159,8 @@ type
     procedure OnLoadingState(Sender: TObject);
     procedure OnTrackChange(Sender: TObject);
     procedure Play(Row: integer);
+    procedure SelectGroup;
+    procedure SelectList;
     procedure SetLoading(AValue: boolean);
     procedure OnPlay(Sender: TObject);
 
@@ -467,7 +470,7 @@ begin
       VK_RETURN:
         if ChannelSelecting then
         begin
-          if BackEnd.M3ULoader.ListProperties.UseChno then
+          if BackEnd.M3ULoader.ActiveList.UseChno then
             ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
           else
             ChannelSelected := ChannelSelected - 1;
@@ -580,10 +583,16 @@ begin
   BackEnd.MpvEngine.Refresh;
 end;
 
-procedure TfPlayer.lvListsDblClick(Sender: TObject);
+procedure TfPlayer.SelectList;
 begin
   BackEnd.LoadList(PtrInt(lvLists.Selected.Data));
   LoadList;
+  pcLists.ActivePage := tsGroups;
+end;
+
+procedure TfPlayer.lvListsDblClick(Sender: TObject);
+begin
+  SelectList;
 end;
 
 procedure TfPlayer.lvListsKeyDown(Sender: TObject; var Key: word;
@@ -592,8 +601,7 @@ begin
 
   if (key) = VK_RETURN then
   begin
-    BackEnd.LoadList(PtrInt(lvLists.Selected.Data));
-    LoadList;
+    SelectList;
   end;
 
   if key = VK_RIGHT then
@@ -731,7 +739,7 @@ procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
   begin
-    if BackEnd.M3ULoader.ListProperties.UseChno then
+    if BackEnd.M3ULoader.ActiveList.UseChno then
       ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
     else
       ChannelSelected := ChannelSelected - 1;
@@ -822,6 +830,25 @@ begin
   end;
 end;
 
+
+procedure TfPlayer.SelectGroup;
+var
+  Filter: TFilterParam;
+begin
+  Filter := Default(TFilterParam);
+  if cbGroups.ItemIndex <> 0 then
+    Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
+  fFilteredList := BackEnd.M3ULoader.Filter(Filter);
+  ChannelList.RowCount := fFilteredList.Count;
+  ChannelList.Invalidate;
+  pcLists.ActivePage := tsChannels;
+end;
+
+procedure TfPlayer.cbGroupsDblClick(Sender: TObject);
+begin
+  SelectGroup;
+end;
+
 procedure TfPlayer.cbGroupsKeyDown(Sender: TObject; var Key: word;
   Shift: TShiftState);
 var
@@ -829,12 +856,7 @@ var
 begin
   if (key) = VK_RETURN then
   begin
-    Filter := Default(TFilterParam);
-    if cbGroups.ItemIndex <> 0 then
-      Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
-    fFilteredList := BackEnd.M3ULoader.Filter(Filter);
-    ChannelList.RowCount := fFilteredList.Count;
-    ChannelList.Invalidate;
+    SelectGroup;
   end;
 
   if key = VK_LEFT then
@@ -893,7 +915,7 @@ procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
   if fConfig.ModalResult = mrOk then
   begin
- {mcmcmcmcmcmc    if BackEnd.M3ULoader.ListProperties.Dirty then
+ {mcmcmcmcmcmc    if BackEnd.M3ULoader.ActiveList.Dirty then
     begin
       OvoLogger.Log(llINFO, 'List configuration changed, reloading');
       BackEnd.EpgData.SetLastScan('Channels', 0);
@@ -942,8 +964,9 @@ begin
   actViewLogo.Checked := not actViewLogo.Checked;
   GuiProperties.ViewLogo := actViewLogo.Checked;
   ComputeGridCellSize;
-  if actViewLogo.Checked then
-    BackEnd.M3ULoader.UpdateLogo;
+  //mcmcmcmcmc
+//  if actViewLogo.Checked then
+//    BackEnd.M3ULoader.UpdateLogo;
 end;
 
 procedure TfPlayer.InitializeGui(Data: ptrint);

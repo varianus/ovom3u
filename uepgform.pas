@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, Buttons, ActnList, ComCtrls,
-  epg, BaseTypes, uBackEnd, Types, Math;
+  epg, BaseTypes, uBackEnd, Config, Types, Math;
 
 type
 
@@ -203,7 +203,7 @@ end;
 
 procedure TEPGForm.bForceReloadClick(Sender: TObject);
 begin
-  EpgData.SetLastScan('epg', 0);
+  ConfigObj.ListManager.SetLastScan(EpgData.ActiveList.ListID, 'epg', 0);
   TimerCheck.Enabled := true;
   EpgData.Scan;
 end;

@@ -79,31 +79,31 @@ type
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
-    FCurrentList: Integer;
+    FCurrentList: integer;
     fLastMessage: string;
     fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
     FM3uList: TM3UList;
-    procedure SetCurrentList(AValue: Integer);
+    procedure LoadList;
+    procedure SetActiveList(AValue: TM3UList);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(const Left, Right: TM3UItem): integer;
+    procedure FixChannelNumbering;
+    procedure UpdateLogo;
+  Protected
+    procedure DoListChanged;
+    function Load(const ListName: string): boolean;
   public
-
     ListMd5: string;
     Groups: TStringList;
     property ListConfig: TListProperties read fListProperties;
-    Property ListProperties: TM3UList read FM3uList write FM3uList;
-    procedure DoListChanged;
+    property ActiveList: TM3UList read FM3uList write SetActiveList;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
-    Property CurrentList: Integer read FCurrentList write SetCurrentList;
     constructor Create;
     destructor Destroy; override;
     function ItemByChno(chno: integer): integer;
     function Filter(aFilter: TFilterParam): TFilteredList;
-    procedure FixChannelNumbering;
-    procedure UpdateLogo;
-    function Load(const ListName: string): boolean;
 
   end;
 
@@ -401,8 +401,61 @@ begin
   Result := CompareValue(left.Number, Right.Number);
 end;
 
+procedure TM3ULoader.LoadList;
+var
+  CacheDir, IPTVList: string;
+  Kind: TProviderKind;
+begin
+
+  Kind := FM3UList.ChannelKind;
+
+  if Kind = URL then
+  begin
+    CacheDir := ConfigObj.CacheDir;
+    IPTVList := FM3UList.ChannelsUrl;
+    try
+      if (ConfigObj.ListManager.LastScan(FM3uList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
+      begin
+        try
+          OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
+          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
+          ConfigObj.ListManager.SetLastScan(FM3uList.ListID,'channels', now);
+        except
+          on e: Exception do
+            OvoLogger.Log(llERROR, 'Can''t download list at: ' +
+              IPTVList + ' error:' +
+              E.Message);
+        end;
+      end
+      else
+        OvoLogger.Log(llINFO, 'Using cached channels list');
+
+      IPTVList := CacheDir + 'current-iptv.m3u';
+    finally
+    end;
+  end
+  else
+    IPTVList := FM3UList.ChannelsUrl;
+
+  if FileExists(IPTVList) then
+    Load(IPTVList);
+
+  OvoLogger.Log(llINFO, 'Found %d channels', [Count]);
+
+  if FM3UList.UseChno then
+  begin
+    FixChannelNumbering;
+    OvoLogger.Log(llINFO, 'Renumber channels using tvg-chno');
+  end;
+
+  if FM3UList.ChannelsDownloadLogo then
+    UpdateLogo;
+
+end;
+
 procedure TM3ULoader.DoListChanged;
 begin
+  LoadList;
   if Assigned(FOnListChanged) then
     FOnListChanged(self);
 end;
@@ -412,12 +465,13 @@ begin
   FOnListChanged := AValue;
 end;
 
-procedure TM3ULoader.SetCurrentList(AValue: Integer);
-begin
-  if FCurrentList=AValue then Exit;
-  FCurrentList:=AValue;
-  FM3uList.Load(AValue);
 
+procedure TM3ULoader.SetActiveList(AValue: TM3UList);
+begin
+  if FM3uList = AValue then Exit;
+  FM3uList := AValue;
+  fListProperties.CurrentList := FM3uList.ListID;
+  DoListChanged;
 end;
 
 procedure TM3ULoader.FixChannelNumbering;

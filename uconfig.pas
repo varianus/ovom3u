@@ -113,10 +113,10 @@ begin
   qLists.Transaction := ConfigObj.TR;;
   qLists.Open;
   { mcmcmcmcmcmcmc
-  Kind := Backend.M3ULoader.ListProperties.ChannelKind;
+  Kind := Backend.M3ULoader.ActiveList.ChannelKind;
   cbChannelsKind.ItemIndex := Ord(kind);
   cbChannelsKind.OnChange(cbChannelsKind);
-  edtChannelsUrl.Text := Backend.M3ULoader.ListProperties.ChannelsUrl;
+  edtChannelsUrl.Text := Backend.M3ULoader.ActiveList.ChannelsUrl;
 
   Kind := Backend.EpgData.EpgProperties.EpgKind;
   cbEpgKind.ItemIndex := Ord(kind);
@@ -124,8 +124,8 @@ begin
   edtEpgFileName.Text := Backend.EpgData.EpgProperties.EpgFileName;
   edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;
 
-  cbUseChno.Checked := Backend.M3ULoader.ListProperties.UseChno;
-  cbDownloadLogo.Checked := Backend.M3ULoader.ListProperties.ChannelsDownloadLogo;       }
+  cbUseChno.Checked := Backend.M3ULoader.ActiveList.UseChno;
+  cbDownloadLogo.Checked := Backend.M3ULoader.ActiveList.ChannelsDownloadLogo;       }
 
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
