@@ -82,7 +82,6 @@ type
 
   public
     PluginsProperties: TPluginsProperties;
-    ListManager: TListsManager;
     procedure ShowEpg;
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure LoadList(List: intptr);
@@ -158,7 +157,9 @@ procedure TBackend.LoadList(List: intptr);
 begin
 
   M3UList.Load(List);
+  epgData.ActiveList := M3UList;
   M3ULoader.ActiveList := M3UList;
+
 
 end;
 
@@ -288,14 +289,13 @@ constructor TBackend.Create;
 begin
   PluginsProperties := TPluginsProperties.Create(ConfigObj);
   M3UList := TM3UList.Create;
-  ListManager := TListsManager.Create;
+
   M3ULoader := TM3ULoader.Create;
   M3ULoader.ActiveList := M3UList;
-  M3ULoader.OnListChanged := OnListChangedPlay;
-
   EpgData := TEpg.Create;
   EpgData.ActiveList := M3UList;
 
+  M3ULoader.OnListChanged := OnListChangedPlay;
 
   if PluginsProperties.EnableCEC then
   try
@@ -359,7 +359,6 @@ begin
   M3ULoader.Free;
   HDMI_CEC.Free;
   mmkey.Free;
-  ListManager.Free;
 
   {$IFDEF LINUX}
   Mpris.Free;

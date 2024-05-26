@@ -352,7 +352,6 @@ begin
     MD5Final(Context, Digest);
     ListMd5 := MD5Print(Digest);
     Result := True;
-    DoListChanged;
   finally
     if not fLastMessage.IsEmpty then
       OvoLogger.Log(llWARN, fLastMessage);
@@ -468,7 +467,6 @@ end;
 
 procedure TM3ULoader.SetActiveList(AValue: TM3UList);
 begin
-  if FM3uList = AValue then Exit;
   FM3uList := AValue;
   fListProperties.CurrentList := FM3uList.ListID;
   DoListChanged;

@@ -93,15 +93,15 @@ type
   { TListsManager }
 
   TListsManager = class(TObjectList<TM3UList>)
-  Private
-    fOwner:TConfig;
+  private
+    fOwner: TConfig;
   public
     procedure Load;
-    Constructor Create(Owner:TConfig); overload;
-    function LastChannelMd5(ListID: Int64): string;
-    function LastScan(ListID: Int64; const ScanType: string): TDateTime;
-    procedure SetLastChannelMd5(ListID: Int64; const ComputedMD5: string);
-    procedure SetLastScan(ListID: Int64; ScanType: string; Date: TdateTime);
+    constructor Create(Owner: TConfig); overload;
+    function LastChannelMd5(ListID: int64): string;
+    function LastScan(ListID: int64; const ScanType: string): TDateTime;
+    procedure SetLastChannelMd5(ListID: int64; const ComputedMD5: string);
+    procedure SetLastScan(ListID: int64; ScanType: string; Date: TdateTime);
 
   end;
 
@@ -478,7 +478,7 @@ begin
   SetupDBConnection;
   CheckDBStructure;
 
-  FListManager:= TListsManager.Create();
+  FListManager := TListsManager.Create(Self);
   FListManager.Load;
 
 end;
@@ -565,6 +565,7 @@ begin
   end;
 
   fDirty := False;
+  fTR.CommitRetaining;
 
 end;
 
@@ -904,10 +905,10 @@ var
   wItem: TM3UList;
 begin
   Clear;
-  tmpQuery := TSQLQuery.Create(ConfigObj.fDB);
+  tmpQuery := TSQLQuery.Create(fOwner.fDB);
   try
-    tmpQuery.DataBase := ConfigObj.fDB;
-    tmpQuery.Transaction := ConfigObj.fTR;
+    tmpQuery.DataBase := fOwner.fDB;
+    tmpQuery.Transaction := fOwner.fTR;
     tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM m3ulists;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
@@ -933,12 +934,12 @@ end;
 constructor TListsManager.Create(Owner: TConfig);
 begin
   inherited Create(True);
-  FOwner:= Owner;
+  FOwner := Owner;
 
 end;
 
 
-function TListsManager.LastChannelMd5(ListID:Int64): string;
+function TListsManager.LastChannelMd5(ListID: int64): string;
 var
   tmpQuery: TSQLQuery;
 begin
@@ -959,12 +960,12 @@ begin
   end;
 end;
 
-procedure TListsManager.SetLastChannelMd5(ListID:Int64; const ComputedMD5: string);
+procedure TListsManager.SetLastChannelMd5(ListID: int64; const ComputedMD5: string);
 begin
   FOwner.DB.ExecuteDirect('update scans set ChannelsMd5 = ' + QuotedStr(ComputedMD5) + ' where list = ' + IntToStr(ListID));
 end;
 
-function TListsManager.LastScan(ListID:Int64; const ScanType: string): TDateTime;
+function TListsManager.LastScan(ListID: int64; const ScanType: string): TDateTime;
 var
   tmpQuery: TSQLQuery;
 begin
@@ -986,7 +987,7 @@ begin
 
 end;
 
-procedure TListsManager.SetLastScan(ListID:Int64; ScanType: string; Date: TdateTime);
+procedure TListsManager.SetLastScan(ListID: int64; ScanType: string; Date: TdateTime);
 var
   tmpQuery: TSQLQuery;
 begin

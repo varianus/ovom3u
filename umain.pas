@@ -283,9 +283,8 @@ begin
 
 
   Result := True;
-  BackEnd.ListManager.Load;
 
-  if BackEnd.ListManager.Count = 0 then
+  if ConfigObj.ListManager.Count = 0 then
     case ShowMyDialog(mtWarning, 'Welcome to OvoM3U',
         'No list configured' + #10 +
         'Message for configuration', [mbClose],
@@ -983,8 +982,7 @@ var
   item: TM3UList;
 begin
   lvLists.Clear;
-  BackEnd.ListManager.Load;
-  for item in BackEnd.ListManager do
+  for item in ConfigObj.ListManager do
   begin
     lvLists.AddItem(Item.Name, TObject(PtrInt(item.ListID)));
   end;
