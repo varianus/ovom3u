@@ -92,12 +92,29 @@ type
 
   { TListsManager }
 
+
+  { TListProperties }
+
+  TListProperties = class(TConfigParam)
+  private
+    FCurrentList: integer;
+    procedure SetCurrentList(AValue: integer);
+  protected
+    procedure InternalSave; override;
+  public
+    property CurrentList: integer read FCurrentList write SetCurrentList;
+    procedure Load; override;
+  end;
+
   TListsManager = class(TObjectList<TM3UList>)
   private
     fOwner: TConfig;
+    fListProperties : TListProperties;
   public
     procedure Load;
+    procedure Save;
     constructor Create(Owner: TConfig); overload;
+    destructor Destroy; override;
     function LastChannelMd5(ListID: int64): string;
     function LastScan(ListID: int64; const ScanType: string): TDateTime;
     procedure SetLastChannelMd5(ListID: int64; const ComputedMD5: string);
@@ -924,6 +941,38 @@ begin
       tmpQuery.Next;
     end;
 
+  finally
+    tmpQuery.Free;
+  end;
+
+end;
+
+
+procedure TListsManager.Save;
+var
+  tmpQuery: TSQLQuery;
+  wItem: TM3UList;
+begin
+  tmpQuery := TSQLQuery.Create(fOwner.fDB);
+  try
+    tmpQuery.DataBase := fOwner.fDB;
+    tmpQuery.Transaction := fOwner.fTR;
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE FROM m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG) ' +
+      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG);';
+    for wItem in self do
+    begin
+      if wItem.ListID = 0 then
+        tmpQuery.ParamByName('ID').Value := Null
+      else
+        tmpQuery.ParamByName('ID').AsInteger := wItem.ListID;
+
+      tmpQuery.ParamByName('Name').AsString := wItem.Name;
+      tmpQuery.ParamByName('Position').AsString := wItem.ChannelsUrl;
+      tmpQuery.ParamByName('UseNumber').AsBoolean := wItem.UseChno;
+      tmpQuery.ParamByName('GetLogo').AsBoolean := wItem.ChannelsDownloadLogo;
+      tmpQuery.ParamByName('EPG').AsString := wItem.EPGUrl;
+      tmpQuery.ExecSQL;
+    end;
 
   finally
     tmpQuery.Free;
@@ -935,7 +984,13 @@ constructor TListsManager.Create(Owner: TConfig);
 begin
   inherited Create(True);
   FOwner := Owner;
+  fListProperties := TListProperties.Create(FOwner);
+end;
 
+destructor TListsManager.Destroy;
+begin
+  fListProperties.Free;
+  inherited Destroy;
 end;
 
 
@@ -1095,6 +1150,27 @@ begin
   Load(FListID);
 end;
 
+{ TListProperties }
+
+
+procedure TListProperties.SetCurrentList(AValue: integer);
+begin
+  if FCurrentList = AValue then Exit;
+  FCurrentList := AValue;
+  Dirty := True;
+end;
+
+
+procedure TListProperties.InternalSave;
+begin
+  Owner.WriteInteger('m3u/CurrentList', CurrentList);
+end;
+
+procedure TListProperties.Load;
+begin
+  CurrentList := Owner.ReadInteger('m3u/CurrentList', 0);
+  Dirty := False;
+end;
 
 
 

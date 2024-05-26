@@ -64,7 +64,7 @@ type
   TEpg = class
   private
     fEpgAvailable: boolean;
-    FM3UList: TM3UList;
+    FActiveList: TM3UList;
     FOnScanComplete: TNotifyEvent;
     FOnScanStart: TNotifyEvent;
     fScanning: boolean;
@@ -72,7 +72,7 @@ type
     procedure AfterScan;
     procedure EndScan(AObject: TObject);
   public
-    Property ActiveList: TM3UList read FM3UList write FM3UList;
+    Property ActiveList: TM3UList read FActiveList write FActiveList;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
@@ -125,7 +125,7 @@ begin
     Scanner.Stop;
   end;
 
-  if ConfigObj.ListManager.LastScan(FM3UList.ListID, 'epg') + 12 / 24 > now then
+  if ConfigObj.ListManager.LastScan(FActiveList.ListID, 'epg') + 12 / 24 > now then
   begin
     OvoLogger.Log(llINFO, 'Skipping EPG update, used cache');
     AfterScan;
@@ -149,7 +149,7 @@ begin
     qSearch.SQL.Text := 'select * from programme p where p.idChannel = :id  ' + ' and dStartTime < :time and dEndTime > :time and list =:list ';
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('time').AsDateTime := CurrTime;
-    qSearch.ParamByName('list').AsInteger := FM3UList.ListID;
+    qSearch.ParamByName('list').AsInteger := FActiveList.ListID;
     qSearch.Open;
     if qSearch.EOF then
       Result := Default(REpgInfo)
@@ -180,7 +180,7 @@ begin
       + ' where stitle like :search or sPlot like :search and list = :list'
       + ' order by p.dStartTime';
     qSearch.ParamByName('search').AsString := '%' + SearchTerm + '%';
-    qSearch.ParamByName('list').AsInteger := FM3UList.ListID;
+    qSearch.ParamByName('list').AsInteger := FActiveList.ListID;
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -221,7 +221,7 @@ begin
     qSearch.ParamByName('id').AsInteger := Channel;
     qSearch.ParamByName('stime').AsDateTime := StartTime;
     qSearch.ParamByName('etime').AsDateTime := EndTime;
-    qSearch.ParamByName('list').AsInteger := FM3UList.ListID;
+    qSearch.ParamByName('list').AsInteger := FActiveList.ListID;
     qSearch.PacketRecords := -1;
     qSearch.Open;
     i := qSearch.RecordCount;
@@ -268,7 +268,7 @@ begin
     for i := 0 to List.Count - 1 do
     begin
       Item := List[i];
-      qinsert.ParamByName('list').AsInteger := FM3UList.ListID;
+      qinsert.ParamByName('list').AsInteger := FActiveList.ListID;
       qinsert.ParamByName('id').AsInteger := i;
       qinsert.ParamByName('name').AsString := item.Title;
       qinsert.ParamByName('EpgName').AsString := item.tvg_name;
@@ -322,16 +322,16 @@ begin
       fOwner.fScanning := True;
       ConfigObj.DB.ExecuteDirect('delete from programme');
       OvoLogger.Log(llINFO, 'EPG update thread started');
-      if fOwner.FM3UList.EpgKind = Url then
+      if fOwner.FActiveList.EpgKind = Url then
       begin
-        OvoLogger.Log(llINFO, 'Downloading EPG from %s', [fOwner.FM3UList.EPGUrl]);
+        OvoLogger.Log(llINFO, 'Downloading EPG from %s', [fOwner.FActiveList.EPGUrl]);
         SourceEpg := CacheDir + TempEPGFile;
-        DownloadFromUrl(fOwner.FM3UList.EPGUrl, SourceEpg, StoppedCheck);
+        DownloadFromUrl(fOwner.FActiveList.EPGUrl, SourceEpg, StoppedCheck);
       end
       else
       begin
-        SourceEpg := fOwner.FM3UList.EPGUrl;
-        OvoLogger.Log(llINFO, 'Load EPG from local file %s', [fOwner.FM3UList.EPGUrl]);
+        SourceEpg := fOwner.FActiveList.EPGUrl;
+        OvoLogger.Log(llINFO, 'Load EPG from local file %s', [fOwner.FActiveList.EPGUrl]);
       end;
       if StoppedCheck then
         Continue;
@@ -361,7 +361,7 @@ begin
         Continue;
       if Load(EpgFile) > 0 then
       begin
-        ConfigObj.ListManager.setlastscan(fOwner.FM3UList.ListID, 'epg', now);
+        ConfigObj.ListManager.setlastscan(fOwner.FActiveList.ListID, 'epg', now);
         Success := True;
       end;
     except
@@ -381,7 +381,7 @@ begin
     qFind.Transaction := ConfigObj.TR;
     qFind.SQL.Text := 'select id from Channels where name = :name and list = :list;';
     qFind.ParamByName('name').AsString := Channel;
-    qFind.ParamByName('list').AsInteger := fOwner.FM3UList.ListID;
+    qFind.ParamByName('list').AsInteger := fOwner.FActiveList.ListID;
     qFind.Open;
     if qFind.EOF then
       Result := -1
@@ -403,7 +403,7 @@ begin
     qFind.Transaction := ConfigObj.TR;
     qFind.SQL.Text := 'select id from Channels where epgname = :name and list = :list ;';
     qFind.ParamByName('name').AsString := Channel;
-    qFind.ParamByName('list').AsInteger := fOwner.FM3UList.ListID;
+    qFind.ParamByName('list').AsInteger := fOwner.FActiveList.ListID;
     qFind.Open;
     if qFind.EOF then
       Result := -1
@@ -530,7 +530,7 @@ begin
           s2 := EpgDateToDate(CurrNode.Attributes.GetNamedItem('stop').NodeValue);
           qInsert.ParamByName('dStartTime').AsDateTime := s1;
           qInsert.ParamByName('dEndTime').AsDateTime := s2;
-          qInsert.ParamByName('list').AsInteger := fOwner.FM3UList.ListID;
+          qInsert.ParamByName('list').AsInteger := fOwner.FActiveList.ListID;
           qInsert.ExecSQL;
         end;
       end;

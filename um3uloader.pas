@@ -62,28 +62,13 @@ type
     function IndexOf(Value: integer): integer;
   end;
 
-
-  { TListProperties }
-
-  TListProperties = class(TConfigParam)
-  private
-    FCurrentList: integer;
-    procedure SetCurrentList(AValue: integer);
-  protected
-    procedure InternalSave; override;
-  public
-    property CurrentList: integer read FCurrentList write SetCurrentList;
-    procedure Load; override;
-  end;
   { TM3ULoader }
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
-    FCurrentList: integer;
     fLastMessage: string;
-    fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
-    FM3uList: TM3UList;
+    FActiveList: TM3UList;
     procedure LoadList;
     procedure SetActiveList(AValue: TM3UList);
     procedure SetOnListChange(AValue: TNotifyEvent);
@@ -96,8 +81,7 @@ type
   public
     ListMd5: string;
     Groups: TStringList;
-    property ListConfig: TListProperties read fListProperties;
-    property ActiveList: TM3UList read FM3uList write SetActiveList;
+    property ActiveList: TM3UList read FActiveList write SetActiveList;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
     constructor Create;
@@ -131,28 +115,6 @@ const
   CountExt = 4;
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
-
-  { TListProperties }
-
-
-procedure TListProperties.SetCurrentList(AValue: integer);
-begin
-  if FCurrentList = AValue then Exit;
-  FCurrentList := AValue;
-  Dirty := True;
-end;
-
-
-procedure TListProperties.InternalSave;
-begin
-  Owner.WriteInteger('m3u/CurrentList', CurrentList);
-end;
-
-procedure TListProperties.Load;
-begin
-  CurrentList := Owner.ReadInteger('m3u/CurrentList', 0);
-  Dirty := False;
-end;
 
 { TFilteredList }
 
@@ -230,7 +192,6 @@ end;
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
-  fListProperties := TListProperties.Create(ConfigObj);
   Groups := TStringList.Create;
   Groups.Sorted := True;
   Groups.Duplicates := dupIgnore;
@@ -406,19 +367,19 @@ var
   Kind: TProviderKind;
 begin
 
-  Kind := FM3UList.ChannelKind;
+  Kind := FActiveList.ChannelKind;
 
   if Kind = URL then
   begin
     CacheDir := ConfigObj.CacheDir;
-    IPTVList := FM3UList.ChannelsUrl;
+    IPTVList := FActiveList.ChannelsUrl;
     try
-      if (ConfigObj.ListManager.LastScan(FM3uList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
+      if (ConfigObj.ListManager.LastScan(FActiveList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
       begin
         try
           OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
           DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
-          ConfigObj.ListManager.SetLastScan(FM3uList.ListID,'channels', now);
+          ConfigObj.ListManager.SetLastScan(FActiveList.ListID,'channels', now);
         except
           on e: Exception do
             OvoLogger.Log(llERROR, 'Can''t download list at: ' +
@@ -434,20 +395,20 @@ begin
     end;
   end
   else
-    IPTVList := FM3UList.ChannelsUrl;
+    IPTVList := FActiveList.ChannelsUrl;
 
   if FileExists(IPTVList) then
     Load(IPTVList);
 
   OvoLogger.Log(llINFO, 'Found %d channels', [Count]);
 
-  if FM3UList.UseChno then
+  if FActiveList.UseChno then
   begin
     FixChannelNumbering;
     OvoLogger.Log(llINFO, 'Renumber channels using tvg-chno');
   end;
 
-  if FM3UList.ChannelsDownloadLogo then
+  if FActiveList.ChannelsDownloadLogo then
     UpdateLogo;
 
 end;
@@ -467,8 +428,7 @@ end;
 
 procedure TM3ULoader.SetActiveList(AValue: TM3UList);
 begin
-  FM3uList := AValue;
-  fListProperties.CurrentList := FM3uList.ListID;
+  FActiveList := AValue;
   DoListChanged;
 end;
 
