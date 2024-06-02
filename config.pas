@@ -487,17 +487,18 @@ begin
       );
 
   end;
-  fConfigHolder := TJsonNode.Create;
-  if not FileExists(FConfigFile) then
-    SaveConfig;
-  ReadConfig;
 
   SetupDBConnection;
   CheckDBStructure;
+  fConfigHolder := TJsonNode.Create;
 
   FListManager := TListsManager.Create(Self);
   FListManager.Load;
 
+
+  if not FileExists(FConfigFile) then
+    SaveConfig;
+  ReadConfig;
 end;
 
 destructor TConfig.Destroy;
@@ -506,6 +507,11 @@ begin
   fConfigList.Free;
   fConfigHolder.Free;
   FListManager.Free;
+  fTR.Commit;
+  fDB.Transaction := nil;
+  fDB.Connected := False;
+  fTR.Free;
+  fDB.Free;
   inherited Destroy;
 end;
 
@@ -581,6 +587,7 @@ begin
     fConfigHolder.SaveToFile(FConfigFile, True);
   end;
 
+  ListManager.Save;
   fDirty := False;
   fTR.CommitRetaining;
 
@@ -598,6 +605,8 @@ begin
   ResourcesPath := ReadString(SectionUnix + '/' + IdentResourcesPath, DefaultDirectory);
   {$endif}
   {$endif}
+
+  ListManager.Load;
 
 end;
 
@@ -957,7 +966,7 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE FROM m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG) ' +
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG) ' +
       'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG);';
     for wItem in self do
     begin
@@ -989,7 +998,7 @@ end;
 
 destructor TListsManager.Destroy;
 begin
-  fListProperties.Free;
+//  fListProperties.Free;
   inherited Destroy;
 end;
 

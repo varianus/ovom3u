@@ -309,16 +309,9 @@ begin
 
   fFilteredList := BackEnd.M3ULoader.Filter(Default(TFilterParam));
 
-  if (BackEnd.M3ULoader.Groups.Count > 1) then
-  begin
-    cbGroups.Items.Clear;
-    cbGroups.items.add(um3uloader.RSAnyGroup);
-    cbGroups.Items.AddStrings(BackEnd.M3ULoader.Groups, False);
-    cbGroups.ItemIndex := 0;
-    cbGroups.Visible := True;
-  end
-  else
-    cbGroups.Visible := False;
+  cbGroups.Items.Clear;
+  cbGroups.items.add(um3uloader.RSAnyGroup);
+  cbGroups.ItemIndex := 0;
 
   ChannelList.RowCount := BackEnd.M3ULoader.Count;
 
@@ -584,7 +577,7 @@ end;
 
 procedure TfPlayer.SelectList;
 begin
-  BackEnd.LoadList(PtrInt(lvLists.Selected.Data));
+  BackEnd.LoadList(lvLists.Selected.Data);
   LoadList;
   pcLists.ActivePage := tsGroups;
 end;
@@ -984,7 +977,7 @@ begin
   lvLists.Clear;
   for item in ConfigObj.ListManager do
   begin
-    lvLists.AddItem(Item.Name, TObject(PtrInt(item.ListID)));
+    lvLists.AddItem(Item.Name, item);
   end;
 
 end;

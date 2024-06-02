@@ -290,11 +290,6 @@ begin
     Scanner.Terminate;
     Scanner.Free;
   end;
-  ConfigObj.TR.Commit;
-  ConfigObj.DB.Transaction := nil;
-  ConfigObj.DB.Connected := False;
-  ConfigObj.TR.Free;
-  ConfigObj.DB.Free;
   inherited Destroy;
 end;
 

@@ -25,7 +25,7 @@ interface
 uses
   Classes, SysUtils, SQLDB, SQLite3Conn, DB, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ComCtrls, EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls,
-  DBGrids, DBCtrls, Config, uBackEnd, LoggerUnit;
+  DBGrids, DBCtrls, Grids, Config, uBackEnd, LoggerUnit;
 
 type
 
@@ -38,31 +38,27 @@ type
     cbMMkeys: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
     cbLibCEC: TCheckBox;
-    DBCheckBox1: TDBCheckBox;
-    DBCheckBox2: TDBCheckBox;
-    dbeName: TDBEdit;
-    dbeName1: TDBEdit;
-    dbeName2: TDBEdit;
-    DBGrid1: TDBGrid;
-    DBNavigator1: TDBNavigator;
-    dsList: TDataSource;
+    DBCheckBox1: TCheckBox;
+    DBCheckBox2: TCheckBox;
+    dbeName: TEdit;
+    dbeName1: TEdit;
+    dbeName2: TEdit;
     GroupBox1: TGroupBox;
+    ImageList1: TImageList;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    lbLists: TListBox;
     pcSettings: TPageControl;
-    qListsEPG: TStringField;
-    qListsGetLogo: TLongintField;
-    qListsID: TAutoIncField;
-    qListsName: TStringField;
-    qListsPosition: TStringField;
-    qListsUseNumber: TLongintField;
     rgKeyCaptureMode: TRadioGroup;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     lbWarning: TLabel;
     SpeedButton3: TSpeedButton;
-    qLists: TSQLQuery;
+    ToolBar1: TToolBar;
+    ToolButton1: TToolButton;
+    ToolButton2: TToolButton;
+    ToolButton3: TToolButton;
     tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
@@ -106,12 +102,9 @@ end;
 procedure TfConfig.FormShow(Sender: TObject);
 var
   Kind: TProviderKind;
+  List : TM3UList;
 begin
   ConfigObj.ReadConfig;
-
-  qLists.DataBase := ConfigObj.DB;
-  qLists.Transaction := ConfigObj.TR;;
-  qLists.Open;
 
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
@@ -121,15 +114,16 @@ begin
   cbMMkeys.Checked := BackEnd.PluginsProperties.EnableMMKeys;
   rgKeyCaptureMode.ItemIndex := BackEnd.PluginsProperties.MMKeysMode;
 
+  lbLists.Clear;
+  for List in ConfigObj.ListManager do
+     lbLists.AddItem(List.Name, List);
+
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
   ListProperties: TListProperties;
 begin
-
-  if qLists.State in dsEditModes then
-    qLists.Post;
 
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);

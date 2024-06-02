@@ -84,7 +84,7 @@ type
     PluginsProperties: TPluginsProperties;
     procedure ShowEpg;
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
-    procedure LoadList(List: intptr);
+    procedure LoadList(AList: TM3UList);
     function InitializeEngine(Renderer: TOpenGLControl): boolean;
     procedure Play(index: integer);
     procedure SwapChannel;
@@ -153,13 +153,12 @@ begin
 end;
 
 { TBackend }
-procedure TBackend.LoadList(List: intptr);
-begin
 
-  M3UList.Load(List);
+procedure TBackend.LoadList(AList: TM3UList);
+begin
+  M3UList := AList;
   epgData.ActiveList := M3UList;
   M3ULoader.ActiveList := M3UList;
-
 
 end;
 

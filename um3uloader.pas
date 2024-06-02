@@ -75,7 +75,7 @@ type
     function SortbyNumber(const Left, Right: TM3UItem): integer;
     procedure FixChannelNumbering;
     procedure UpdateLogo;
-  Protected
+  protected
     procedure DoListChanged;
     function Load(const ListName: string): boolean;
   public
@@ -116,7 +116,7 @@ const
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
 
-{ TFilteredList }
+  { TFilteredList }
 
 function TFilteredList.Map(idx: integer): integer;
 begin
@@ -234,6 +234,7 @@ var
 
 begin
   Clear;
+  Groups.clear;
   Result := False;
   Index := 1;
 
@@ -365,6 +366,7 @@ procedure TM3ULoader.LoadList;
 var
   CacheDir, IPTVList: string;
   Kind: TProviderKind;
+  ListName: string;
 begin
 
   Kind := FActiveList.ChannelKind;
@@ -374,12 +376,13 @@ begin
     CacheDir := ConfigObj.CacheDir;
     IPTVList := FActiveList.ChannelsUrl;
     try
+      ListName := CacheDir + format('list-%d-iptv.m3u', [FActiveList.ListID]);
       if (ConfigObj.ListManager.LastScan(FActiveList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
       begin
         try
           OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
-          DownloadFromUrl(IPTVList, CacheDir + 'current-iptv.m3u');
-          ConfigObj.ListManager.SetLastScan(FActiveList.ListID,'channels', now);
+          DownloadFromUrl(IPTVList, ListName);
+          ConfigObj.ListManager.SetLastScan(FActiveList.ListID, 'channels', now);
         except
           on e: Exception do
             OvoLogger.Log(llERROR, 'Can''t download list at: ' +
@@ -390,7 +393,7 @@ begin
       else
         OvoLogger.Log(llINFO, 'Using cached channels list');
 
-      IPTVList := CacheDir + 'current-iptv.m3u';
+      IPTVList := ListName;
     finally
     end;
   end
