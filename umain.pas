@@ -311,6 +311,7 @@ begin
 
   cbGroups.Items.Clear;
   cbGroups.items.add(um3uloader.RSAnyGroup);
+  cbGroups.Items.AddStrings(BackEnd.m3uloader.Groups);
   cbGroups.ItemIndex := 0;
 
   ChannelList.RowCount := BackEnd.M3ULoader.Count;
