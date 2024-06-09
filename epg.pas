@@ -71,8 +71,9 @@ type
     Scanner: TEpgScanner;
     procedure AfterScan;
     procedure EndScan(AObject: TObject);
+    procedure SetActiveList(AValue: TM3UList);
   public
-    Property ActiveList: TM3UList read FActiveList write FActiveList;
+    Property ActiveList: TM3UList read FActiveList write SetActiveList;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
@@ -107,6 +108,12 @@ begin
 
   fScanning := False;
 
+end;
+
+procedure TEpg.SetActiveList(AValue: TM3UList);
+begin
+  FActiveList:=AValue;
+  Scan;
 end;
 
 
