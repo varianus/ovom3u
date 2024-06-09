@@ -6,6 +6,7 @@ object fConfig: TfConfig
   Caption = 'Config'
   ClientHeight = 439
   ClientWidth = 767
+  LCLVersion = '3.99.0.0'
   OnShow = FormShow
   object pcSettings: TPageControl
     Left = 185
@@ -19,7 +20,7 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object Label1: TLabel
         AnchorSideLeft.Control = tsChannels
@@ -76,12 +77,11 @@ object fConfig: TfConfig
         Height = 27
         Top = 195
         Width = 442
-        Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
         TabOrder = 0
       end
-      object dbeName1: TEdit
+      object dbeM3USource: TEdit
         AnchorSideLeft.Control = Label2
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = Label2
@@ -96,7 +96,7 @@ object fConfig: TfConfig
         BorderSpacing.Around = 8
         TabOrder = 1
       end
-      object dbeName2: TEdit
+      object dbeEpgSource: TEdit
         AnchorSideLeft.Control = Label3
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = Label3
@@ -111,7 +111,7 @@ object fConfig: TfConfig
         BorderSpacing.Around = 8
         TabOrder = 2
       end
-      object DBCheckBox1: TCheckBox
+      object cbUseNumbering: TCheckBox
         AnchorSideLeft.Control = tsChannels
         AnchorSideTop.Control = Label2
         AnchorSideTop.Side = asrBottom
@@ -123,7 +123,7 @@ object fConfig: TfConfig
         Caption = 'Use Number from m3u source'
         TabOrder = 3
       end
-      object DBCheckBox2: TCheckBox
+      object cbShowLogo: TCheckBox
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Side = asrCenter
         Left = 217
@@ -142,6 +142,7 @@ object fConfig: TfConfig
         ItemHeight = 0
         TabOrder = 5
         TopIndex = -1
+        OnSelectionChange = lbListsSelectionChange
       end
       object ToolBar1: TToolBar
         Left = 16
@@ -159,29 +160,31 @@ object fConfig: TfConfig
         Indent = 0
         TabOrder = 6
         Wrapable = False
-        object ToolButton1: TToolButton
+        object tbAdd: TToolButton
           Left = 0
           Top = 0
-          Caption = 'ToolButton1'
+          Caption = 'tbAdd'
           ImageIndex = 0
+          OnClick = tbAddClick
         end
-        object ToolButton2: TToolButton
+        object tbRemove: TToolButton
           Left = 23
           Top = 0
-          Caption = 'ToolButton2'
+          Caption = 'tbRemove'
           ImageIndex = 1
+          OnClick = tbRemoveClick
         end
-        object ToolButton3: TToolButton
+        object tbEdit: TToolButton
           Left = 46
           Top = 0
-          Caption = 'ToolButton3'
+          Caption = 'tbEdit'
           ImageIndex = 2
         end
       end
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -235,7 +238,7 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 386
+      ClientHeight = 357
       ClientWidth = 576
       object cbLibCEC: TCheckBox
         Left = 12

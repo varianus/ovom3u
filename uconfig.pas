@@ -38,11 +38,11 @@ type
     cbMMkeys: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
     cbLibCEC: TCheckBox;
-    DBCheckBox1: TCheckBox;
-    DBCheckBox2: TCheckBox;
+    cbUseNumbering: TCheckBox;
+    cbShowLogo: TCheckBox;
     dbeName: TEdit;
-    dbeName1: TEdit;
-    dbeName2: TEdit;
+    dbeM3USource: TEdit;
+    dbeEpgSource: TEdit;
     GroupBox1: TGroupBox;
     ImageList1: TImageList;
     Label1: TLabel;
@@ -56,21 +56,26 @@ type
     lbWarning: TLabel;
     SpeedButton3: TSpeedButton;
     ToolBar1: TToolBar;
-    ToolButton1: TToolButton;
-    ToolButton2: TToolButton;
-    ToolButton3: TToolButton;
+    tbAdd: TToolButton;
+    tbRemove: TToolButton;
+    tbEdit: TToolButton;
     tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
     vleCustomOptions: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure lbListsSelectionChange(Sender: TObject; User: boolean);
     procedure OKButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
+    procedure tbAddClick(Sender: TObject);
+    procedure tbRemoveClick(Sender: TObject);
   private
     FOnWorkDone: TNotifyEvent;
+    procedure ListItemToScreen(CurrItem: TM3UList);
+    procedure ScreenToListItem(var CurrItem: TM3UList);
     procedure SetOnWorkDone(AValue: TNotifyEvent);
   public
     property OnWorkDone: TNotifyEvent read FOnWorkDone write SetOnWorkDone;
@@ -102,7 +107,7 @@ end;
 procedure TfConfig.FormShow(Sender: TObject);
 var
   Kind: TProviderKind;
-  List : TM3UList;
+  List: TM3UList;
 begin
   ConfigObj.ReadConfig;
 
@@ -115,8 +120,36 @@ begin
   rgKeyCaptureMode.ItemIndex := BackEnd.PluginsProperties.MMKeysMode;
 
   lbLists.Clear;
-  for List in ConfigObj.ListManager do
-     lbLists.AddItem(List.Name, List);
+  if ConfigObj.ListManager.Count > 0 then
+  begin
+    for List in ConfigObj.ListManager do
+      lbLists.AddItem(List.Name, List);
+    lbLists.Selected[0]:= true;
+  end;
+
+end;
+
+procedure TfConfig.ListItemToScreen(CurrItem: TM3UList);
+begin
+  dbeName.Text := CurrItem.Name;
+  dbeM3USource.Text := CurrItem.ChannelsUrl;
+  dbeEpgSource.Text := CurrItem.EPGUrl;
+  cbUseNumbering.Checked := CurrItem.UseChno;
+  cbShowLogo.Checked := CurrItem.ChannelsDownloadLogo;
+end;
+
+procedure TfConfig.ScreenToListItem(var CurrItem: TM3UList);
+begin
+  CurrItem.Name := dbeName.Text;
+  CurrItem.ChannelsUrl := dbeM3USource.Text;
+  CurrItem.EPGUrl := dbeEpgSource.Text;
+  CurrItem.UseChno := cbUseNumbering.Checked;
+  CurrItem.ChannelsDownloadLogo := cbShowLogo.Checked;
+end;
+
+procedure TfConfig.lbListsSelectionChange(Sender: TObject; User: boolean);
+begin
+  ListItemToScreen(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
 
 end;
 
@@ -156,6 +189,28 @@ end;
 procedure TfConfig.SpeedButton3Click(Sender: TObject);
 begin
   pcSettings.ActivePage := tsPlugins;
+end;
+
+procedure TfConfig.tbAddClick(Sender: TObject);
+begin
+  lbLists.AddItem('Untitled', TM3UList.Create);
+  lbLists.Selected[lbLists.Count -1] := true;
+end;
+
+procedure TfConfig.tbRemoveClick(Sender: TObject);
+var
+  CurrentItem: TM3UList;
+begin
+  CurrentItem:= TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
+  if Dialogs.MessageDlg('','Delete list ?',mtConfirmation,mbYesNo,0) = mrYes then
+    begin
+      if CurrentItem.ListID <> 0 then
+        begin
+          ConfigObj.ListManager.ListDelete(CurrentItem.ListID);
+        end;
+      CurrentItem.Free;
+      lbLists.DeleteSelected;
+    end;
 end;
 
 procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);

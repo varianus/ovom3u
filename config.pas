@@ -109,7 +109,7 @@ type
   TListsManager = class(TObjectList<TM3UList>)
   private
     fOwner: TConfig;
-    fListProperties : TListProperties;
+    fListProperties: TListProperties;
   public
     procedure Load;
     procedure Save;
@@ -119,6 +119,9 @@ type
     function LastScan(ListID: int64; const ScanType: string): TDateTime;
     procedure SetLastChannelMd5(ListID: int64; const ComputedMD5: string);
     procedure SetLastScan(ListID: int64; ScanType: string; Date: TdateTime);
+    procedure ListAdd(var List: TM3UList);
+    function ListDelete(ListID: int64): boolean;
+
 
   end;
 
@@ -998,7 +1001,7 @@ end;
 
 destructor TListsManager.Destroy;
 begin
-//  fListProperties.Free;
+  //  fListProperties.Free;
   inherited Destroy;
 end;
 
@@ -1066,6 +1069,75 @@ begin
     ConfigObj.TR.CommitRetaining;
   finally
     tmpQuery.Free;
+  end;
+
+end;
+
+procedure TListsManager.ListAdd(var List: TM3UList);
+var
+  tmpQuery: TSQLQuery;
+  wItem: TM3UList;
+begin
+  tmpQuery := TSQLQuery.Create(fOwner.fDB);
+  try
+    tmpQuery.DataBase := fOwner.fDB;
+    tmpQuery.Transaction := fOwner.fTR;
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG) ' +
+      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG);';
+    if List.ListID = 0 then
+      tmpQuery.ParamByName('ID').Value := Null
+    else
+      tmpQuery.ParamByName('ID').AsInteger := List.ListID;
+
+    tmpQuery.ParamByName('Name').AsString := List.Name;
+    tmpQuery.ParamByName('Position').AsString := List.ChannelsUrl;
+    tmpQuery.ParamByName('UseNumber').AsBoolean := List.UseChno;
+    tmpQuery.ParamByName('GetLogo').AsBoolean := List.ChannelsDownloadLogo;
+    tmpQuery.ParamByName('EPG').AsString := List.EPGUrl;
+    tmpQuery.ExecSQL;
+    List.ListID:= fOwner.fDB.GetInsertID;
+
+  finally
+    tmpQuery.Free;
+  end;
+
+end;
+
+
+function TListsManager.ListDelete(ListID: int64): boolean;
+var
+  q: TSQLQuery;
+begin
+  Result := False;
+  q := TSQLQuery.Create(fOwner.fDB);
+  try
+    q.DataBase := fOwner.fDB;
+    q.Transaction := fOwner.fTR;
+    fOwner.fTR.StartTransaction;
+    try
+      q.SQL.Text := 'Delete from M3ULists where ID = :ID ';
+      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ExecSQL;
+      q.SQL.Text := 'Delete from channels where list = :ID ';
+      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ExecSQL;
+      q.SQL.Text := 'Delete from programme where list = :ID ';
+      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ExecSQL;
+      q.SQL.Text := 'Delete from scans where list = :ID ';
+      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ExecSQL;
+
+      fOwner.fTR.CommitRetaining;
+      Result := True;
+    except
+      fowner.fTR.RollbackRetaining;
+    end;
+
+
+  finally
+    q.Free;
+
   end;
 
 end;
