@@ -88,6 +88,7 @@ type
     function EpgKind: TProviderKind;
     procedure Load(List: integer); overload;
     procedure Load; overload;
+    Constructor Create(const NewName:string); overload;
   end;
 
   { TListsManager }
@@ -1229,6 +1230,12 @@ end;
 procedure TM3UList.Load;
 begin
   Load(FListID);
+end;
+
+constructor TM3UList.Create(const NewName: string);
+begin
+  inherited Create;
+  FName:= NewName;
 end;
 
 { TListProperties }

@@ -1,17 +1,18 @@
 object fConfig: TfConfig
   Left = 585
-  Height = 320
+  Height = 512
   Top = 213
-  Width = 850
+  Width = 902
   Caption = 'Config'
-  ClientHeight = 320
-  ClientWidth = 850
+  ClientHeight = 512
+  ClientWidth = 902
+  OnCreate = FormCreate
   OnShow = FormShow
   object pcSettings: TPageControl
     Left = 185
-    Height = 273
+    Height = 465
     Top = 0
-    Width = 665
+    Width = 717
     ActivePage = tsChannels
     Align = alClient
     ShowTabs = False
@@ -19,8 +20,8 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'tsChannels'
-      ClientHeight = 267
-      ClientWidth = 659
+      ClientHeight = 459
+      ClientWidth = 711
       object lbLists: TListBox
         AnchorSideLeft.Control = tsChannels
         AnchorSideTop.Control = tsChannels
@@ -29,7 +30,7 @@ object fConfig: TfConfig
         Left = 8
         Height = 74
         Top = 8
-        Width = 643
+        Width = 695
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
         DoubleBuffered = True
@@ -45,12 +46,13 @@ object fConfig: TfConfig
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
-        Left = 8
+        Left = 16
         Height = 26
         Top = 90
-        Width = 651
+        Width = 687
         Align = alNone
         Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Around = 8
         BorderWidth = 3
         Caption = 'ToolBar1'
         EdgeBorders = []
@@ -75,173 +77,50 @@ object fConfig: TfConfig
           ImageIndex = 1
           OnClick = tbRemoveClick
         end
-        object tbEdit: TToolButton
-          Left = 46
-          Top = 0
-          Caption = 'tbEdit'
-          ImageIndex = 2
-          OnClick = tbEditClick
-        end
-        object tbCancel: TToolButton
-          Left = 77
-          Top = 0
-          Caption = 'tbCancel'
-          ImageIndex = 3
-          OnClick = tbCancelClick
-        end
-        object tbConfirm: TToolButton
-          Left = 100
-          Top = 0
-          Caption = 'tbConfirm'
-          ImageIndex = 4
-          OnClick = tbConfirmClick
-        end
         object tbSpacer: TToolButton
-          Left = 69
+          Left = 46
           Height = 22
           Top = 0
           Caption = 'tbSpacer'
           Style = tbsSeparator
         end
       end
-      object pnlList: TPanel
+      object ValueListEditor1: TValueListEditor
         AnchorSideLeft.Control = tsChannels
         AnchorSideTop.Control = ToolBar1
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 8
-        Height = 142
-        Top = 116
-        Width = 643
+        Height = 124
+        Top = 124
+        Width = 695
         Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 8
-        BorderSpacing.Right = 8
-        BorderSpacing.Bottom = 8
-        ClientHeight = 142
-        ClientWidth = 643
-        Enabled = False
+        BorderSpacing.Around = 8
+        DefaultColWidth = 150
+        FixedCols = 0
+        Flat = True
+        RowCount = 5
         TabOrder = 2
-        object Label1: TLabel
-          AnchorSideLeft.Control = pnlList
-          AnchorSideTop.Control = dbeName
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = dbeName
-          Left = 9
-          Height = 17
-          Top = 10
-          Width = 34
-          Alignment = taRightJustify
-          BorderSpacing.Around = 8
-          Caption = 'Name'
-        end
-        object Label2: TLabel
-          AnchorSideLeft.Control = tsChannels
-          AnchorSideTop.Control = dbeM3USource
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = dbeM3USource
-          Left = 22
-          Height = 17
-          Top = 45
-          Width = 106
-          Alignment = taRightJustify
-          Anchors = [akTop, akRight]
-          BorderSpacing.Around = 8
-          Caption = 'Channel list source'
-        end
-        object Label3: TLabel
-          AnchorSideLeft.Control = tsChannels
-          AnchorSideTop.Control = dbeEpgSource
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = dbeEpgSource
-          Left = 63
-          Height = 17
-          Top = 109
-          Width = 65
-          Alignment = taRightJustify
-          Anchors = [akTop, akRight]
-          BorderSpacing.Left = 8
-          BorderSpacing.Top = 8
-          BorderSpacing.Right = 8
-          BorderSpacing.Bottom = 8
-          Caption = 'EPG Source'
-        end
-        object dbeName: TEdit
-          AnchorSideLeft.Control = pnlList
-          AnchorSideTop.Control = pnlList
-          AnchorSideRight.Control = pnlList
-          AnchorSideRight.Side = asrBottom
-          Left = 136
-          Height = 27
-          Top = 5
-          Width = 498
-          Anchors = [akLeft, akRight]
-          AutoSize = False
-          BorderSpacing.Left = 127
-          BorderSpacing.Around = 8
-          TabOrder = 0
-        end
-        object dbeM3USource: TEdit
-          AnchorSideLeft.Control = dbeName
-          AnchorSideTop.Control = dbeName
-          AnchorSideTop.Side = asrBottom
-          AnchorSideRight.Control = pnlList
-          AnchorSideRight.Side = asrBottom
-          Left = 136
-          Height = 27
-          Top = 40
-          Width = 498
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Top = 8
-          BorderSpacing.Right = 8
-          BorderSpacing.Bottom = 8
-          TabOrder = 1
-        end
-        object dbeEpgSource: TEdit
-          AnchorSideLeft.Control = dbeName
-          AnchorSideTop.Control = cbUseNumbering
-          AnchorSideTop.Side = asrBottom
-          AnchorSideRight.Control = dbeName
-          AnchorSideRight.Side = asrBottom
-          Left = 136
-          Height = 27
-          Top = 104
-          Width = 498
-          Anchors = [akTop, akLeft, akRight]
-          TabOrder = 2
-        end
-        object cbUseNumbering: TCheckBox
-          AnchorSideLeft.Control = dbeName
-          AnchorSideTop.Control = dbeM3USource
-          AnchorSideTop.Side = asrBottom
-          Left = 136
-          Height = 21
-          Top = 75
-          Width = 193
-          BorderSpacing.Top = 8
-          BorderSpacing.Bottom = 8
-          Caption = 'Use Number from m3u source'
-          TabOrder = 3
-        end
-        object cbShowLogo: TCheckBox
-          AnchorSideLeft.Control = cbUseNumbering
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = cbUseNumbering
-          AnchorSideTop.Side = asrCenter
-          Left = 337
-          Height = 21
-          Top = 75
-          Width = 158
-          BorderSpacing.Around = 8
-          Caption = 'Download channels icon'
-          TabOrder = 4
-        end
+        DisplayOptions = [doAutoColResize, doKeyColFixed]
+        DoubleBuffered = True
+        Strings.Strings = (
+          'Name='
+          'Channel source='
+          'Use channel number from M3U='
+          'Dowload channels icon='
+          'EPG Source='
+        )
+        ColWidths = (
+          150
+          544
+        )
       end
     end
     object tsMpv: TTabSheet
       Caption = 'tsMpv'
-      ClientHeight = 267
-      ClientWidth = 659
+      ClientHeight = 459
+      ClientWidth = 711
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
         AnchorSideTop.Control = lbWarning
@@ -251,9 +130,9 @@ object fConfig: TfConfig
         AnchorSideBottom.Control = tsMpv
         AnchorSideBottom.Side = asrBottom
         Left = 9
-        Height = 158
+        Height = 350
         Top = 100
-        Width = 641
+        Width = 693
         AlternateColor = clBtnFace
         Anchors = [akTop, akLeft, akRight, akBottom]
         BorderSpacing.Around = 9
@@ -266,7 +145,7 @@ object fConfig: TfConfig
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
         ColWidths = (
           150
-          490
+          542
         )
       end
       object cbHardwareAcceleration: TCheckBox
@@ -294,8 +173,8 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'tsPlugins'
-      ClientHeight = 267
-      ClientWidth = 659
+      ClientHeight = 459
+      ClientWidth = 711
       object cbLibCEC: TCheckBox
         Left = 12
         Height = 21
@@ -351,12 +230,12 @@ object fConfig: TfConfig
   end
   object GroupBox1: TGroupBox
     Left = 0
-    Height = 273
+    Height = 465
     Top = 0
     Width = 185
     Align = alLeft
     Caption = 'Settings'
-    ClientHeight = 254
+    ClientHeight = 446
     ClientWidth = 181
     DoubleBuffered = True
     ParentDoubleBuffered = False
@@ -408,8 +287,8 @@ object fConfig: TfConfig
   object bpConfig: TButtonPanel
     Left = 6
     Height = 35
-    Top = 279
-    Width = 838
+    Top = 471
+    Width = 890
     OKButton.Name = 'OKButton'
     OKButton.DefaultCaption = True
     OKButton.OnClick = OKButtonClick

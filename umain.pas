@@ -906,21 +906,10 @@ end;
 
 procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
-  if fConfig.ModalResult = mrOk then
-  begin
- {mcmcmcmcmcmc    if BackEnd.M3ULoader.ActiveList.Dirty then
-    begin
-      OvoLogger.Log(llINFO, 'List configuration changed, reloading');
-      BackEnd.EpgData.SetLastScan('Channels', 0);
-      LoadList;
-    end;
-    if BackEnd.EpgData.EpgProperties.Dirty then
-    begin
-      OvoLogger.Log(llINFO, 'EPG configuration changed, reloading');
-      BackEnd.EpgData.SetLastScan('epg', 0);
-      BackEnd.EpgData.Scan;
-    end;    }
 
+  begin
+    InitializeLists;
+    fConfig.Close;
   end;
 
   CloseSubForm();
@@ -931,6 +920,7 @@ begin
   if not Assigned(fConfig) then
     Application.CreateForm(TfConfig, fConfig);
 
+  fConfig.Init;
   fConfig.OnWorkDone := ConfigDone;
 
   EmbedSubForm(fConfig);
@@ -958,8 +948,8 @@ begin
   GuiProperties.ViewLogo := actViewLogo.Checked;
   ComputeGridCellSize;
   //mcmcmcmcmc
-//  if actViewLogo.Checked then
-//    BackEnd.M3ULoader.UpdateLogo;
+  //  if actViewLogo.Checked then
+  //    BackEnd.M3ULoader.UpdateLogo;
 end;
 
 procedure TfPlayer.InitializeGui(Data: ptrint);

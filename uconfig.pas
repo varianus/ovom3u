@@ -38,18 +38,9 @@ type
     cbMMkeys: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
     cbLibCEC: TCheckBox;
-    cbUseNumbering: TCheckBox;
-    cbShowLogo: TCheckBox;
-    dbeName: TEdit;
-    dbeM3USource: TEdit;
-    dbeEpgSource: TEdit;
     GroupBox1: TGroupBox;
     ImageList1: TImageList;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
     lbLists: TListBox;
-    pnlList: TPanel;
     pcSettings: TPageControl;
     rgKeyCaptureMode: TRadioGroup;
     SpeedButton1: TSpeedButton;
@@ -61,15 +52,14 @@ type
     ToolBar1: TToolBar;
     tbAdd: TToolButton;
     tbRemove: TToolButton;
-    tbEdit: TToolButton;
-    tbCancel: TToolButton;
-    tbConfirm: TToolButton;
     tbSpacer: TToolButton;
     tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
+    ValueListEditor1: TValueListEditor;
     vleCustomOptions: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure lbListsSelectionChange(Sender: TObject; User: boolean);
     procedure OKButtonClick(Sender: TObject);
@@ -77,19 +67,16 @@ type
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
     procedure tbAddClick(Sender: TObject);
-    procedure tbCancelClick(Sender: TObject);
-    procedure tbConfirmClick(Sender: TObject);
-    procedure tbEditClick(Sender: TObject);
     procedure tbRemoveClick(Sender: TObject);
   private
+    PreviousIndex: integer;
     FOnWorkDone: TNotifyEvent;
-    EditingList: boolean;
-    Adding: boolean;
     procedure ListItemToScreen(CurrItem: TM3UList);
     procedure ScreenToListItem(var CurrItem: TM3UList);
     procedure SetEditMode(Editing: boolean);
     procedure SetOnWorkDone(AValue: TNotifyEvent);
   public
+    procedure Init;
     property OnWorkDone: TNotifyEvent read FOnWorkDone write SetOnWorkDone;
 
   end;
@@ -143,25 +130,32 @@ end;
 
 procedure TfConfig.ListItemToScreen(CurrItem: TM3UList);
 begin
-  dbeName.Text := CurrItem.Name;
-  dbeM3USource.Text := CurrItem.ChannelsUrl;
-  dbeEpgSource.Text := CurrItem.EPGUrl;
-  cbUseNumbering.Checked := CurrItem.UseChno;
-  cbShowLogo.Checked := CurrItem.ChannelsDownloadLogo;
+  ValueListEditor1.Values[ValueListEditor1.Keys[0]] := CurrItem.Name;
+  ValueListEditor1.Values[ValueListEditor1.Keys[1]] := CurrItem.ChannelsUrl;
+  ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[4]] := CurrItem.EPGUrl;
 end;
 
 procedure TfConfig.ScreenToListItem(var CurrItem: TM3UList);
 begin
-  CurrItem.Name := dbeName.Text;
-  CurrItem.ChannelsUrl := dbeM3USource.Text;
-  CurrItem.EPGUrl := dbeEpgSource.Text;
-  CurrItem.UseChno := cbUseNumbering.Checked;
-  CurrItem.ChannelsDownloadLogo := cbShowLogo.Checked;
+  CurrItem.Name := ValueListEditor1.Values[ValueListEditor1.Keys[0]];
+  CurrItem.ChannelsUrl := ValueListEditor1.Values[ValueListEditor1.Keys[1]];
+  CurrItem.UseChno := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[2]]);
+  CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
+  CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[4]];
+  lbLists.Items[lbLists.ItemIndex] := CurrItem.Name;
+  ConfigObj.ListManager.ListAdd(CurrItem);
 end;
 
 procedure TfConfig.lbListsSelectionChange(Sender: TObject; User: boolean);
 begin
-  ListItemToScreen(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
+  if (PreviousIndex <> -1) and (PreviousIndex <> lbLists.ItemIndex) then
+  begin
+    ScreenToListItem(TM3UList(lbLists.Items.Objects[PreviousIndex]));
+  end;
+  PreviousIndex := lbLists.ItemIndex;
+  ListItemToScreen(TM3UList(lbLists.Items.Objects[PreviousIndex]));
 
 end;
 
@@ -177,16 +171,15 @@ begin
   BackEnd.PluginsProperties.EnableMPRIS2 := cbMpris2.Checked;
   BackEnd.PluginsProperties.EnableMMKeys := cbMMkeys.Checked;
   BackEnd.PluginsProperties.MMKeysMode := rgKeyCaptureMode.ItemIndex;
+  ScreenToListItem(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
 
-  ModalResult := mrOk;
   try
     if Assigned(FOnWorkDone) then
       FOnWorkDone(self);
   finally
     ConfigObj.SaveConfig;
   end;
-  Close;
-
+  ModalResult := mrOk;
 end;
 
 procedure TfConfig.SpeedButton1Click(Sender: TObject);
@@ -205,59 +198,17 @@ begin
 end;
 
 procedure TfConfig.tbAddClick(Sender: TObject);
+var
+  NewList: TM3UList;
 begin
-  lbLists.AddItem('Untitled', TM3UList.Create);
+  NewList := TM3UList.Create('Untitled');
+  ConfigObj.ListManager.ListAdd(NewList);
+  lbLists.AddItem('Untitled', NewList);
   lbLists.Selected[lbLists.Count - 1] := True;
-  SetEditMode(True);
-  Adding := True;
-end;
-
-procedure TfConfig.tbCancelClick(Sender: TObject);
-begin
-  if Adding then
-    begin
-      lbLists.Items.Objects[lbLists.ItemIndex].Free;
-      lbLists.Items.Delete(lbLists.ItemIndex);
-    end;
-  Adding := False;
-  SetEditMode(False);
-end;
-
-procedure TfConfig.tbConfirmClick(Sender: TObject);
-begin
-  ScreenToListItem(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
-  Adding := false;
-  ConfigObj.ListManager.ListAdd(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
-  SetEditMode(False);
-end;
-
-procedure TfConfig.tbEditClick(Sender: TObject);
-begin
-  SetEditMode(True);
 end;
 
 procedure TfConfig.SetEditMode(Editing: boolean);
 begin
-  if Editing then
-  begin
-    pnlList.Enabled := True;
-    tbAdd.Enabled := False;
-    tbEdit.Enabled := False;
-    tbRemove.Enabled := False;
-    tbConfirm.Visible := True;
-    tbCancel.Visible := True;
-  end
-  else
-  begin
-    pnlList.Enabled := False;
-    tbAdd.Enabled := True;
-    tbEdit.Enabled := True;
-    tbRemove.Enabled := True;
-    tbConfirm.Visible := False;
-    tbCancel.Visible := False;
-  end;
-
-  EditingList := Editing;
 end;
 
 procedure TfConfig.tbRemoveClick(Sender: TObject);
@@ -287,6 +238,27 @@ begin
   if Assigned(FOnWorkDone) then
     FOnWorkDone(self);
 end;
+
+procedure TfConfig.FormCreate(Sender: TObject);
+begin
+  init;
+end;
+
+procedure TfConfig.Init;
+begin
+  PreviousIndex := -1;
+  with ValueListEditor1.ItemProps[2] do
+  begin
+    EditStyle := esPickList;
+    PickList.Text := 'True' + sLineBreak + 'False';
+  end;
+  with ValueListEditor1.ItemProps[3] do
+  begin
+    EditStyle := esPickList;
+    PickList.Text := 'True' + sLineBreak + 'False';
+  end;
+end;
+
 
 initialization
 
