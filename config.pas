@@ -120,7 +120,7 @@ type
     procedure SetLastChannelMd5(ListID: int64; const ComputedMD5: string);
     procedure SetLastScan(ListID: int64; ScanType: string; Date: TdateTime);
     procedure ListAdd(var List: TM3UList);
-    function ListDelete(ListID: int64): boolean;
+    function ListDelete(List: TM3UList): boolean;
 
 
   end;
@@ -1104,7 +1104,7 @@ begin
 end;
 
 
-function TListsManager.ListDelete(ListID: int64): boolean;
+function TListsManager.ListDelete(List: TM3UList): boolean;
 var
   q: TSQLQuery;
 begin
@@ -1113,20 +1113,20 @@ begin
   try
     q.DataBase := fOwner.fDB;
     q.Transaction := fOwner.fTR;
-    fOwner.fTR.StartTransaction;
     try
       q.SQL.Text := 'Delete from M3ULists where ID = :ID ';
-      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ParamByName('ID').AsLargeInt := List.ListID;
       q.ExecSQL;
       q.SQL.Text := 'Delete from channels where list = :ID ';
-      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ParamByName('ID').AsLargeInt := List.ListID;
       q.ExecSQL;
       q.SQL.Text := 'Delete from programme where list = :ID ';
-      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ParamByName('ID').AsLargeInt := List.ListID;
       q.ExecSQL;
       q.SQL.Text := 'Delete from scans where list = :ID ';
-      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ParamByName('ID').AsLargeInt := List.ListID;
       q.ExecSQL;
+      Delete(IndexOf(List));
 
       fOwner.fTR.CommitRetaining;
       Result := True;

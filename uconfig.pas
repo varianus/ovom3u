@@ -49,16 +49,22 @@ type
     Label2: TLabel;
     Label3: TLabel;
     lbLists: TListBox;
+    pnlList: TPanel;
     pcSettings: TPageControl;
     rgKeyCaptureMode: TRadioGroup;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     lbWarning: TLabel;
     SpeedButton3: TSpeedButton;
+    SpeedButton4: TSpeedButton;
+    SpeedButton5: TSpeedButton;
     ToolBar1: TToolBar;
     tbAdd: TToolButton;
     tbRemove: TToolButton;
     tbEdit: TToolButton;
+    tbCancel: TToolButton;
+    tbConfirm: TToolButton;
+    tbSpacer: TToolButton;
     tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
@@ -71,11 +77,17 @@ type
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
     procedure tbAddClick(Sender: TObject);
+    procedure tbCancelClick(Sender: TObject);
+    procedure tbConfirmClick(Sender: TObject);
+    procedure tbEditClick(Sender: TObject);
     procedure tbRemoveClick(Sender: TObject);
   private
     FOnWorkDone: TNotifyEvent;
+    EditingList: boolean;
+    Adding: boolean;
     procedure ListItemToScreen(CurrItem: TM3UList);
     procedure ScreenToListItem(var CurrItem: TM3UList);
+    procedure SetEditMode(Editing: boolean);
     procedure SetOnWorkDone(AValue: TNotifyEvent);
   public
     property OnWorkDone: TNotifyEvent read FOnWorkDone write SetOnWorkDone;
@@ -124,7 +136,7 @@ begin
   begin
     for List in ConfigObj.ListManager do
       lbLists.AddItem(List.Name, List);
-    lbLists.Selected[0]:= true;
+    lbLists.Selected[0] := True;
   end;
 
 end;
@@ -173,6 +185,7 @@ begin
   finally
     ConfigObj.SaveConfig;
   end;
+  Close;
 
 end;
 
@@ -194,23 +207,72 @@ end;
 procedure TfConfig.tbAddClick(Sender: TObject);
 begin
   lbLists.AddItem('Untitled', TM3UList.Create);
-  lbLists.Selected[lbLists.Count -1] := true;
+  lbLists.Selected[lbLists.Count - 1] := True;
+  SetEditMode(True);
+  Adding := True;
+end;
+
+procedure TfConfig.tbCancelClick(Sender: TObject);
+begin
+  if Adding then
+    begin
+      lbLists.Items.Objects[lbLists.ItemIndex].Free;
+      lbLists.Items.Delete(lbLists.ItemIndex);
+    end;
+  Adding := False;
+  SetEditMode(False);
+end;
+
+procedure TfConfig.tbConfirmClick(Sender: TObject);
+begin
+  ScreenToListItem(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
+  Adding := false;
+  ConfigObj.ListManager.ListAdd(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
+  SetEditMode(False);
+end;
+
+procedure TfConfig.tbEditClick(Sender: TObject);
+begin
+  SetEditMode(True);
+end;
+
+procedure TfConfig.SetEditMode(Editing: boolean);
+begin
+  if Editing then
+  begin
+    pnlList.Enabled := True;
+    tbAdd.Enabled := False;
+    tbEdit.Enabled := False;
+    tbRemove.Enabled := False;
+    tbConfirm.Visible := True;
+    tbCancel.Visible := True;
+  end
+  else
+  begin
+    pnlList.Enabled := False;
+    tbAdd.Enabled := True;
+    tbEdit.Enabled := True;
+    tbRemove.Enabled := True;
+    tbConfirm.Visible := False;
+    tbCancel.Visible := False;
+  end;
+
+  EditingList := Editing;
 end;
 
 procedure TfConfig.tbRemoveClick(Sender: TObject);
 var
   CurrentItem: TM3UList;
 begin
-  CurrentItem:= TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
-  if Dialogs.MessageDlg('','Delete list ?',mtConfirmation,mbYesNo,0) = mrYes then
+  CurrentItem := TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
+  if Dialogs.MessageDlg('', 'Delete list ?', mtConfirmation, mbYesNo, 0) = mrYes then
+  begin
+    if CurrentItem.ListID <> 0 then
     begin
-      if CurrentItem.ListID <> 0 then
-        begin
-          ConfigObj.ListManager.ListDelete(CurrentItem.ListID);
-        end;
-      CurrentItem.Free;
-      lbLists.DeleteSelected;
+      ConfigObj.ListManager.ListDelete(CurrentItem);
     end;
+    lbLists.DeleteSelected;
+  end;
 end;
 
 procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);
