@@ -70,6 +70,7 @@ type
     ChannelList: TDrawGrid;
     EPGList: TDrawGrid;
     lvLists: TListView;
+    MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     N1: TMenuItem;
@@ -118,6 +119,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
     procedure GLRendererChangeBounds(Sender: TObject);
     procedure lvListsDblClick(Sender: TObject);
     procedure lvListsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState
@@ -381,9 +383,7 @@ begin
   if Loading then
     Loading := backend.mpvengine.IsIdle;
   if not Loading then
-  begin
     Backend.OsdMessage('', False);
-  end;
 end;
 
 procedure TfPlayer.OnTrackChange(Sender: TObject);
@@ -430,9 +430,7 @@ begin
     VK_ESCAPE:
     begin
       if SubFormVisible then
-      begin
-        CloseSubForm;
-      end
+        CloseSubForm
       else
       if flgFullScreen then
         SetFullScreen;
@@ -501,11 +499,8 @@ begin
         Backend.OsdMessage('Stop', True);
       end;
       VK_T:
-      begin
         Backend.OsdMessage(FormatDateTime('t', now), True);
-      end;
       VK_SPACE:
-      begin
         if backend.mpvengine.Pause then
         begin
           backend.mpvengine.OsdEpg('', Default(REpgInfo), False);
@@ -513,31 +508,26 @@ begin
         end
         else
           backend.mpvengine.OsdMessage();
-      end;
       VK_F:
         SetFullScreen;
       VK_L:
         actShowList.Execute;
       VK_M:
-      begin
         backend.mpvengine.Mute;
-      end;
       VK_E:
-      begin
         actShowEpg.Execute;
-      end;
       VK_B:
-      begin
         BackEnd.SwapChannel;
-      end;
 
       VK_RIGHT:
       begin
+        if ExtendedKey then;
         backend.mpvengine.Seek(5);
         pass := True;
       end;
       VK_LEFT:
       begin
+        if ExtendedKey then;
         backend.mpvengine.Seek(-5);
         pass := True;
       end;
@@ -571,6 +561,12 @@ begin
     key := 0;
 end;
 
+procedure TfPlayer.FormShow(Sender: TObject);
+begin
+  if pnlChannel.Visible then
+    lvLists.SetFocus;
+end;
+
 procedure TfPlayer.GLRendererChangeBounds(Sender: TObject);
 begin
   BackEnd.MpvEngine.Refresh;
@@ -580,7 +576,10 @@ procedure TfPlayer.SelectList;
 begin
   BackEnd.LoadList(lvLists.Selected.Data);
   LoadList;
-  pcLists.ActivePage := tsGroups;
+  if cbGroups.Count < 2 then
+    pcLists.ActivePage := tsChannels
+  else
+    pcLists.ActivePage := tsGroups;
 end;
 
 procedure TfPlayer.lvListsDblClick(Sender: TObject);
@@ -593,9 +592,7 @@ procedure TfPlayer.lvListsKeyDown(Sender: TObject; var Key: word;
 begin
 
   if (key) = VK_RETURN then
-  begin
     SelectList;
-  end;
 
   if key = VK_RIGHT then
     pcLists.ActivePage := tsGroups;
@@ -718,9 +715,7 @@ begin
   if (key) = VK_RETURN then
     Play(fFilteredList.Map(ChannelList.Row));
   if key = VK_LEFT then
-  begin
     pcLists.ActivePage := tsGroups;
-  end;
 end;
 
 procedure TfPlayer.ChannelSplitterMoved(Sender: TObject);
@@ -787,9 +782,7 @@ end;
 procedure TfPlayer.FormChangeBounds(Sender: TObject);
 begin
   if SubFormVisible then
-  begin
     pnlsubform.Height := min(600, pnlcontainer.Height - 100);
-  end;
   GuiProperties.BoundsRect := BoundsRect;
 end;
 
@@ -848,9 +841,7 @@ var
   Filter: TFilterParam;
 begin
   if (key) = VK_RETURN then
-  begin
     SelectGroup;
-  end;
 
   if key = VK_LEFT then
     pcLists.ActivePage := tsList;
@@ -959,6 +950,12 @@ begin
   BoundsRect := GuiProperties.BoundsRect;
   ComputeGridCellSize;
   InitializeLists;
+  pcLists.ActivePage:= tsList;
+  if pnlChannel.Visible then
+    lvLists.SetFocus;
+  if lvLists.Items.Count > 0 then
+    lvLists.ItemIndex := 0;
+
 end;
 
 procedure TfPlayer.InitializeLists;
@@ -967,9 +964,7 @@ var
 begin
   lvLists.Clear;
   for item in ConfigObj.ListManager do
-  begin
     lvLists.AddItem(Item.Name, item);
-  end;
 
 end;
 
@@ -1029,9 +1024,7 @@ end;
 procedure TfPlayer.pmPlayerClose(Sender: TObject);
 begin
   if flgFullScreen then
-  begin
     HideMouse.Enabled := True;
-  end;
 end;
 
 procedure TfPlayer.pmPlayerPopup(Sender: TObject);
@@ -1043,9 +1036,7 @@ begin
   if mnuSub.Count = 0 then
     mnuSub.Enabled := False;
   if flgFullScreen then
-  begin
     HideMouse.Enabled := False;
-  end;
 end;
 
 procedure TfPlayer.pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);

@@ -287,12 +287,8 @@ end;
 constructor TBackend.Create;
 begin
   PluginsProperties := TPluginsProperties.Create(ConfigObj);
-  M3UList := TM3UList.Create;
-
   M3ULoader := TM3ULoader.Create;
-  M3ULoader.ActiveList := M3UList;
   EpgData := TEpg.Create;
-  EpgData.ActiveList := M3UList;
 
   M3ULoader.OnListChanged := OnListChangedPlay;
 
