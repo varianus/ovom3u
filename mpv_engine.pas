@@ -305,6 +305,9 @@ end;
 
 destructor TMPVEngine.Destroy;
 begin
+  If Assigned(fdecoupler) then
+    fdecoupler.OnCommand :=  nil;
+
   if Assigned(fHandle) then
   begin
     RenderObj.Free;

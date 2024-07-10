@@ -82,7 +82,8 @@ end;
 
 procedure TDecoupThread.RunEvent;
 begin
-  Owner.FOnCommand(Owner, Owner.fCommand, Owner.fParam);
+  if Assigned(Owner.FOnCommand) then
+    Owner.FOnCommand(Owner, Owner.fCommand, Owner.fParam);
 end;
 
 destructor TDecoupThread.Destroy;
