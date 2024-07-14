@@ -72,7 +72,7 @@ type
     PreviousIndex: integer;
     FOnWorkDone: TNotifyEvent;
     procedure ListItemToScreen(CurrItem: TM3UList);
-    procedure ScreenToListItem(var CurrItem: TM3UList);
+    procedure ScreenToListItem(CurrItem: TM3UList);
     procedure SetEditMode(Editing: boolean);
     procedure SetOnWorkDone(AValue: TNotifyEvent);
   public
@@ -137,7 +137,7 @@ begin
   ValueListEditor1.Values[ValueListEditor1.Keys[4]] := CurrItem.EPGUrl;
 end;
 
-procedure TfConfig.ScreenToListItem(var CurrItem: TM3UList);
+procedure TfConfig.ScreenToListItem(CurrItem: TM3UList);
 begin
   CurrItem.Name := ValueListEditor1.Values[ValueListEditor1.Keys[0]];
   CurrItem.ChannelsUrl := ValueListEditor1.Values[ValueListEditor1.Keys[1]];
