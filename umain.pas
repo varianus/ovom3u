@@ -521,14 +521,14 @@ begin
 
       VK_RIGHT:
       begin
-        if ExtendedKey then;
-        backend.mpvengine.Seek(5);
+        if ExtendedKey then
+          backend.mpvengine.Seek(5);
         pass := True;
       end;
       VK_LEFT:
       begin
-        if ExtendedKey then;
-        backend.mpvengine.Seek(-5);
+        if ExtendedKey then
+          backend.mpvengine.Seek(-5);
         pass := True;
       end;
 
