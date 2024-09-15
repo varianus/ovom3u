@@ -576,7 +576,7 @@ procedure TfPlayer.SelectList;
 begin
   BackEnd.LoadList(lvLists.Selected.Data);
   LoadList;
-  if cbGroups.Count < 2 then
+  if cbGroups.Count < 3 then
     pcLists.ActivePage := tsChannels
   else
     pcLists.ActivePage := tsGroups;
