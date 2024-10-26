@@ -135,6 +135,8 @@ begin
   ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[4]] := CurrItem.EPGUrl;
+  ValueListEditor1.Invalidate;
+  ;
 end;
 
 procedure TfConfig.ScreenToListItem(CurrItem: TM3UList);
@@ -144,16 +146,20 @@ begin
   CurrItem.UseChno := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[2]]);
   CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
   CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[4]];
-  lbLists.Items[lbLists.ItemIndex] := CurrItem.Name;
+  lbLists.Items[PreviousIndex] := CurrItem.Name;
   ConfigObj.ListManager.ListAdd(CurrItem);
 end;
 
 procedure TfConfig.lbListsSelectionChange(Sender: TObject; User: boolean);
 begin
-  if (PreviousIndex <> -1) and (PreviousIndex <> lbLists.ItemIndex) then
+  if PreviousIndex = -1 then
   begin
-    ScreenToListItem(TM3UList(lbLists.Items.Objects[PreviousIndex]));
+    PreviousIndex := lbLists.ItemIndex;
+    ListItemToScreen(TM3UList(lbLists.Items.Objects[PreviousIndex]));
+    exit;
   end;
+  if (PreviousIndex <> -1) and (PreviousIndex <> lbLists.ItemIndex) then
+    ScreenToListItem(TM3UList(lbLists.Items.Objects[PreviousIndex]));
   PreviousIndex := lbLists.ItemIndex;
   ListItemToScreen(TM3UList(lbLists.Items.Objects[PreviousIndex]));
 
@@ -219,9 +225,7 @@ begin
   if Dialogs.MessageDlg('', 'Delete list ?', mtConfirmation, mbYesNo, 0) = mrYes then
   begin
     if CurrentItem.ListID <> 0 then
-    begin
       ConfigObj.ListManager.ListDelete(CurrentItem);
-    end;
     lbLists.DeleteSelected;
   end;
 end;
@@ -247,6 +251,14 @@ end;
 procedure TfConfig.Init;
 begin
   PreviousIndex := -1;
+  with ValueListEditor1.ItemProps[0] do
+  begin
+    EditStyle := esSimple;
+  end;
+  with ValueListEditor1.ItemProps[1] do
+  begin
+    EditStyle := esSimple;
+  end;
   with ValueListEditor1.ItemProps[2] do
   begin
     EditStyle := esPickList;
