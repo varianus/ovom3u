@@ -69,7 +69,7 @@ type
     fLastMessage: string;
     FOnListChanged: TNotifyEvent;
     FActiveList: TM3UList;
-    procedure LoadList;
+    function LoadList: boolean;
     procedure SetActiveList(AValue: TM3UList);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(const Left, Right: TM3UItem): integer;
@@ -362,13 +362,13 @@ begin
   Result := CompareValue(left.Number, Right.Number);
 end;
 
-procedure TM3ULoader.LoadList;
+Function TM3ULoader.LoadList:boolean;
 var
   CacheDir, IPTVList: string;
   Kind: TProviderKind;
   ListName: string;
 begin
-
+  Result := false;
   Kind := FActiveList.ChannelKind;
 
   if Kind = URL then
@@ -385,7 +385,7 @@ begin
           ConfigObj.ListManager.SetLastScan(FActiveList.ListID, 'channels', now);
         except
           on e: Exception do
-            OvoLogger.Log(llERROR, 'Can''t download list at: ' +
+            OvoLogger.Log(llERROR, 'Can''t download new list at: ' +
               IPTVList + ' error:' +
               E.Message);
         end;
@@ -401,7 +401,13 @@ begin
     IPTVList := FActiveList.ChannelsUrl;
 
   if FileExists(IPTVList) then
-    Load(IPTVList);
+    if not Load(IPTVList) then
+      begin
+         OvoLogger.Log(llERROR, 'Can''t load %. Error: %s', [IPTVList, LastMessage]);
+         exit;
+      end;
+
+  Result:= true;
 
   OvoLogger.Log(llINFO, 'Found %d channels', [Count]);
 
