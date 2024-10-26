@@ -27,7 +27,7 @@ uses
   lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
   um3uloader, OpenGLContext, Types, Math, SysUtils, MPV_Engine, Config,
   {$IFDEF LINUX} clocale,{$endif}
-  GeneralFunc, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput;
+  GeneralFunc, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput, LoggerUnit;
 
 type
 
@@ -145,6 +145,7 @@ type
     fFilteredList: TFilteredList;
     SubForm: TForm;
     SubFormVisible: boolean;
+    OldLogLevel : TOvoLogLevel;
     function CheckConfigAndSystem: boolean;
     procedure CloseSubForm;
     procedure ComputeGridCellSize;
@@ -186,7 +187,7 @@ var
 
 implementation
 
-uses uconfig, LoggerUnit, AppConsts, uChannels, LazUTF8, LazLogger;
+uses uconfig, AppConsts, uChannels, LazUTF8, LazLogger;
 
 var
   f: Text;
@@ -369,7 +370,7 @@ begin
   end
   else
     OvoLogger.Log(llWARN, 'Invalid config');
-
+  OldLogLevel := OvoLogger.Level;
 end;
 
 procedure TfPlayer.FormDestroy(Sender: TObject);
@@ -417,6 +418,14 @@ begin
     application.ProcessMessages;
     Application.Terminate;
   end;
+
+  if (Shift = [ssShift, ssCtrl]) and (key = VK_D) then
+    begin
+      if OvoLogger.Level <> llDEBUG then
+        OvoLogger.Level := llDEBUG
+      else
+        OvoLogger.Level := OldLogLevel;
+    end;
 
   if (Key and $200) <> 0 then
   begin
