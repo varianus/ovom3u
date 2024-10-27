@@ -411,7 +411,6 @@ var
   ExtendedKey: boolean;
 begin
   Pass := False;
-  Application.ProcessMessages;
   if (key and $300) = $300 then
   begin
     hide;
