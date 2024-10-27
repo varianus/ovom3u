@@ -37,9 +37,8 @@ uses {$IFDEF UNIX}
   sysutils,
   uEPGFOrm,
   LoggerUnit, appconsts, Renderer, uChannels, uBackEnd,
-  cec, CEC_intf, MultimediaKeys
-  {$IFDEF LINUX}, mpris2{$ENDIF}
-  ;
+  {$IFDEF LINUX}mpris2,{$ENDIF}
+  cec, CEC_intf, MultimediaKeys, uLogViewer;
 
 {$R *.res}
 var

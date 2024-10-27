@@ -59,6 +59,7 @@ type
 type
 
   TfPlayer = class(TForm)
+    actShowLog: TAction;
     actShowList: TAction;
     actShowConfig: TAction;
     actShowEpg: TAction;
@@ -101,6 +102,7 @@ type
     procedure actShowEpgExecute(Sender: TObject);
     procedure actShowConfigExecute(Sender: TObject);
     procedure actShowListExecute(Sender: TObject);
+    procedure actShowLogExecute(Sender: TObject);
     procedure actViewCurrentProgramExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
@@ -187,7 +189,7 @@ var
 
 implementation
 
-uses uconfig, AppConsts, uChannels, LazUTF8, LazLogger;
+uses uconfig, AppConsts, uChannels, uLogViewer, LazUTF8, LazLogger;
 
 var
   f: Text;
@@ -466,19 +468,27 @@ begin
   if (not SubFormVisible) or ExtendedKey then
   begin
     case key of
-      VK_RETURN:
-        if ChannelSelecting then
+      VK_0..VK_9, VK_NUMPAD0..VK_NUMPAD9:
+      begin
+        if not ChannelSelecting then
         begin
-          if BackEnd.M3ULoader.ActiveList.UseChno then
-            ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
-          else
-            ChannelSelected := ChannelSelected - 1;
-          play(ChannelSelected);
-          ChannelSelecting := False;
-          key := 0;
+          ChannelSelecting := True;
+          ChannelSelected := Key - $30;
+          if Key >= $60 then
+            ChannelSelected := ChannelSelected - $30;
         end
         else
-          pass := True;
+        begin
+          ChannelSelected := (ChannelSelected * 10) + Key - $30;
+          if Key >= $60 then
+            ChannelSelected := ChannelSelected - $30;
+
+        end;
+        Backend.OsdMessage(IntToStr(ChannelSelected), False);
+        ChannelTimer.Enabled := True;
+      end;
+      VK_B:
+        BackEnd.SwapChannel;
       VK_C:
       begin
         pnlChannel.Visible := not pnlChannel.Visible;
@@ -486,11 +496,19 @@ begin
         HideMouse.Enabled := (not pnlChannel.Visible) and flgFullScreen;
         if pnlChannel.Visible then
           ChannelList.SetFocus;
-        ;
       end;
-
+      VK_D:
+        actShowLog.Execute;
+      VK_E:
+        actShowEpg.Execute;
+      VK_F:
+        SetFullScreen;
       VK_I:
         Backend.ShowEpg;
+      VK_L:
+        actShowList.Execute;
+      VK_M:
+        backend.mpvengine.Mute;
       VK_O:
         backend.mpvengine.ShowStats();
       VK_P:
@@ -516,16 +534,6 @@ begin
         end
         else
           backend.mpvengine.OsdMessage();
-      VK_F:
-        SetFullScreen;
-      VK_L:
-        actShowList.Execute;
-      VK_M:
-        backend.mpvengine.Mute;
-      VK_E:
-        actShowEpg.Execute;
-      VK_B:
-        BackEnd.SwapChannel;
 
       VK_RIGHT:
       begin
@@ -539,26 +547,19 @@ begin
           backend.mpvengine.Seek(-5);
         pass := True;
       end;
-
-      VK_0..VK_9, VK_NUMPAD0..VK_NUMPAD9:
-      begin
-        if not ChannelSelecting then
+      VK_RETURN:
+        if ChannelSelecting then
         begin
-          ChannelSelecting := True;
-          ChannelSelected := Key - $30;
-          if Key >= $60 then
-            ChannelSelected := ChannelSelected - $30;
+          if BackEnd.M3ULoader.ActiveList.UseChno then
+            ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
+          else
+            ChannelSelected := ChannelSelected - 1;
+          play(ChannelSelected);
+          ChannelSelecting := False;
+          key := 0;
         end
         else
-        begin
-          ChannelSelected := (ChannelSelected * 10) + Key - $30;
-          if Key >= $60 then
-            ChannelSelected := ChannelSelected - $30;
-
-        end;
-        Backend.OsdMessage(IntToStr(ChannelSelected), False);
-        ChannelTimer.Enabled := True;
-      end;
+          pass := True;
       else
         Pass := True;
     end;
@@ -932,6 +933,14 @@ begin
     Application.CreateForm(TfChannels, fChannels);
   fChannels.Init;
   EmbedSubForm(fChannels);
+end;
+
+procedure TfPlayer.actShowLogExecute(Sender: TObject);
+begin
+  if not Assigned(fLogViewer) then
+    Application.CreateForm(TfLogViewer, fLogViewer);
+  fLogViewer.Init;
+  EmbedSubForm(fLogViewer);
 end;
 
 procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);

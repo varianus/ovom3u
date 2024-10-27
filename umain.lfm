@@ -321,6 +321,10 @@ object fPlayer: TfPlayer
       Caption = 'Show List'
       OnExecute = actShowListExecute
     end
+    object actShowLog: TAction
+      Caption = 'Show Log'
+      OnExecute = actShowLogExecute
+    end
   end
   object pmuView: TPopupMenu
     Left = 200
