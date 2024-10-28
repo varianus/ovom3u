@@ -6,7 +6,8 @@ object EPGForm: TEPGForm
   Caption = 'EPG Guide'
   ClientHeight = 417
   ClientWidth = 867
-  LCLVersion = '3.99.0.0'
+  KeyPreview = True
+  LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   object pnlDetail: TPanel
     Left = 0

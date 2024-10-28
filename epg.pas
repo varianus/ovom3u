@@ -265,6 +265,7 @@ var
   qinsert: TSQLQuery;
   i: integer;
 begin
+  FActiveList := List.ActiveList;
   OvoLogger.Log(llINFO, 'Updating EPG channels list');
   qinsert := TSQLQuery.Create(ConfigObj.DB);
   try
@@ -446,7 +447,7 @@ var
       Result := EmptyStr;
   end;
 
-  procedure AddChannel(const Node: TDOMNode); inline;
+  procedure AddChannel(const Node: TDOMNode);
   var
     Channel: TChannelData;
     Child: TDomNode;

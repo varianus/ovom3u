@@ -6,6 +6,7 @@ object fConfig: TfConfig
   Caption = 'Config'
   ClientHeight = 512
   ClientWidth = 902
+  KeyPreview = True
   OnCreate = FormCreate
   OnShow = FormShow
   object pcSettings: TPageControl

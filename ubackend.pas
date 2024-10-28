@@ -59,11 +59,13 @@ type
   TBackend = class
   private
     FOnExternalInput: ExternalInput;
+    FOnListChanged: TNotifyEvent;
     FOnPlay: TNotifyEvent;
     procedure OnListChangedPlay(Sender: TObject);
     procedure OSDTimerTimer(Sender: TObject);
     procedure SetOnExternalInput(AValue: ExternalInput);
     procedure CecKey(Sender: TObject; var Key: word);
+    procedure SetOnListChanged(AValue: TNotifyEvent);
     procedure SetOnPlay(AValue: TNotifyEvent);
   public
     M3ULoader: TM3ULoader;
@@ -90,6 +92,7 @@ type
     procedure SwapChannel;
   public
     property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
+    Property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChanged;
     property OnPlay: TNotifyEvent read FOnPlay write SetOnPlay;
     constructor Create;
     destructor Destroy; override;
@@ -157,8 +160,8 @@ end;
 procedure TBackend.LoadList(AList: TM3UList);
 begin
   M3UList := AList;
-  epgData.ActiveList := M3UList;
   M3ULoader.ActiveList := M3UList;
+  epgData.ActiveList := M3UList;
 
 end;
 
@@ -260,6 +263,11 @@ begin
     FOnExternalInput(Sender, key);
 end;
 
+procedure TBackend.SetOnListChanged(AValue: TNotifyEvent);
+begin
+  FOnListChanged := AValue;
+end;
+
 procedure TBackend.SetOnPlay(AValue: TNotifyEvent);
 begin
   FOnPlay := AValue;
@@ -280,6 +288,9 @@ begin
     epgData.Scan
   else
     OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
+
+  if Assigned(FOnListChanged) then
+    FOnListChanged(sender);
 
 end;
 

@@ -356,7 +356,7 @@ begin
   OvoLogger.Log(llINFO, 'Create main GUI');
   BackEnd.OnExternalInput := ExternalInput;
   BackEnd.OnPlay := OnPlay;
-  BackEnd.M3ULoader.OnListChanged := OnListChanged;
+  BackEnd.OnListChanged := OnListChanged;
   ChannelList.RowCount := 0;
 
   ChannelSelecting := False;

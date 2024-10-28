@@ -1015,8 +1015,8 @@ begin
     tmpQuery := TSQLQuery.Create(FOwner.DB);
     tmpQuery.DataBase := FOwner.DB;
     tmpQuery.Transaction := FOwner.TR;
-    tmpQuery.ParamByName('list').AsInteger := ListID;
     tmpQuery.SQL.Text := 'SELECT ChannelsMd5  FROM Scans  where list =:list';
+    tmpQuery.ParamByName('list').AsInteger := ListID;
     tmpQuery.Open;
     if not tmpQuery.EOF then
       Result := tmpQuery.Fields[0].AsString

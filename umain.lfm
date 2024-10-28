@@ -178,7 +178,7 @@ object fPlayer: TfPlayer
             item
               Caption = 'Title'
               MaxWidth = 300
-              Width = 200
+              Width = 10
             end          
             item
               AutoSize = True
