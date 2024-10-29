@@ -216,13 +216,32 @@ var
   i: integer;
   Cachedir: string;
 
+  function FindCommaOutsideQuotes(const S: string): Integer;
+  var
+    i: Integer;
+    InQuotes: Boolean;
+  begin
+    Result := -1;
+    InQuotes := False;
+    for i := 1 to Length(S) do
+    begin
+      if S[i] = '"' then
+        InQuotes := not InQuotes
+      else if (S[i] = ',') and not InQuotes then
+      begin
+        Result := i;
+        Exit;
+      end;
+    end;
+  end;
+
 
   function FindTag(const tag: string; const st: string): string;
   var
     tagpos: integer;
     TagStart: integer;
   begin
-    TagPos := Pos(tag, st);
+    TagPos := Pos(tag+'=', st);
     if TagPos > 0 then
     begin
       TagStart := PosEx('"', st, tagpos) + 1;
@@ -273,7 +292,7 @@ begin
       if (s <> EmptyStr) then
       begin
         MD5Update(Context, s[1], Length(s));
-        if (uppercase(copy(s, 1, 7)) = '#EXTINF') then
+        if (uppercase(copy(s, 1, 8)) = '#EXTINF:') then
         begin
           item := TM3UItem.Create;
           Item.Number := index;
@@ -283,7 +302,7 @@ begin
           item.IconUrl := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
           item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
-          Item.Title := copy(s, RPos(',', S) + 1, Length(s));
+          Item.Title := copy(s, FindCommaOutsideQuotes(S) + 1, Length(s));
           if not Trim(item.IconUrl).IsEmpty then
           begin
             ext := LowerCase(ExtractFileExt(Item.IconUrl));
