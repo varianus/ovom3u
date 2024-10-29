@@ -174,18 +174,7 @@ object fPlayer: TfPlayer
           Width = 205
           Align = alClient
           BorderStyle = bsNone
-          Columns = <          
-            item
-              Caption = 'Title'
-              MaxWidth = 300
-              Width = 10
-            end          
-            item
-              AutoSize = True
-              Caption = 'Index'
-              Visible = False
-              Width = 2
-            end>
+          Columns = <>
           ReadOnly = True
           RowSelect = True
           TabOrder = 0
