@@ -281,7 +281,7 @@ begin
     OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
     EpgData.LoadChannelList(M3ULoader);
     ConfigObj.ListManager.SetLastChannelMd5(M3ULoader.ActiveList.ListID, M3ULoader.ListMd5);
-    ConfigObj.ListManager.SetLastScan(M3ULoader.ActiveList.ListID, 'epg', 0);
+
   end;
 
   if not M3UList.EPGUrl.IsEmpty then

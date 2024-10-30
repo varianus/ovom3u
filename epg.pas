@@ -101,6 +101,7 @@ begin
   if not TEpgScanner(AObject).Success then
     OvoLogger.Log(llINFO, 'EPG update Not completed');
   OvoLogger.Log(llINFO, 'EPG update thread stopped');
+
   AfterScan;
 
   if Assigned(FOnScanComplete) then
@@ -269,7 +270,8 @@ begin
   OvoLogger.Log(llINFO, 'Updating EPG channels list');
   qinsert := TSQLQuery.Create(ConfigObj.DB);
   try
-    ConfigObj.DB.ExecuteDirect('delete from channels;');
+    ConfigObj.DB.ExecuteDirect('delete from channels where list = '+Inttostr(FActiveList.ListID));
+
     qinsert.Transaction := ConfigObj.TR;
     qinsert.SQL.Text := 'insert into channels values (:list, :id, :name, :ChannelNo, :EpgName);';
     i := 0;
@@ -323,7 +325,7 @@ begin
     try
       Success := False;
       fOwner.fScanning := True;
-      ConfigObj.DB.ExecuteDirect('delete from programme');
+      ConfigObj.DB.ExecuteDirect('delete from programme where list = '+Inttostr(fOwner.FActiveList.ListID));
       OvoLogger.Log(llINFO, 'EPG update thread started');
       if fOwner.FActiveList.EpgKind = Url then
       begin
@@ -494,6 +496,8 @@ begin
   if StoppedCheck then exit;
   ChannelList := TObjectList<TChannelData>.Create;
   ReadXMLFile(XMLDoc, EPGFile);
+  // avoid parsing trouble for XML with DTD directive
+  XmlDoc.DocType.Destroy;
   try
 
     if StoppedCheck then exit;

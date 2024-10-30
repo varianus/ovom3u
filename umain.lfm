@@ -173,6 +173,7 @@ object fPlayer: TfPlayer
           Top = 0
           Width = 205
           Align = alClient
+          AutoWidthLastColumn = True
           BorderStyle = bsNone
           Columns = <>
           ReadOnly = True
