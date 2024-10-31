@@ -1096,8 +1096,13 @@ begin
     tmpQuery.ParamByName('GetLogo').AsBoolean := List.ChannelsDownloadLogo;
     tmpQuery.ParamByName('EPG').AsString := List.EPGUrl;
     tmpQuery.ExecSQL;
-    List.ListID:= fOwner.fDB.GetInsertID;
+    if List.ListID = 0 then
+      List.ListID:= fOwner.fDB.GetInsertID;
 
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO scans (ID, epg, Channels, channelsMD5) ' +
+        'VALUES (:ID, 0, 0, 0);';
+    tmpQuery.ParamByName('ID').AsInteger := List.ListID;
+    tmpQuery.ExecSQL;
   finally
     tmpQuery.Free;
   end;

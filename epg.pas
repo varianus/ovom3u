@@ -47,6 +47,7 @@ type
     function FindChannelIdByEPGName(Channel: string): integer;
     function FindChannelIdByName(Channel: string): integer;
     procedure SetOnEndWork(AValue: TNotifyEvent);
+    procedure Reset;
   protected
     procedure Execute; override;
     function Load(EPGFile: string): integer;
@@ -73,14 +74,13 @@ type
     procedure EndScan(AObject: TObject);
     procedure SetActiveList(AValue: TM3UList);
   public
-    Property ActiveList: TM3UList read FActiveList write SetActiveList;
+    property ActiveList: TM3UList read FActiveList write SetActiveList;
     property OnScanComplete: TNotifyEvent read FOnScanComplete write FOnScanComplete;
     property OnScanStart: TNotifyEvent read FOnScanStart write FOnScanStart;
     property EpgAvailable: boolean read fEpgAvailable;
     property Scanning: boolean read fScanning;
     constructor Create;
     destructor Destroy; override;
-    procedure LoadChannelList(List: TM3ULoader);
     procedure Scan;
     function GetEpgInfo(Channel: integer; CurrTime: TDateTime): REpgInfo; overload;
     function GetEpgInfo(Channel: integer; StartTime: TDateTime; EndTime: TDateTime): AREpgInfo; overload;
@@ -113,8 +113,12 @@ end;
 
 procedure TEpg.SetActiveList(AValue: TM3UList);
 begin
-  FActiveList:=AValue;
-  Scan;
+  FActiveList := AValue;
+  if not FActiveList.EPGUrl.IsEmpty then
+    Scan
+  else
+    OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
+//  Scan;
 end;
 
 
@@ -129,9 +133,7 @@ end;
 procedure TEpg.Scan;
 begin
   if Assigned(Scanner) then
-  begin
     Scanner.Stop;
-  end;
 
   if ConfigObj.ListManager.LastScan(FActiveList.ListID, 'epg') + 12 / 24 > now then
   begin
@@ -139,6 +141,8 @@ begin
     AfterScan;
     exit;
   end;
+
+  Scanner.Reset;
   RTLEventSetEvent(Scanner.FScanEvent);
 
   fEpgAvailable := True;
@@ -260,38 +264,6 @@ begin
   Scanner.Start;
 end;
 
-procedure TEpg.LoadChannelList(List: TM3ULoader);
-var
-  item: TM3UItem;
-  qinsert: TSQLQuery;
-  i: integer;
-begin
-  FActiveList := List.ActiveList;
-  OvoLogger.Log(llINFO, 'Updating EPG channels list');
-  qinsert := TSQLQuery.Create(ConfigObj.DB);
-  try
-    ConfigObj.DB.ExecuteDirect('delete from channels where list = '+Inttostr(FActiveList.ListID));
-
-    qinsert.Transaction := ConfigObj.TR;
-    qinsert.SQL.Text := 'insert into channels values (:list, :id, :name, :ChannelNo, :EpgName);';
-    i := 0;
-    for i := 0 to List.Count - 1 do
-    begin
-      Item := List[i];
-      qinsert.ParamByName('list').AsInteger := FActiveList.ListID;
-      qinsert.ParamByName('id').AsInteger := i;
-      qinsert.ParamByName('name').AsString := item.Title;
-      qinsert.ParamByName('EpgName').AsString := item.tvg_name;
-      qinsert.ParamByName('ChannelNo').AsInteger := item.Number;
-      qinsert.ExecSQL;
-    end;
-  finally
-    qinsert.Free;
-  end;
-  ConfigObj.TR.CommitRetaining;
-
-end;
-
 destructor TEpg.Destroy;
 begin
   if Assigned(Scanner) then
@@ -325,8 +297,9 @@ begin
     try
       Success := False;
       fOwner.fScanning := True;
-      ConfigObj.DB.ExecuteDirect('delete from programme where list = '+Inttostr(fOwner.FActiveList.ListID));
+      ConfigObj.DB.ExecuteDirect('delete from programme where list = ' + IntToStr(fOwner.FActiveList.ListID));
       OvoLogger.Log(llINFO, 'EPG update thread started');
+      FStopped := False;
       if fOwner.FActiveList.EpgKind = Url then
       begin
         OvoLogger.Log(llINFO, 'Downloading EPG from %s', [fOwner.FActiveList.EPGUrl]);
@@ -485,10 +458,8 @@ var
   begin
     Result := -1;
     for channel in ChannelList do
-    begin
       if Channel.EpgId = ChannelEpgId then
         Result := Channel.Id;
-    end;
   end;
 
 begin
@@ -569,8 +540,6 @@ end;
 function TEpgScanner.StoppedCheck: boolean;
 begin
   Result := Terminated or FStopped;
-  if Result then
-    FStopped := False;
 end;
 
 procedure TEpgScanner.Stop;
@@ -580,10 +549,18 @@ begin
   RTLEventSetEvent(FScanEvent);
 end;
 
+procedure TEpgScanner.Reset;
+begin
+  FStopped := False;
+  OvoLogger.Log(llINFO, 'Starting EPG thread');
+  RTLEventSetEvent(FScanEvent);
+end;
+
 constructor TEpgScanner.Create(Owner: TEpg);
 begin
   inherited Create(True);
   fOwner := Owner;
+  FStopped := False;
   FScanEvent := RTLEventCreate;
 end;
 

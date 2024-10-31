@@ -246,6 +246,14 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="MultimediaKeys"/>
       </Unit>
+      <Unit>
+        <Filename Value="ulogviewer.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="fLogViewer"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uLogViewer"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

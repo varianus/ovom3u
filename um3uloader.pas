@@ -88,6 +88,8 @@ type
     destructor Destroy; override;
     function ItemByChno(chno: integer): integer;
     function Filter(aFilter: TFilterParam): TFilteredList;
+    procedure LoadChannelList;
+
 
   end;
 
@@ -163,7 +165,6 @@ begin
       exit;
 
     if not Item.IconLocal.IsEmpty then
-    begin
       if FileExists(Item.IconLocal) then
       begin
         Item.IconAvailable := True;
@@ -177,7 +178,6 @@ begin
         Item.IconAvailable := True;
         Queue(fOwner.DoListChanged);
       end;
-    end;
   end;
 end;
 
@@ -216,15 +216,14 @@ var
   i: integer;
   Cachedir: string;
 
-  function FindCommaOutsideQuotes(const S: string): Integer;
+  function FindCommaOutsideQuotes(const S: string): integer;
   var
-    i: Integer;
-    InQuotes: Boolean;
+    i: integer;
+    InQuotes: boolean;
   begin
     Result := -1;
     InQuotes := False;
     for i := 1 to Length(S) do
-    begin
       if S[i] = '"' then
         InQuotes := not InQuotes
       else if (S[i] = ',') and not InQuotes then
@@ -232,7 +231,6 @@ var
         Result := i;
         Exit;
       end;
-    end;
   end;
 
 
@@ -241,7 +239,7 @@ var
     tagpos: integer;
     TagStart: integer;
   begin
-    TagPos := Pos(tag+'=', st);
+    TagPos := Pos(tag + '=', st);
     if TagPos > 0 then
     begin
       TagStart := PosEx('"', st, tagpos) + 1;
@@ -253,7 +251,7 @@ var
 
 begin
   Clear;
-  Groups.clear;
+  Groups.Clear;
   Result := False;
   Index := 1;
 
@@ -381,13 +379,13 @@ begin
   Result := CompareValue(left.Number, Right.Number);
 end;
 
-Function TM3ULoader.LoadList:boolean;
+function TM3ULoader.LoadList: boolean;
 var
   CacheDir, IPTVList: string;
   Kind: TProviderKind;
   ListName: string;
 begin
-  Result := false;
+  Result := False;
   Kind := FActiveList.ChannelKind;
 
   if Kind = URL then
@@ -397,17 +395,15 @@ begin
     try
       ListName := CacheDir + format('list-%d-iptv.m3u', [FActiveList.ListID]);
       if (ConfigObj.ListManager.LastScan(FActiveList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
-      begin
-        try
-          OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
-          DownloadFromUrl(IPTVList, ListName);
-          ConfigObj.ListManager.SetLastScan(FActiveList.ListID, 'channels', now);
-        except
-          on e: Exception do
-            OvoLogger.Log(llERROR, 'Can''t download new list at: ' +
-              IPTVList + ' error:' +
-              E.Message);
-        end;
+      try
+        OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
+        DownloadFromUrl(IPTVList, ListName);
+        ConfigObj.ListManager.SetLastScan(FActiveList.ListID, 'channels', now);
+      except
+        on e: Exception do
+          OvoLogger.Log(llERROR, 'Can''t download new list at: ' +
+            IPTVList + ' error:' +
+            E.Message);
       end
       else
         OvoLogger.Log(llINFO, 'Using cached channels list');
@@ -421,12 +417,12 @@ begin
 
   if FileExists(IPTVList) then
     if not Load(IPTVList) then
-      begin
-         OvoLogger.Log(llERROR, 'Can''t load %. Error: %s', [IPTVList, LastMessage]);
-         exit;
-      end;
+    begin
+      OvoLogger.Log(llERROR, 'Can''t load %. Error: %s', [IPTVList, LastMessage]);
+      exit;
+    end;
 
-  Result:= true;
+  Result := True;
 
   OvoLogger.Log(llINFO, 'Found %d channels', [Count]);
 
@@ -441,9 +437,48 @@ begin
 
 end;
 
+procedure TM3ULoader.LoadChannelList;
+var
+  item: TM3UItem;
+  qinsert: TSQLQuery;
+  i: integer;
+begin
+  OvoLogger.Log(llINFO, 'Updating channels list for ID ' + IntToStr(FActiveList.ListID));
+  qinsert := TSQLQuery.Create(ConfigObj.DB);
+  try
+    ConfigObj.DB.ExecuteDirect('delete from channels where list = ' + IntToStr(FActiveList.ListID));
+
+    qinsert.Transaction := ConfigObj.TR;
+    qinsert.SQL.Text := 'insert into channels values (:list, :id, :name, :ChannelNo, :EpgName);';
+    i := 0;
+    for i := 0 to Count - 1 do
+    begin
+      Item := Items[i];
+      qinsert.ParamByName('list').AsInteger := FActiveList.ListID;
+      qinsert.ParamByName('id').AsInteger := i;
+      qinsert.ParamByName('name').AsString := item.Title;
+      qinsert.ParamByName('EpgName').AsString := item.tvg_name;
+      qinsert.ParamByName('ChannelNo').AsInteger := item.Number;
+      qinsert.ExecSQL;
+    end;
+  finally
+    qinsert.Free;
+  end;
+  ConfigObj.TR.CommitRetaining;
+
+end;
+
 procedure TM3ULoader.DoListChanged;
 begin
   LoadList;
+  if ListMd5 <> ConfigObj.ListManager.LastChannelMd5(FactiveList.ListID) then
+  begin
+    OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
+    LoadChannelList;
+    ConfigObj.ListManager.SetLastChannelMd5(FActiveList.ListID, ListMd5);
+
+  end;
+
   if Assigned(FOnListChanged) then
     FOnListChanged(self);
 end;

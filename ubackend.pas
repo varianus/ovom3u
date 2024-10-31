@@ -92,7 +92,7 @@ type
     procedure SwapChannel;
   public
     property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
-    Property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChanged;
+    property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChanged;
     property OnPlay: TNotifyEvent read FOnPlay write SetOnPlay;
     constructor Create;
     destructor Destroy; override;
@@ -234,9 +234,7 @@ begin
     OSDTimer.Enabled := True;
   end
   else
-  begin
     OSDTimerTimer(self);
-  end;
 
 end;
 
@@ -276,21 +274,8 @@ end;
 procedure TBackend.OnListChangedPlay(Sender: TObject);
 begin
 
-  if M3ULoader.ListMd5 <> ConfigObj.ListManager.LastChannelMd5(M3ULoader.ActiveList.ListID) then
-  begin
-    OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
-    EpgData.LoadChannelList(M3ULoader);
-    ConfigObj.ListManager.SetLastChannelMd5(M3ULoader.ActiveList.ListID, M3ULoader.ListMd5);
-
-  end;
-
-  if not M3UList.EPGUrl.IsEmpty then
-    epgData.Scan
-  else
-    OvoLogger.Log(llINFO, 'No EPG configuration, skipping');
-
   if Assigned(FOnListChanged) then
-    FOnListChanged(sender);
+    FOnListChanged(Sender);
 
 end;
 
