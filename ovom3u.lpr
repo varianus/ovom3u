@@ -59,7 +59,7 @@ begin
   OvoLogger.Log(llFORCED, format (rBuildEnv,[lazVersion, fpcVersion]));
   OvoLogger.Log(llFORCED, format (rTarget,[TargetCPU, TargetOS]));
   RequireDerivedFormResource := True;
-  Application.Scaled:=True;
+  Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
   Application.Run;

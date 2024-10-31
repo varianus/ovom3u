@@ -23,25 +23,28 @@ unit GeneralFunc;
 interface
 
 uses
-  Classes, SysUtils,  LazLoggerBase;
+  Classes, SysUtils, LazLoggerBase;
+
 type
-TStopDownloadFunc = function ():boolean of object;
+  TStopDownloadFunc = function(): boolean of object;
 
 function TimeToMSec(Time: double): int64;
-Function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;   overload;
-Function FormatTimeRange(StartTime, EndTime:TDateTime; TimeOnly: boolean=false): string;  overload;
-function CompareBoolean (a, b: Boolean): Integer;
-FUNCTION DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc:TStopDownloadFunc=nil):boolean;
+function FormatTimeRange(const Time: TDateTime; ShortMode: boolean = False): string; overload;
+function FormatTimeRange(StartTime, EndTime: TDateTime; TimeOnly: boolean = False): string; overload;
+function CompareBoolean(a, b: boolean): integer;
+function DownloadFromUrl(AFrom: string; ATo: string; StopDownloadFunc: TStopDownloadFunc = nil): boolean;
 function EpgDateToDate(const iDateStr: string): TDateTime;
 function CleanupFileName(AString: string): string;
 
- type
+type
   TByteStringFormat = (bsfDefault, bsfBytes, bsfKB, bsfMB, bsfGB, bsfTB);
-  function FormatByteString(Bytes: UInt64; Format: TByteStringFormat = bsfDefault): string;
+
+function FormatByteString(Bytes: uint64; Format: TByteStringFormat = bsfDefault): string;
 
 implementation
+
 uses
- opensslsockets, fphttpclient, DateUtils;
+  opensslsockets, fphttpclient, DateUtils;
 
 const
   OneKB = 1024;
@@ -55,24 +58,25 @@ type
 
   { TDownloadStream }
 
-  TOnWriteStream = procedure(Sender: TObject; APos: Int64) of object;
+  TOnWriteStream = procedure(Sender: TObject; APos: int64) of object;
+
   TDownloadStream = class(TStream)
   private
     FOnWriteStream: TOnWriteStream;
     FStream: TStream;
     fStopDownloadFunc: TStopDownloadFunc;
-    FHTTPClient : TFPHTTPClient;
+    FHTTPClient: TFPHTTPClient;
   public
     constructor Create(AStream: TStream; StopDownloadFunc: TStopDownloadFunc);
     destructor Destroy; override;
-    function Read(var Buffer; Count: LongInt): LongInt; override;
-    function Write(const Buffer; Count: LongInt): LongInt; override;
-    function Seek(Offset: LongInt; Origin: Word): LongInt; override;
+    function Read(var Buffer; Count: longint): longint; override;
+    function Write(const Buffer; Count: longint): longint; override;
+    function Seek(Offset: longint; Origin: word): longint; override;
     procedure DoProgress;
   published
     property OnWriteStream: TOnWriteStream read FOnWriteStream write FOnWriteStream;
   end;
-{ TDownloadStream }
+  { TDownloadStream }
 
 constructor TDownloadStream.Create(AStream: TStream; StopDownloadFunc: TStopDownloadFunc);
 begin
@@ -88,18 +92,18 @@ begin
   inherited Destroy;
 end;
 
-function TDownloadStream.Read(var Buffer; Count: LongInt): LongInt;
+function TDownloadStream.Read(var Buffer; Count: longint): longint;
 begin
   Result := FStream.Read(Buffer, Count);
 end;
 
-function TDownloadStream.Write(const Buffer; Count: LongInt): LongInt;
+function TDownloadStream.Write(const Buffer; Count: longint): longint;
 begin
   Result := FStream.Write(Buffer, Count);
   DoProgress;
 end;
 
-function TDownloadStream.Seek(Offset: LongInt; Origin: Word): LongInt;
+function TDownloadStream.Seek(Offset: longint; Origin: word): longint;
 begin
   Result := FStream.Seek(Offset, Origin);
 end;
@@ -113,29 +117,29 @@ begin
     FOnWriteStream(Self, Self.Position);
 end;
 
-function DownloadFromUrl(AFrom: String; ATo: String; StopDownloadFunc: TStopDownloadFunc): boolean;
+function DownloadFromUrl(AFrom: string; ATo: string; StopDownloadFunc: TStopDownloadFunc): boolean;
 var
   DS: TDownloadStream;
 begin
-  Result := false;
+  Result := False;
   DS := TDownloadStream.Create(TFileStream.Create(ATo, fmCreate), StopDownloadFunc);
   try
     try
       DS.FHTTPClient := TFPHTTPClient.Create(nil);
-      DS.FHTTPClient.AllowRedirect:=true;
+      DS.FHTTPClient.AllowRedirect := True;
       DS.FHTTPClient.HTTPMethod('GET', AFrom, DS, [200]);
-      Result := true;
+      Result := True;
     except
       on E: Exception do
       begin
-        Result := false;
+        Result := False;
         ds.FStream.Free;
         ds.FStream := nil;
         DeleteFile(Ato);
       end;
     end;
   finally
-    DS.FHTTPClient.free;
+    DS.FHTTPClient.Free;
     DS.Free
   end;
 end;
@@ -145,7 +149,7 @@ var
   x: integer;
 const
   IllegalCharSet: set of char =
-    ['|','<','>','\','^','+','=','?','/','[',']','"',';',',','*'];
+    ['|', '<', '>', '\', '^', '+', '=', '?', '/', '[', ']', '"', ';', ',', '*'];
 begin
   for x := 1 to Length(AString) do
     if AString[x] in IllegalCharSet then
@@ -155,78 +159,86 @@ end;
 
 function EpgDateToDate(const iDateStr: string): TDateTime;
 var
-  AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word;
+  AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: word;
+  TimeOffset: integer;
+  DatePart, OffsetPart: string;
 begin
-   AMilliSecond:=0;
-   AYear:=StrToIntDef(copy(iDateStr,1,4),0);
-   AMonth:=StrToIntDef(copy(iDateStr,5,2),1);
-   ADay:=StrToIntDef(copy(iDateStr,7,2),1);
-   AHour:=StrToIntDef(copy(iDateStr,9,2),0);
-   AMinute:=StrToIntDef(copy(iDateStr,11,2),0);
-   ASecond:=StrToIntDef(copy(iDateStr,13,2),0);
+  AMilliSecond := 0;
+  TimeOffset := Pos(' ', iDateStr);
+  if TimeOffset > 0 then
+  begin
+    DatePart := Copy(iDateStr, 1, TimeOffset - 1);
+    OffsetPart := Copy(iDateStr,TimeOffset + 1, 5);
+  end
+  else
+    DatePart := iDateStr;
+
+  AYear := StrToIntDef(copy(DatePart, 1, 4), 0);
+  AMonth := StrToIntDef(copy(DatePart, 5, 2), 1);
+  ADay := StrToIntDef(copy(DatePart, 7, 2), 1);
+  AHour := StrToIntDef(copy(DatePart, 9, 2), 0);
+  AMinute := StrToIntDef(copy(DatePart, 11, 2), 0);
+  ASecond := StrToIntDef(copy(DatePart, 13, 2), 0);
 
   Result := EncodeDateTime(AYear, AMonth, ADay, AHour, AMinute, ASecond,
     AMilliSecond);
-//  W
+
+  if TimeOffset > 0 then
+  begin
+    if TryStrToInt(OffsetPart, TimeOffset) then
+      TimeOffset := -1 * Trunc((TimeOffset div 100) * 60 + (TimeOffset mod 100))
+    else
+      TimeOffset := 0;
+  end;
+  Result := incMinute(Result, TimeOffset - GetLocalTimeOffset(Result, True));
 end;
 
 function FormatTimeRange(StartTime, EndTime: TDateTime; TimeOnly: boolean): string;
 begin
   if TimeOnly then
-    Result := FormatDateTime('t', StartTime)+ ' - '+ FormatDateTime('t', EndTime)
+    Result := FormatDateTime('t', StartTime) + ' - ' + FormatDateTime('t', EndTime)
   else
-    Result := FormatDateTime('ddddd t', StartTime)+ ' - ' +FormatDateTime('ddddd t', EndTime);
+    Result := FormatDateTime('ddddd t', StartTime) + ' - ' + FormatDateTime('ddddd t', EndTime);
 end;
 
-function FormatTimeRange(const Time: TDateTime; ShortMode:boolean=false): string;
+function FormatTimeRange(const Time: TDateTime; ShortMode: boolean = False): string;
 begin
   if ShortMode and (Time < OneHour) then
-    result:=FormatDateTime('[mm]:ss', Time / MSecsPerDay,[fdoInterval])
+    Result := FormatDateTime('[mm]:ss', Time / MSecsPerDay, [fdoInterval])
   else
-    result:=FormatDateTime('[hh]:mm:ss', Time / MSecsPerDay,[fdoInterval]);
+    Result := FormatDateTime('[hh]:mm:ss', Time / MSecsPerDay, [fdoInterval]);
 
 end;
 
-function CompareBoolean (a, b: Boolean): Integer;
+function CompareBoolean(a, b: boolean): integer;
 const
-   BoolOrder: Array [False..True] Of Integer = (0,1); // o 1,0 se si desidera ordinare il contrario
-Begin
-   result := BoolOrder [a] - BoolOrder [b];
-End ;
+  BoolOrder: array [False..True] of integer = (0, 1); // o 1,0 se si desidera ordinare il contrario
+begin
+  Result := BoolOrder[a] - BoolOrder[b];
+end;
 
 
 // code from David Heffernan, from http://stackoverflow.com/questions/30548940/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-delphi
-function FormatByteString(Bytes: UInt64; Format: TByteStringFormat = bsfDefault): string;
+function FormatByteString(Bytes: uint64; Format: TByteStringFormat = bsfDefault): string;
 begin
-  if Format = bsfDefault then begin
-    if Bytes < OneKB then begin
-      Format := bsfBytes;
-    end
-    else if Bytes < OneMB then begin
-      Format := bsfKB;
-    end
-    else if Bytes < OneGB then begin
-      Format := bsfMB;
-    end
-    else if Bytes < OneTB then begin
-      Format := bsfGB;
-    end
-    else begin
+  if Format = bsfDefault then if Bytes < OneKB then Format := bsfBytes
+    else if Bytes < OneMB then Format := bsfKB
+    else if Bytes < OneGB then Format := bsfMB
+    else if Bytes < OneTB then Format := bsfGB
+    else
       Format := bsfTB;
-    end;
-  end;
 
   case Format of
-  bsfKB:
-    Result := SysUtils.Format('%.1n KB', [Bytes / OneKB]);
-  bsfMB:
-    Result := SysUtils.Format('%.1n MB', [Bytes / OneMB]);
-  bsfGB:
-    Result := SysUtils.Format('%.1n GB', [Bytes / OneGB]);
-  bsfTB:
-    Result := SysUtils.Format('%.1n TB', [Bytes / OneTB]);
-  else  // bsfBytes:
-    Result := SysUtils.Format('%d bytes', [Bytes]);
+    bsfKB:
+      Result := SysUtils.Format('%.1n KB', [Bytes / OneKB]);
+    bsfMB:
+      Result := SysUtils.Format('%.1n MB', [Bytes / OneMB]);
+    bsfGB:
+      Result := SysUtils.Format('%.1n GB', [Bytes / OneGB]);
+    bsfTB:
+      Result := SysUtils.Format('%.1n TB', [Bytes / OneTB]);
+    else  // bsfBytes:
+      Result := SysUtils.Format('%d bytes', [Bytes]);
 
   end;
 end;
