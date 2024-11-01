@@ -88,7 +88,7 @@ type
     function EpgKind: TProviderKind;
     procedure Load(List: integer); overload;
     procedure Load; overload;
-    Constructor Create(const NewName:string); overload;
+    constructor Create(const NewName: string); overload;
   end;
 
   { TListsManager }
@@ -479,18 +479,13 @@ begin
 
 
   if FPortableMode then
-  begin
-    FConfigFile := fConfigDir + ApplicationName + ConfigExtension;
-  end
+    FConfigFile := fConfigDir + ApplicationName + ConfigExtension
   else
-  begin
     FConfigFile := GetAppConfigFile(False
       {$ifdef NEEDCFGSUBDIR}
       , True
       {$ENDIF}
       );
-
-  end;
 
   SetupDBConnection;
   CheckDBStructure;
@@ -644,10 +639,8 @@ begin
   Values.Clear;
   Node := fConfigHolder.find(APath);
   if Assigned(Node) then
-  begin
     for i := 0 to node.Count - 1 do
       Values.Add(Node.Child(i).AsString);
-  end;
 
   Result := Values.Count;
 end;
@@ -660,9 +653,7 @@ begin
   if Assigned(Node) then
     Node.AsString := Value
   else
-  begin
     fConfigHolder.find(APath, True).AsString := Value;
-  end;
 
 end;
 
@@ -708,9 +699,7 @@ begin
   if Assigned(Node) then
     Node.AsInteger := Value
   else
-  begin
     fConfigHolder.find(APath, True).AsInteger := Value;
-  end;
 
 end;
 
@@ -1097,12 +1086,13 @@ begin
     tmpQuery.ParamByName('EPG').AsString := List.EPGUrl;
     tmpQuery.ExecSQL;
     if List.ListID = 0 then
-      List.ListID:= fOwner.fDB.GetInsertID;
-
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO scans (ID, epg, Channels, channelsMD5) ' +
-        'VALUES (:ID, 0, 0, 0);';
-    tmpQuery.ParamByName('ID').AsInteger := List.ListID;
-    tmpQuery.ExecSQL;
+    begin
+      List.ListID := fOwner.fDB.GetInsertID;
+      tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO scans (LIST, epg, Channels, channelsMD5) ' +
+        'VALUES (:LIST, 0, 0, 0);';
+      tmpQuery.ParamByName('LIST').AsInteger := List.ListID;
+      tmpQuery.ExecSQL;
+    end;
   finally
     tmpQuery.Free;
   end;
@@ -1240,7 +1230,7 @@ end;
 constructor TM3UList.Create(const NewName: string);
 begin
   inherited Create;
-  FName:= NewName;
+  FName := NewName;
 end;
 
 { TListProperties }
