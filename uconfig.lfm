@@ -113,7 +113,7 @@ object fConfig: TfConfig
         )
         ColWidths = (
           150
-          542
+          525
         )
       end
     end

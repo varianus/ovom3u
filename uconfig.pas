@@ -135,6 +135,7 @@ begin
   ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[4]] := CurrItem.EPGUrl;
+  ValueListEditor1.Modified:= false;
   ValueListEditor1.Invalidate;
   ;
 end;
@@ -147,7 +148,8 @@ begin
   CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
   CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[4]];
   lbLists.Items[PreviousIndex] := CurrItem.Name;
-  ConfigObj.ListManager.ListAdd(CurrItem);
+  if ValueListEditor1.Modified then
+    ConfigObj.ListManager.ListAdd(CurrItem);
 end;
 
 procedure TfConfig.lbListsSelectionChange(Sender: TObject; User: boolean);
@@ -252,13 +254,9 @@ procedure TfConfig.Init;
 begin
   PreviousIndex := -1;
   with ValueListEditor1.ItemProps[0] do
-  begin
     EditStyle := esSimple;
-  end;
   with ValueListEditor1.ItemProps[1] do
-  begin
     EditStyle := esSimple;
-  end;
   with ValueListEditor1.ItemProps[2] do
   begin
     EditStyle := esPickList;
