@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 program ovom3u;
 
 uses {$IFDEF UNIX}
-  cthreads,
+  cthreads, clocale,
   {$ENDIF} {$IFDEF HASAMIGA}
   athreads, {$ENDIF}
   {$IF defined(LCLGTK2) or defined(LCLGTK3)}
