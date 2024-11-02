@@ -147,7 +147,7 @@ type
     fFilteredList: TFilteredList;
     SubForm: TForm;
     SubFormVisible: boolean;
-    OldLogLevel : TOvoLogLevel;
+    OldLogLevel: TOvoLogLevel;
     function CheckConfigAndSystem: boolean;
     procedure CloseSubForm;
     procedure ComputeGridCellSize;
@@ -179,7 +179,7 @@ type
     procedure LoadTracks;
     procedure mnuTrackClick(Sender: TObject);
     procedure SetFullScreen;
-    procedure LoadList;
+    procedure LoadGroups;
   public
   end;
 
@@ -303,20 +303,30 @@ begin
         actShowConfig.Execute;
     end
   else
-    Loadlist;
+    LoadGroups;
 
 end;
 
-procedure TfPlayer.LoadList;
+procedure TfPlayer.LoadGroups;
 var
   CacheDir: string;
+  i, j, k: integer;
 begin
 
   fFilteredList := BackEnd.M3ULoader.Filter(Default(TFilterParam));
-
+  i := BackEnd.m3uloader.Groups.Count;
   cbGroups.Items.Clear;
-  cbGroups.items.add(um3uloader.RSAnyGroup);
-  cbGroups.Items.AddStrings(BackEnd.m3uloader.Groups);
+  k := 0;
+  if cbGroups.Items.Capacity < i + 1 then
+    cbGroups.Items.Capacity := i + 1;
+
+  for j := 0 to i - 1 do
+  begin
+    cbGroups.Items.Add(BackEnd.m3uloader.Groups[j] + ' (' + IntToStr(PtrInt(BackEnd.m3uloader.Groups.Objects[j])) + ')');
+    Inc(k, PtrInt(BackEnd.m3uloader.Groups.Objects[j]));
+  end;
+
+  cbGroups.items.Insert(0, um3uloader.RSAnyGroup + ' (' + IntToStr(k) + ')');
   cbGroups.ItemIndex := 0;
 
   ChannelList.RowCount := BackEnd.M3ULoader.Count;
@@ -421,12 +431,10 @@ begin
   end;
 
   if (Shift = [ssShift, ssCtrl]) and (key = VK_D) then
-    begin
-      if OvoLogger.Level <> llDEBUG then
-        OvoLogger.Level := llDEBUG
-      else
-        OvoLogger.Level := OldLogLevel;
-    end;
+    if OvoLogger.Level <> llDEBUG then
+      OvoLogger.Level := llDEBUG
+    else
+      OvoLogger.Level := OldLogLevel;
 
   if (Key and $200) <> 0 then
   begin
@@ -584,7 +592,7 @@ end;
 procedure TfPlayer.SelectList;
 begin
   BackEnd.LoadList(lvLists.Selected.Data);
-  LoadList;
+  LoadGroups;
   if cbGroups.Count < 3 then
     pcLists.ActivePage := tsChannels
   else
@@ -782,6 +790,8 @@ begin
     cv.Font.Style := [];
     Spacing := Scale96ToScreen(5);
     CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
+//    IF (EpgInfo.StartTime <= Now) and (EpgInfo.EndTime > Now) then
+//      CurrProgram := 'LIVE '+CurrProgram;
     cv.TextRect(aRect, aRect.Left + Spacing, aRect.top + Spacing, CurrProgram);
     cv.TextRect(aRect, aRect.Left + spacing, aRect.top + Spacing + scale96toscreen(12), EpgInfo.Title);
   end;
@@ -825,14 +835,13 @@ begin
   end;
 end;
 
-
 procedure TfPlayer.SelectGroup;
 var
   Filter: TFilterParam;
 begin
   Filter := Default(TFilterParam);
-  if cbGroups.ItemIndex <> 0 then
-    Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
+  if cbGroups.ItemIndex > 0 then
+    Filter.Group := BackEnd.M3ULoader.Groups[cbGroups.ItemIndex-1];
   fFilteredList := BackEnd.M3ULoader.Filter(Filter);
   ChannelList.RowCount := fFilteredList.Count;
   ChannelList.Invalidate;
@@ -967,7 +976,7 @@ begin
   BoundsRect := GuiProperties.BoundsRect;
   ComputeGridCellSize;
   InitializeLists;
-  pcLists.ActivePage:= tsList;
+  pcLists.ActivePage := tsList;
   if pnlChannel.Visible then
     lvLists.SetFocus;
   if lvLists.Items.Count > 0 then

@@ -192,9 +192,8 @@ end;
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
-  Groups := TStringList.Create;
+  Groups := TStringList.Create(False);
   Groups.Sorted := True;
-  Groups.Duplicates := dupIgnore;
 end;
 
 destructor TM3ULoader.Destroy;
@@ -210,7 +209,7 @@ var
   p, ext: string;
   Item: TM3UItem;
   fData: boolean;
-  index: integer;
+  index, CurrGroup: integer;
   Context: TMD5Context;
   Digest: TMD5Digest;
   i: integer;
@@ -262,6 +261,7 @@ begin
   end;
 
   try
+    Groups.BeginUpdate;
     OvoLogger.Log(llINFO, 'Loading list from %s', [ListName]);
     MD5Init(Context);
     Cachedir := IncludeTrailingPathDelimiter(ConfigObj.CacheDir + 'logo');
@@ -295,7 +295,10 @@ begin
           item := TM3UItem.Create;
           Item.Number := index;
           Item.Group := FindTag('group-title', s);
-          Groups.Add(Item.Group);
+          if Groups.Find(Item.Group, CurrGroup) then
+            Groups.Objects[CurrGroup] := TObject(PtrInt(Groups.Objects[CurrGroup])+1)
+          else
+            Groups.AddObject(Item.Group, TObject(1));
           item.Id := FindTag('tvg-id', s);
           item.IconUrl := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
@@ -332,6 +335,7 @@ begin
     ListMd5 := MD5Print(Digest);
     Result := True;
   finally
+    Groups.EndUpdate;
     if not fLastMessage.IsEmpty then
       OvoLogger.Log(llWARN, fLastMessage);
     closefile(f);

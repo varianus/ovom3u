@@ -221,6 +221,8 @@ var
   qSearch: TSQLQuery;
   i: integer;
 begin
+  if not Assigned(FActiveList) then
+    exit;
   qSearch := TSQLQuery.Create(ConfigObj.DB);
   try
     qSearch.Transaction := ConfigObj.TR;

@@ -176,6 +176,8 @@ object fPlayer: TfPlayer
           AutoWidthLastColumn = True
           BorderStyle = bsNone
           Columns = <>
+          Font.Height = -14
+          ParentFont = False
           ReadOnly = True
           RowSelect = True
           TabOrder = 0
