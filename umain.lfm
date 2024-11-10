@@ -71,7 +71,7 @@ object fPlayer: TfPlayer
       Visible = False
       object EPGList: TDrawGrid
         Left = 1
-        Height = 371
+        Height = 323
         Top = 1
         Width = 210
         Align = alClient
@@ -98,11 +98,11 @@ object fPlayer: TfPlayer
       end
       object Panel2: TPanel
         Left = 1
-        Height = 138
-        Top = 372
+        Height = 186
+        Top = 324
         Width = 210
         Align = alBottom
-        ClientHeight = 138
+        ClientHeight = 186
         ClientWidth = 210
         Color = clWindow
         ParentBackground = False
@@ -110,7 +110,7 @@ object fPlayer: TfPlayer
         TabOrder = 1
         object MemoEpg: TMemo
           Left = 1
-          Height = 136
+          Height = 184
           Top = 1
           Width = 208
           Align = alClient
