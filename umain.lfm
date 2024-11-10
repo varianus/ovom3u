@@ -71,7 +71,7 @@ object fPlayer: TfPlayer
       Visible = False
       object EPGList: TDrawGrid
         Left = 1
-        Height = 509
+        Height = 371
         Top = 1
         Width = 210
         Align = alClient
@@ -91,10 +91,33 @@ object fPlayer: TfPlayer
         TabOrder = 0
         UseXORFeatures = True
         OnDrawCell = EPGListDrawCell
-        OnKeyDown = ChannelListKeyDown
+        OnSelectCell = EPGListSelectCell
         ColWidths = (
           189
         )
+      end
+      object Panel2: TPanel
+        Left = 1
+        Height = 138
+        Top = 372
+        Width = 210
+        Align = alBottom
+        ClientHeight = 138
+        ClientWidth = 210
+        Color = clWindow
+        ParentBackground = False
+        ParentColor = False
+        TabOrder = 1
+        object MemoEpg: TMemo
+          Left = 1
+          Height = 136
+          Top = 1
+          Width = 208
+          Align = alClient
+          ReadOnly = True
+          ScrollBars = ssAutoVertical
+          TabOrder = 0
+        end
       end
     end
   end

@@ -72,6 +72,7 @@ type
     EPGList: TDrawGrid;
     lvLists: TListView;
     MainMenu1: TMainMenu;
+    MemoEpg: TMemo;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     N1: TMenuItem;
@@ -80,6 +81,7 @@ type
     mnuVideo: TMenuItem;
     GLRenderer: TOpenGLControl;
     ChannelTimer: TTimer;
+    Panel2: TPanel;
     pcLists: TPageControl;
     Panel1: TPanel;
     pnlEpg: TPanel;
@@ -116,6 +118,7 @@ type
     procedure ChannelSplitterMoved(Sender: TObject);
     procedure ChannelTimerTimer(Sender: TObject);
     procedure EPGListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
+    procedure EPGListSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
     procedure FormChangeBounds(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -796,6 +799,17 @@ begin
     cv.TextRect(aRect, aRect.Left + spacing, aRect.top + Spacing + scale96toscreen(12), EpgInfo.Title);
   end;
 
+end;
+
+procedure TfPlayer.EPGListSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
+var
+  i, Spacing: integer;
+  epgInfo: REpgInfo;
+  cv: TCanvas;
+  CurrProgram: string;
+begin
+  epgInfo := ChannelInfo[Arow];
+  MemoEpg.Lines.Text := epgInfo.Plot;
 end;
 
 procedure TfPlayer.FormChangeBounds(Sender: TObject);
