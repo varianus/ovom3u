@@ -470,7 +470,8 @@ begin
   ChannelList := TObjectList<TChannelData>.Create;
   ReadXMLFile(XMLDoc, EPGFile);
   // avoid parsing trouble for XML with DTD directive
-  XmlDoc.DocType.Destroy;
+  if Assigned(XmlDoc.DocType) then
+    XmlDoc.DocType.Destroy;
   try
 
     if StoppedCheck then exit;
