@@ -209,7 +209,7 @@ begin
   CurrentIndex := Index;
   mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
   Loading := True;
-  fLastMessage := 'Loading: ' + BackEnd.M3ULoader[CurrentIndex].title;
+  fLastMessage := format('Load: %3.3d %s',[CurrentIndex+1, BackEnd.M3ULoader[CurrentIndex].title]);
   OsdMessage(fLastMessage);
   if Assigned(FOnPlay) then
     FOnPlay(Self);
