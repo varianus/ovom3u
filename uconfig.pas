@@ -269,6 +269,12 @@ begin
     EditStyle := esPickList;
     PickList.Text := 'True' + sLineBreak + 'False';
   end;
+  with ValueListEditor1.ItemProps[4] do
+  begin
+    EditStyle := esPickList;
+    PickList.Text := 'True' + sLineBreak + 'False';
+  end;
+
 end;
 
 
