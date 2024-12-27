@@ -66,6 +66,7 @@ type
     FChannelsDownloadLogo: boolean;
     FChannelsFileName: string;
     FChannelsUrl: string;
+    FEPGFromM3U: boolean;
     FEPGUrl: string;
     FListID: integer;
     FName: string;
@@ -73,6 +74,7 @@ type
     procedure SetChannelsDownloadLogo(AValue: boolean);
     procedure SetChannelsFileName(AValue: string);
     procedure SetChannelsUrl(AValue: string);
+    procedure SetEPGFromM3U(AValue: boolean);
     procedure SetEPGUrl(AValue: string);
     procedure SetListID(AValue: integer);
     procedure SetName(AValue: string);
@@ -84,6 +86,7 @@ type
     property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
     property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
     property UseChno: boolean read FUseChno write SetUseChno;
+    property EPGFromM3U: boolean read FEPGFromM3U write SetEPGFromM3U;
     function ChannelKind: TProviderKind;
     function EpgKind: TProviderKind;
     procedure Load(List: integer); overload;
@@ -229,7 +232,7 @@ const
     'PRAGMA count_changes = 0;',
     'PRAGMA encoding = "UTF-8";'
     );
-  CURRENTDBVERSION = 3;
+  CURRENTDBVERSION = 4;
 
   CREATECONFIGTABLE1 =
     'CREATE TABLE config ('
@@ -243,6 +246,7 @@ const
     + ',Position VARCHAR'
     + ',UseNumber INTEGER'
     + ',GetLogo INTEGER'
+    + ',EPGFromM3U INTEGER'
     + ',EPG VARCHAR'
     + ',PRIMARY KEY("ID" AUTOINCREMENT))';
   CREATECONFIGTABLE2 =
@@ -887,16 +891,19 @@ end;
 procedure TConfig.UpgradeDBStructure(LoadedDBVersion: integer);
 const
   ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
+  ToV4_1 = 'ALTER TABLE "m3ulists" add COLUMN "EPGFromM3U" integer NULL;';
+
   UPDATESTATUS = 'UPDATE confid SET Version = %d;';
 var
   MustUpdate: boolean;
 begin
   MustUpdate := False;
   OvoLogger.Log(llINFO, 'Upgrading db version from %d to %d:', [LoadedDBVersion, CURRENTDBVERSION]);
-  if LoadedDBVersion < 2 then
+  if LoadedDBVersion < 4 then
   begin
-    fDB.ExecuteDirect(ToV2_1);
+    fDB.ExecuteDirect(ToV4_1);
     MustUpdate := True;
+    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
   end;
 
   if LoadedDBVersion < 3 then
@@ -905,11 +912,17 @@ begin
     fDB.ExecuteDirect('Drop table programme');
     fDB.ExecuteDirect('Drop table scans');
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
-    CheckDBStructure;
-
+    MustUpdate := True;
+  end
+  else
+  if LoadedDBVersion < 2 then
+  begin
+    fDB.ExecuteDirect(ToV2_1);
+    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
     MustUpdate := True;
   end;
 
+  CheckDBStructure;
 
   if MustUpdate then
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
@@ -928,7 +941,7 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG FROM m3ulists;';
+    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U FROM m3ulists;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
     begin
@@ -939,6 +952,8 @@ begin
       wItem.UseChno := tmpQuery.FieldByName('UseNumber').AsBoolean;
       wItem.ChannelsDownloadLogo := tmpQuery.FieldByName('GetLogo').AsBoolean;
       wItem.EPGUrl := tmpQuery.FieldByName('EPG').AsString;
+      wItem.EPGFromM3U := tmpQuery.FieldByName('EPGFromM3U').AsBoolean;
+
       Add(wItem);
       tmpQuery.Next;
     end;
@@ -959,8 +974,8 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG) ' +
-      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG);';
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U) ' +
+      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :EPGFromM3U);';
     for wItem in self do
     begin
       if wItem.ListID = 0 then
@@ -973,6 +988,7 @@ begin
       tmpQuery.ParamByName('UseNumber').AsBoolean := wItem.UseChno;
       tmpQuery.ParamByName('GetLogo').AsBoolean := wItem.ChannelsDownloadLogo;
       tmpQuery.ParamByName('EPG').AsString := wItem.EPGUrl;
+      tmpQuery.ParamByName('EPGFromM3U').AsBoolean := wItem.EPGFromM3U;
       tmpQuery.ExecSQL;
     end;
 
@@ -1156,6 +1172,12 @@ procedure TM3UList.SetChannelsUrl(AValue: string);
 begin
   if FChannelsUrl = AValue then Exit;
   FChannelsUrl := AValue;
+end;
+
+procedure TM3UList.SetEPGFromM3U(AValue: boolean);
+begin
+  if FEPGFromM3U=AValue then Exit;
+  FEPGFromM3U:=AValue;
 end;
 
 procedure TM3UList.SetEPGUrl(AValue: string);

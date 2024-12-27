@@ -80,6 +80,7 @@ type
     function Load(const ListName: string): boolean;
   public
     ListMd5: string;
+    EPGURL: string;
     Groups: TStringList;
     property ActiveList: TM3UList read FActiveList write SetActiveList;
     property LastMessage: string read fLastMessage;
@@ -282,6 +283,14 @@ begin
       fLastMessage := RSMissingHeader;
       exit;
     end;
+    if FActiveList.EPGFromM3U then
+      begin
+        EPGURL := FindTag('url-tvg',S);
+        if EPGURL = '' then
+          OvoLogger.Log(llWARN, 'EPG Url from M3U missing or empty!');
+        FActiveList.EPGUrl:= EPGURL;
+      end;
+
     fData := False;
     while EOF(f) <> True do
     begin

@@ -134,7 +134,8 @@ begin
   ValueListEditor1.Values[ValueListEditor1.Keys[1]] := CurrItem.ChannelsUrl;
   ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
-  ValueListEditor1.Values[ValueListEditor1.Keys[4]] := CurrItem.EPGUrl;
+  ValueListEditor1.Values[ValueListEditor1.Keys[4]] := BoolToStr(CurrItem.EPGFromM3U, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[5]] := CurrItem.EPGUrl;
   ValueListEditor1.Modified:= false;
   ValueListEditor1.Invalidate;
   ;
@@ -146,7 +147,8 @@ begin
   CurrItem.ChannelsUrl := ValueListEditor1.Values[ValueListEditor1.Keys[1]];
   CurrItem.UseChno := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[2]]);
   CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
-  CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[4]];
+  CurrItem.EPGFromM3U := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[4]]);
+  CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[5]];
   lbLists.Items[PreviousIndex] := CurrItem.Name;
   if ValueListEditor1.Modified then
     ConfigObj.ListManager.ListAdd(CurrItem);
