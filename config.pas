@@ -57,7 +57,7 @@ type
   TConfigList = TObjectList<TConfigParam>;
 
 
-  TProviderKind = (Local, URL);
+  TProviderKind = (Local, URL, None);
 
   { TM3UList }
 
@@ -1176,8 +1176,8 @@ end;
 
 procedure TM3UList.SetEPGFromM3U(AValue: boolean);
 begin
-  if FEPGFromM3U=AValue then Exit;
-  FEPGFromM3U:=AValue;
+  if FEPGFromM3U = AValue then Exit;
+  FEPGFromM3U := AValue;
 end;
 
 procedure TM3UList.SetEPGUrl(AValue: string);
@@ -1214,6 +1214,9 @@ end;
 
 function TM3UList.EpgKind: TProviderKind;
 begin
+  if (FEPGUrl.IsEmpty and not FEPGFromM3U) then
+    Result := None
+  else
   if FEPGUrl.ToLower.StartsWith('http://') or FEPGUrl.ToLower.StartsWith('https://') then
     Result := URL
   else

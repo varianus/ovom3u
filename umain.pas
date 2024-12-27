@@ -700,7 +700,8 @@ begin
 
   Spacing := Scale96ToScreen(2);
   cv.TextRect(aRect, h + Spacing * 2, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
-  if GuiProperties.ViewCurrentProgram then
+  if GuiProperties.ViewCurrentProgram and
+     (BackEnd.EpgData.ActiveList.EpgKind <> None) then
   begin
     epgInfo := BackEnd.epgdata.GetEpgInfo(fFilteredList.Map(arow), now);
     if epgInfo.HaveData then
