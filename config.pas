@@ -1256,6 +1256,7 @@ constructor TM3UList.Create(const NewName: string);
 begin
   inherited Create;
   FName := NewName;
+  FEPGUrl := '';
 end;
 
 { TListProperties }
