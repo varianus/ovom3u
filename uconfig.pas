@@ -249,6 +249,21 @@ end;
 
 procedure TfConfig.FormCreate(Sender: TObject);
 begin
+  {$IfNDef USE_MPRIS}
+  cbMpris2.Enabled:= false;
+  cbMpris2.Checked:= false;
+  {$ENDIF}
+
+  {$IfNDef USE_LIBCEC}
+  cbLibCEC.Enabled:= false;
+  cbLibCEC.Checked:= false;
+  {$ENDIF}
+
+  {$IfNDef USE_MMKEYS}
+  cbMMkeys.Enabled:= false;
+  cbMMkeys.Checked:= false;
+  {$ENDIF}
+
   init;
 end;
 

@@ -287,7 +287,7 @@ begin
   EpgData := TEpg.Create;
 
   M3ULoader.OnListChanged := OnListChangedPlay;
-
+  {$IFDEF USE_LIBCEC}
   if PluginsProperties.EnableCEC then
   try
     HDMI_CEC := THDMI_CEC.Create;
@@ -300,8 +300,10 @@ begin
     end;
   end
   else
+  {$ENDIF}
     HDMI_CEC := nil;
 
+  {$IFDEF USE_MMKEYS}
   if PluginsProperties.EnableMMKeys then
   try
     mmkey := TMultimediaKeys.Create(PluginsProperties.MMKeysMode);
@@ -314,8 +316,10 @@ begin
     end;
   end
   else
+  {$ENDIF}
     mmkey := nil;
-  {$IFDEF LINUX}
+
+  {$IFDEF USE_MPRIS2}
   if PluginsProperties.EnableMPRIS2 then
   try
     Mpris := TMpris2.Create();
@@ -329,8 +333,9 @@ begin
     end;
   end
   else
-    Mpris := nil;
   {$ENDIF}
+    Mpris := nil;
+
 
   OSDTimer := TFPTimer.Create(nil);
   OSDTimer.Enabled := False;

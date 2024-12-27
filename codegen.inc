@@ -17,17 +17,36 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 }
-// General options for code generation
+  // General options for code generation
+  /// compiler and interface mode
+  {$mode DELPHI}{$H+}
+  {$interfaces corba}
 
-// compiler and interface mode
-{$mode DELPHI}{$H+}
-{$interfaces corba}
+  /// Platform dependant code
+  {$IFDEF UNIX}
+  {$DEFINE NEED_C_LIBS} //threading and locales use C library
+  {$ENDIF}
+  {$IF defined(LCLGTK2) or defined(LCLGTK3)}
+    {$IF defined(Linux) or defined(FreeBSD)}
+      {$DEFINE NEED_XLIB} //Needed to avoid threading error on GTK under XLIB
+    {$ENDIF}
+  {$ENDIF}
 
-//if release is defined, try to be quiet and efficient...
-{$IFDEF RELEASE}
+  // Additional features (mainly platform dependant)
+  {$IFDEF LINUX}
+    {$DEFINE USE_MPRIS2} // allow integration with desktop sound applet, available on most Linux desktop manager
+  {$ENDIF}
+
+  {$DEFINE USE_LIBCEC} //add support for HDMI-CEC, allow to control player using TV remote, need hardware support (Raspberry PI has it)
+
+  {$DEFINE USE_MMKEYS} //Add support for keyboard with multimedia keys
+
+  ///if release is defined, try to be quiet and efficient...
+  {$IFDEF RELEASE}
   {$HINTS OFF}
   {$INLINE ON}
   {$warn 6058 off}
   {$warn 5024 off}
-{$ENDIF RELEASE}
+  {$ENDIF RELEASE}
+
 

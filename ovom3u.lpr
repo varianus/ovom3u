@@ -20,27 +20,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 {$I codegen.inc}
 program ovom3u;
 
-uses {$IFDEF UNIX}
-  cthreads, clocale,
-  {$ENDIF} {$IFDEF HASAMIGA}
-  athreads, {$ENDIF}
-  {$IF defined(LCLGTK2) or defined(LCLGTK3)}
-    {$IF defined(Linux) or defined(FreeBSD)}
-     unix_init_xlib,
-    {$ENDIF}
+uses
+  {$IFDEF NEED_C_LIBS}
+  cthreads,
+  clocale,
+  {$ENDIF}
+  {$IFDEF NEED_XLIB}
+  unix_init_xlib,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms,
-  LazLogger, lazmouseandkeyinput,
+  LazLogger,
+  lazmouseandkeyinput,
   Config,
   umain,
-  sysutils,
+  SysUtils,
   uEPGFOrm,
-  LoggerUnit, appconsts, Renderer, uChannels, uBackEnd,
-  {$IFDEF LINUX}mpris2,{$ENDIF}
-  cec, CEC_intf, MultimediaKeys, uLogViewer;
+  LoggerUnit,
+  appconsts,
+  Renderer,
+  uChannels,
+  uBackEnd,
+  {$IFDEF USE_MPRIS2}mpris2,{$ENDIF}
+  {$IFDEF USE_LIBCEC}cec, CEC_intf,{$ENDIF}
+  {$IFDEF USE_MMKEYS}MultimediaKeys,{$ENDIF}
+  uLogViewer;
 
-{$R *.res}
+  {$R *.res}
 var
   Verbose: string;
 
@@ -49,17 +55,17 @@ begin
   // needed to output exception to a file
   Application.Flags := Application.Flags + [appNoExceptionMessages];
 
-  OvoLogger.LogName := ConfigObj.ConfigDir+LogFileName;
+  OvoLogger.LogName := ConfigObj.ConfigDir + LogFileName;
   OvoLogger.SaveOldLog;
-  Verbose := Application.GetOptionValue('v','verbose');
+  Verbose := Application.GetOptionValue('v', 'verbose');
   OvoLogger.LevelFromString(Verbose);
   OvoLogger.Log(llFORCED, '----------------------------');
   OvoLogger.Log(llFORCED, DisplayAppName);
-  OvoLogger.Log(llFORCED, format (rVersionString,[AppVersion, RevisionStr, BuildDate]));
-  OvoLogger.Log(llFORCED, format (rBuildEnv,[lazVersion, fpcVersion]));
-  OvoLogger.Log(llFORCED, format (rTarget,[TargetCPU, TargetOS]));
+  OvoLogger.Log(llFORCED, format(rVersionString, [AppVersion, RevisionStr, BuildDate]));
+  OvoLogger.Log(llFORCED, format(rBuildEnv, [lazVersion, fpcVersion]));
+  OvoLogger.Log(llFORCED, format(rTarget, [TargetCPU, TargetOS]));
   RequireDerivedFormResource := True;
-  Application.Scaled:=True;
+  Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
   Application.Run;
