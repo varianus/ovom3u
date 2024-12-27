@@ -23,10 +23,9 @@ unit um3uloader;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections, StrUtils, Config, Nullable;
+  Classes, SysUtils, Generics.Collections, SQLDB, StrUtils, Config, Nullable;
 
 type
-  TProviderKind = (Local, URL);
 
   TM3UItem = class
   public
@@ -57,63 +56,41 @@ type
     FFilterArray: array of integer;
     function GetItem(idx: integer): TM3UItem;
   public
-    property Item[idx:integer]:TM3UItem read GetItem; default;
-    Function Count: integer;
-    function Map(idx:integer):integer;
-    function IndexOf(value:integer):integer;
+    property Item[idx: integer]: TM3UItem read GetItem; default;
+    function Count: integer;
+    function Map(idx: integer): integer;
+    function IndexOf(Value: integer): integer;
   end;
 
-
-  { TListProperties }
-
-  TListProperties = Class(TConfigParam)
-  private
-    FChannelsDownloadLogo: boolean;
-    FChannelsFileName: string;
-    FChannelsKind: TProviderKind;
-    FChannelsUrl: string;
-    FUseChno: boolean;
-    procedure SetChannelsDownloadLogo(AValue: boolean);
-    procedure SetChannelsFileName(AValue: string);
-    procedure SetChannelsKind(AValue: TProviderKind);
-    procedure SetChannelsUrl(AValue: string);
-    procedure SetUseChno(AValue: boolean);
-  Protected
-    Procedure InternalSave; Override;
-  public
-    Property ChannelsDownloadLogo: boolean read FChannelsDownloadLogo write SetChannelsDownloadLogo;
-    Property ChannelsFileName: string read FChannelsFileName write SetChannelsFileName;
-    Property ChannelsKind: TProviderKind read FChannelsKind write SetChannelsKind;
-    Property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
-    Property UseChno: boolean read FUseChno write SetUseChno;
-    Procedure Load; Override;
-  end;
   { TM3ULoader }
 
   TM3ULoader = class(TObjectList<TM3UItem>)
   private
     fLastMessage: string;
-    fListProperties: TListProperties;
     FOnListChanged: TNotifyEvent;
+    FActiveList: TM3UList;
+    function LoadList: boolean;
+    procedure SetActiveList(AValue: TM3UList);
     procedure SetOnListChange(AValue: TNotifyEvent);
     function SortbyNumber(const Left, Right: TM3UItem): integer;
-
-  public
-
-    ListMd5: string;
-    Groups: TStringList;
-    Property ListProperties: TListProperties read fListProperties;
+    procedure FixChannelNumbering;
+    procedure UpdateLogo;
+  protected
     procedure DoListChanged;
+    function Load(const ListName: string): boolean;
+  public
+    ListMd5: string;
+    EPGURL: string;
+    Groups: TStringList;
+    property ActiveList: TM3UList read FActiveList write SetActiveList;
     property LastMessage: string read fLastMessage;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChange;
     constructor Create;
     destructor Destroy; override;
-    function Load(const ListName: string): boolean;
     function ItemByChno(chno: integer): integer;
-    Function Filter(aFilter:TFilterParam): TFilteredList;
+    function Filter(aFilter: TFilterParam): TFilteredList;
+    procedure LoadChannelList;
 
-    procedure FixChannelNumbering;
-    procedure UpdateLogo;
 
   end;
 
@@ -142,83 +119,23 @@ const
   CoverExt: array [0..CountExt - 1] of string =
     ('.png', '.jpg', '.jpeg', '.gif');
 
-{ TListProperties }
-
-procedure TListProperties.SetChannelsDownloadLogo(AValue: boolean);
-begin
-  if FChannelsDownloadLogo=AValue then Exit;
-  FChannelsDownloadLogo:=AValue;
-  Dirty:=true;
-end;
-
-procedure TListProperties.SetChannelsFileName(AValue: string);
-begin
-  if FChannelsFileName=AValue then Exit;
-  FChannelsFileName:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.SetChannelsKind(AValue: TProviderKind);
-begin
-  if FChannelsKind=AValue then Exit;
-  FChannelsKind:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.SetChannelsUrl(AValue: string);
-begin
-  if FChannelsUrl=AValue then Exit;
-  FChannelsUrl:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.SetUseChno(AValue: boolean);
-begin
-  if FUseChno=AValue then Exit;
-  FUseChno:=AValue;
-  Dirty:=true;
-
-end;
-
-procedure TListProperties.InternalSave;
-begin
-  Owner.WriteString('m3u/ProviderKind',TEnum<TProviderKind>.ToString(ChannelsKind));
-  Owner.WriteString('m3u/FileName',ChannelsFileName);
-  Owner.WriteString('m3u/Url',ChannelsUrl);
-  Owner.WriteBoolean('m3u/UseChno', UseChno);
-  Owner.WriteBoolean('m3u/DownloadLogo', ChannelsDownloadLogo);
-end;
-
-procedure TListProperties.Load;
-begin
-  ChannelsKind:= TEnum<TProviderKind>.FromString(Owner.ReadString('m3u/ProviderKind',''), Local);
-  ChannelsFileName:= Owner.ReadString('m3u/FileName','');
-  ChannelsUrl:= Owner.ReadString('m3u/Url','');
-  UseChno := Owner.ReadBoolean('m3u/UseChno', false);
-  ChannelsDownloadLogo := Owner.ReadBoolean('m3u/DownloadLogo', false);
-  Dirty:=false;
-end;
-
-{ TFilteredList }
+  { TFilteredList }
 
 function TFilteredList.Map(idx: integer): integer;
 begin
   Result := FFilterArray[idx];
 end;
 
-function TFilteredList.IndexOf(value: integer): integer;
+function TFilteredList.IndexOf(Value: integer): integer;
 var
-  i: Integer;
+  i: integer;
 begin
-  for i :=0 to Length(FFilterArray) -1 do
-    if FFilterArray[i] = value then
-      begin
-        Result := i;
-        exit;
-      end;
+  for i := 0 to Length(FFilterArray) - 1 do
+    if FFilterArray[i] = Value then
+    begin
+      Result := i;
+      exit;
+    end;
   Result := -1;
 end;
 
@@ -249,7 +166,6 @@ begin
       exit;
 
     if not Item.IconLocal.IsEmpty then
-    begin
       if FileExists(Item.IconLocal) then
       begin
         Item.IconAvailable := True;
@@ -263,7 +179,6 @@ begin
         Item.IconAvailable := True;
         Queue(fOwner.DoListChanged);
       end;
-    end;
   end;
 end;
 
@@ -278,15 +193,13 @@ end;
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
-  fListProperties := TListProperties.Create(ConfigObj);
-  Groups := TStringList.Create;
-  Groups.Sorted:=true;
-  Groups.Duplicates:=dupIgnore;
+  Groups := TStringList.Create(False);
+  Groups.Sorted := True;
 end;
 
 destructor TM3ULoader.Destroy;
 begin
-  Groups.free;
+  Groups.Free;
   inherited Destroy;
 end;
 
@@ -297,11 +210,28 @@ var
   p, ext: string;
   Item: TM3UItem;
   fData: boolean;
-  index: integer;
+  index, CurrGroup: integer;
   Context: TMD5Context;
   Digest: TMD5Digest;
   i: integer;
   Cachedir: string;
+
+  function FindCommaOutsideQuotes(const S: string): integer;
+  var
+    i: integer;
+    InQuotes: boolean;
+  begin
+    Result := -1;
+    InQuotes := False;
+    for i := 1 to Length(S) do
+      if S[i] = '"' then
+        InQuotes := not InQuotes
+      else if (S[i] = ',') and not InQuotes then
+      begin
+        Result := i;
+        Exit;
+      end;
+  end;
 
 
   function FindTag(const tag: string; const st: string): string;
@@ -309,18 +239,19 @@ var
     tagpos: integer;
     TagStart: integer;
   begin
-    TagPos := Pos(tag, st);
+    TagPos := Pos(tag + '=', st);
     if TagPos > 0 then
     begin
       TagStart := PosEx('"', st, tagpos) + 1;
       Result := ExtractSubstr(St, TagStart, ['"']);
     end
     else
-      result := EmptyStr;
+      Result := EmptyStr;
   end;
 
 begin
   Clear;
+  Groups.Clear;
   Result := False;
   Index := 1;
 
@@ -331,6 +262,7 @@ begin
   end;
 
   try
+    Groups.BeginUpdate;
     OvoLogger.Log(llINFO, 'Loading list from %s', [ListName]);
     MD5Init(Context);
     Cachedir := IncludeTrailingPathDelimiter(ConfigObj.CacheDir + 'logo');
@@ -351,6 +283,14 @@ begin
       fLastMessage := RSMissingHeader;
       exit;
     end;
+    if FActiveList.EPGFromM3U then
+      begin
+        EPGURL := FindTag('url-tvg',S);
+        if EPGURL = '' then
+          OvoLogger.Log(llWARN, 'EPG Url from M3U missing or empty!');
+        FActiveList.EPGUrl:= EPGURL;
+      end;
+
     fData := False;
     while EOF(f) <> True do
     begin
@@ -359,17 +299,20 @@ begin
       if (s <> EmptyStr) then
       begin
         MD5Update(Context, s[1], Length(s));
-        if (uppercase(copy(s, 1, 7)) = '#EXTINF') then
+        if (uppercase(copy(s, 1, 8)) = '#EXTINF:') then
         begin
           item := TM3UItem.Create;
           Item.Number := index;
           Item.Group := FindTag('group-title', s);
-          Groups.Add(Item.Group);
+          if Groups.Find(Item.Group, CurrGroup) then
+            Groups.Objects[CurrGroup] := TObject(PtrInt(Groups.Objects[CurrGroup])+1)
+          else
+            Groups.AddObject(Item.Group, TObject(1));
           item.Id := FindTag('tvg-id', s);
           item.IconUrl := FindTag('tvg-logo', s);
           item.tvg_name := FindTag('tvg-name', s);
           item.tvg_chno := StrToIntDef(FindTag('tvg-chno', s), 0);
-          Item.Title := copy(s, RPos(',', S) + 1, Length(s));
+          Item.Title := copy(s, FindCommaOutsideQuotes(S) + 1, Length(s));
           if not Trim(item.IconUrl).IsEmpty then
           begin
             ext := LowerCase(ExtractFileExt(Item.IconUrl));
@@ -400,8 +343,8 @@ begin
     MD5Final(Context, Digest);
     ListMd5 := MD5Print(Digest);
     Result := True;
-    DoListChanged;
   finally
+    Groups.EndUpdate;
     if not fLastMessage.IsEmpty then
       OvoLogger.Log(llWARN, fLastMessage);
     closefile(f);
@@ -422,24 +365,25 @@ begin
 end;
 
 function TM3ULoader.Filter(aFilter: TFilterParam): TFilteredList;
-var i,j:Integer;
-    Item: TM3UItem;
+var
+  i, j: integer;
+  Item: TM3UItem;
 begin
   Result.OriginalList := self;
   SetLength(Result.FFilterArray, Count);
-  i:= 0;
-  for j:= 0 to count -1 do
+  i := 0;
+  for j := 0 to Count - 1 do
+  begin
+    Item := FItems[j];
+    if ((not aFilter.Group.HasValue) or (Item.Group = Afilter.Group.Value)) and
+      ((not aFilter.Title.HasValue) or (AnsiContainsText(Item.Title, AFilter.Title.Value))) then
     begin
-      Item := FItems[j];
-      if ((not aFilter.Group.HasValue) or (Item.Group = Afilter.Group.Value)) and
-         ((not aFilter.Title.HasValue) or (AnsiContainsText(Item.Title, AFilter.Title.value))) then
-        begin
-          Result.FFilterArray[i]:=j;
-          inc(i);
-        end;
-
+      Result.FFilterArray[i] := j;
+      Inc(i);
     end;
-  SetLength(Result.FFilterArray,i);
+
+  end;
+  SetLength(Result.FFilterArray, i);
 
 end;
 
@@ -448,8 +392,106 @@ begin
   Result := CompareValue(left.Number, Right.Number);
 end;
 
+function TM3ULoader.LoadList: boolean;
+var
+  CacheDir, IPTVList: string;
+  Kind: TProviderKind;
+  ListName: string;
+begin
+  Result := False;
+  Kind := FActiveList.ChannelKind;
+
+  if Kind = URL then
+  begin
+    CacheDir := ConfigObj.CacheDir;
+    IPTVList := FActiveList.ChannelsUrl;
+    try
+      ListName := CacheDir + format('list-%d-iptv.m3u', [FActiveList.ListID]);
+      if (ConfigObj.ListManager.LastScan(FActiveList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
+      try
+        OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
+        DownloadFromUrl(IPTVList, ListName);
+        ConfigObj.ListManager.SetLastScan(FActiveList.ListID, 'channels', now);
+      except
+        on e: Exception do
+          OvoLogger.Log(llERROR, 'Can''t download new list at: ' +
+            IPTVList + ' error:' +
+            E.Message);
+      end
+      else
+        OvoLogger.Log(llINFO, 'Using cached channels list');
+
+      IPTVList := ListName;
+    finally
+    end;
+  end
+  else
+    IPTVList := FActiveList.ChannelsUrl;
+
+  if FileExists(IPTVList) then
+    if not Load(IPTVList) then
+    begin
+      OvoLogger.Log(llERROR, 'Can''t load %. Error: %s', [IPTVList, LastMessage]);
+      exit;
+    end;
+
+  Result := True;
+
+  OvoLogger.Log(llINFO, 'Found %d channels', [Count]);
+
+  if FActiveList.UseChno then
+  begin
+    FixChannelNumbering;
+    OvoLogger.Log(llINFO, 'Renumber channels using tvg-chno');
+  end;
+
+  if FActiveList.ChannelsDownloadLogo then
+    UpdateLogo;
+
+end;
+
+procedure TM3ULoader.LoadChannelList;
+var
+  item: TM3UItem;
+  qinsert: TSQLQuery;
+  i: integer;
+begin
+  OvoLogger.Log(llINFO, 'Updating channels list for ID ' + IntToStr(FActiveList.ListID));
+  qinsert := TSQLQuery.Create(ConfigObj.DB);
+  try
+    ConfigObj.DB.ExecuteDirect('delete from channels where list = ' + IntToStr(FActiveList.ListID));
+
+    qinsert.Transaction := ConfigObj.TR;
+    qinsert.SQL.Text := 'insert into channels values (:list, :id, :name, :ChannelNo, :EpgName);';
+    i := 0;
+    for i := 0 to Count - 1 do
+    begin
+      Item := Items[i];
+      qinsert.ParamByName('list').AsInteger := FActiveList.ListID;
+      qinsert.ParamByName('id').AsInteger := i;
+      qinsert.ParamByName('name').AsString := item.Title;
+      qinsert.ParamByName('EpgName').AsString := item.tvg_name;
+      qinsert.ParamByName('ChannelNo').AsInteger := item.Number;
+      qinsert.ExecSQL;
+    end;
+  finally
+    qinsert.Free;
+  end;
+  ConfigObj.TR.CommitRetaining;
+
+end;
+
 procedure TM3ULoader.DoListChanged;
 begin
+  LoadList;
+  if ListMd5 <> ConfigObj.ListManager.LastChannelMd5(FactiveList.ListID) then
+  begin
+    OvoLogger.Log(llINFO, 'Channels list changed, reloading EPG');
+    LoadChannelList;
+    ConfigObj.ListManager.SetLastChannelMd5(FActiveList.ListID, ListMd5);
+
+  end;
+
   if Assigned(FOnListChanged) then
     FOnListChanged(self);
 end;
@@ -457,6 +499,13 @@ end;
 procedure TM3ULoader.SetOnListChange(AValue: TNotifyEvent);
 begin
   FOnListChanged := AValue;
+end;
+
+
+procedure TM3ULoader.SetActiveList(AValue: TM3UList);
+begin
+  FActiveList := AValue;
+  DoListChanged;
 end;
 
 procedure TM3ULoader.FixChannelNumbering;

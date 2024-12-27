@@ -153,11 +153,11 @@ end;
 
 procedure TfChannels.Init;
 begin
-  if (BackEnd.list.Groups.Count > 1) then
+  if (BackEnd.M3ULoader.Groups.Count > 1) then
     begin
       cbGroups.Items.clear;
       cbGroups.items.add(um3uloader.RSAnyGroup);
-      cbGroups.Items.AddStrings(BackEnd.List.Groups, false);
+      cbGroups.Items.AddStrings(BackEnd.M3ULoader.Groups, false);
       cbGroups.ItemIndex:=0;
       cbGroups.Visible:=true;
     end
@@ -194,14 +194,14 @@ begin
   if cbGroups.ItemIndex <> 0 then
     Filter.Group := cbGroups.Items[cbGroups.ItemIndex];
 
-  fFilter := Backend.List.Filter(Filter);
+  fFilter := Backend.M3ULoader.Filter(Filter);
   ChannelList.RowCount:=ceil(ffilter.Count / 4 );
   ChannelList.Invalidate;
 end;
 
 procedure TfChannels.FormCreate(Sender: TObject);
 begin
-  fFilter := BackEnd.List.Filter(Default(TFilterParam));
+  fFilter := BackEnd.M3ULoader.Filter(Default(TFilterParam));
 end;
 
 procedure TfChannels.FormKeyDown(Sender: TObject; var Key: Word;

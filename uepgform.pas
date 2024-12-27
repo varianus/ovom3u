@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, ExtCtrls, Arrow, StdCtrls, Buttons, ActnList, ComCtrls,
-  epg, BaseTypes, uBackEnd, Types, Math;
+  epg, BaseTypes, uBackEnd, Config, Types, Math;
 
 type
 
@@ -152,7 +152,7 @@ begin
     end;
   end;
   if (aRow > 0) and (Acol = 0) then
-    fCanvas.TextRect(aRect, 0, aRect.top + 5, Format('%3.3d: %s', [BackEnd.LIST[aRow - 1].Number, BackEnd.List[aRow - 1].title]));
+    fCanvas.TextRect(aRect, 0, aRect.top + 5, Format('%3.3d: %s', [BackEnd.M3ULoader[aRow - 1].Number, BackEnd.M3ULoader[aRow - 1].title]));
   CurrTime := now;
   if (CurrTime >= StartTime) and (CurrTime <= endtime) then
     begin
@@ -203,7 +203,7 @@ end;
 
 procedure TEPGForm.bForceReloadClick(Sender: TObject);
 begin
-  EpgData.SetLastScan('epg', 0);
+  ConfigObj.ListManager.SetLastScan(EpgData.ActiveList.ListID, 'epg', 0);
   TimerCheck.Enabled := true;
   EpgData.Scan;
 end;
@@ -263,7 +263,7 @@ procedure TEPGForm.FormCreate(Sender: TObject);
 begin
   pcView.ActivePage := tsFullGuide;
   SetNow;
-  TimeGrid.RowCount := BackEnd.List.Count + 1;
+  TimeGrid.RowCount := BackEnd.M3ULoader.Count + 1;
   Details := nil;
 ;
 end;
@@ -293,7 +293,7 @@ begin
 
   ClickTime := StartTime + (x - TimeGrid.Columns[0].Width) / (TimeGrid.Columns[1].Width / (endTime - StartTime));
   EpgInfo := FEpgData.GetEpgInfo(Coord.Y-1, ClickTime);
-  EpgInfo.Channel := BackEnd.List[Coord.y-1].title;
+  EpgInfo.Channel := BackEnd.M3ULoader[Coord.y-1].title;
   UpdateDetail(EpgInfo);
 
 end;

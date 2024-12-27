@@ -6,6 +6,8 @@ object EPGForm: TEPGForm
   Caption = 'EPG Guide'
   ClientHeight = 417
   ClientWidth = 867
+  KeyPreview = True
+  LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   object pnlDetail: TPanel
     Left = 0
@@ -15,8 +17,8 @@ object EPGForm: TEPGForm
     Align = alBottom
     BevelInner = bvLowered
     BorderStyle = bsSingle
-    ClientHeight = 128
-    ClientWidth = 865
+    ClientHeight = 130
+    ClientWidth = 867
     TabOrder = 0
     object stChannel: TStaticText
       Left = 14
@@ -91,7 +93,7 @@ object EPGForm: TEPGForm
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
       Caption = 'FullGuide'
-      ClientHeight = 281
+      ClientHeight = 252
       ClientWidth = 861
       object TimeGrid: TDrawGrid
         Left = 0
@@ -205,8 +207,8 @@ object EPGForm: TEPGForm
           Width = 82
           BorderSpacing.Around = 9
           Caption = '&Search...'
-          OnClick = bViewSearchClick
           TabOrder = 1
+          OnClick = bViewSearchClick
         end
         object bForceReload: TButton
           AnchorSideLeft.Control = bViewSearch
@@ -218,14 +220,14 @@ object EPGForm: TEPGForm
           Width = 82
           BorderSpacing.Around = 9
           Caption = '&Force Reload'
-          OnClick = bForceReloadClick
           TabOrder = 2
+          OnClick = bForceReloadClick
         end
       end
     end
     object tsDetail: TTabSheet
       Caption = 'Detail'
-      ClientHeight = 281
+      ClientHeight = 252
       ClientWidth = 861
       object DetailGrid: TDrawGrid
         AnchorSideLeft.Control = tsDetail
@@ -294,13 +296,13 @@ object EPGForm: TEPGForm
         Anchors = [akTop, akRight]
         BorderSpacing.Around = 9
         Caption = '<- Back'
-        OnClick = bBackClick
         TabOrder = 1
+        OnClick = bBackClick
       end
     end
     object tsSearch: TTabSheet
       Caption = 'Search'
-      ClientHeight = 281
+      ClientHeight = 252
       ClientWidth = 861
       object lbeSearch: TLabeledEdit
         Left = 88
@@ -320,8 +322,8 @@ object EPGForm: TEPGForm
         Width = 75
         Caption = '&Search'
         Default = True
-        OnClick = SearchClick
         TabOrder = 1
+        OnClick = SearchClick
       end
       object ResultGrid: TDrawGrid
         AnchorSideLeft.Control = tsSearch
@@ -402,8 +404,8 @@ object EPGForm: TEPGForm
         Anchors = [akTop, akLeft, akRight]
         Cancel = True
         Caption = '<- &Back'
-        OnClick = bBackClick
         TabOrder = 3
+        OnClick = bBackClick
       end
     end
   end

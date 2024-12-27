@@ -23,9 +23,9 @@ unit uconfig;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls, Config, uBackEnd,
-  LoggerUnit;
+  Classes, SysUtils, SQLDB, SQLite3Conn, DB, Forms, Controls, Graphics, Dialogs,
+  StdCtrls, ComCtrls, EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls,
+  DBGrids, DBCtrls, Grids, Config, uBackEnd, LoggerUnit;
 
 type
 
@@ -34,47 +34,49 @@ type
   TfConfig = class(TForm)
   published
     bpConfig: TButtonPanel;
-    cbChannelsKind: TComboBox;
-    cbEpgKind: TComboBox;
     cbMpris2: TCheckBox;
     cbMMkeys: TCheckBox;
-    cbUseChno: TCheckBox;
-    cbDownloadLogo: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
     cbLibCEC: TCheckBox;
-    edtChannelsFileName: TFileNameEdit;
-    edtEpgFileName: TFileNameEdit;
-    edtChannelsUrl: TEdit;
-    edtEpgUrl: TEdit;
     GroupBox1: TGroupBox;
-    Label5: TLabel;
-    lb: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
-    lb1: TLabel;
+    ImageList1: TImageList;
+    lbLists: TListBox;
     pcSettings: TPageControl;
     rgKeyCaptureMode: TRadioGroup;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     lbWarning: TLabel;
     SpeedButton3: TSpeedButton;
+    SpeedButton4: TSpeedButton;
+    SpeedButton5: TSpeedButton;
+    ToolBar1: TToolBar;
+    tbAdd: TToolButton;
+    tbRemove: TToolButton;
+    tbSpacer: TToolButton;
     tsPlugins: TTabSheet;
     tsMpv: TTabSheet;
     tsChannels: TTabSheet;
+    ValueListEditor1: TValueListEditor;
     vleCustomOptions: TValueListEditor;
     procedure CancelButtonClick(Sender: TObject);
-    procedure cbChannelsKindChange(Sender: TObject);
-    procedure cbEpgKindChange(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure lbListsSelectionChange(Sender: TObject; User: boolean);
     procedure OKButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
+    procedure tbAddClick(Sender: TObject);
+    procedure tbRemoveClick(Sender: TObject);
   private
+    PreviousIndex: integer;
     FOnWorkDone: TNotifyEvent;
+    procedure ListItemToScreen(CurrItem: TM3UList);
+    procedure ScreenToListItem(CurrItem: TM3UList);
+    procedure SetEditMode(Editing: boolean);
     procedure SetOnWorkDone(AValue: TNotifyEvent);
   public
+    procedure Init;
     property OnWorkDone: TNotifyEvent read FOnWorkDone write SetOnWorkDone;
 
   end;
@@ -104,23 +106,9 @@ end;
 procedure TfConfig.FormShow(Sender: TObject);
 var
   Kind: TProviderKind;
+  List: TM3UList;
 begin
   ConfigObj.ReadConfig;
-
-  Kind := Backend.List.ListProperties.ChannelsKind;
-  cbChannelsKind.ItemIndex := Ord(kind);
-  cbChannelsKind.OnChange(cbChannelsKind);
-  edtChannelsFileName.Text := Backend.List.ListProperties.ChannelsFileName;
-  edtChannelsUrl.Text := Backend.List.ListProperties.ChannelsUrl;
-
-  Kind := Backend.EpgData.EpgProperties.EpgKind;
-  cbEpgKind.ItemIndex := Ord(kind);
-  cbEpgKind.OnChange(cbChannelsKind);
-  edtEpgFileName.Text := Backend.EpgData.EpgProperties.EpgFileName;
-  edtEpgUrl.Text := Backend.EpgData.EpgProperties.EpgUrl;
-
-  cbUseChno.Checked := Backend.List.ListProperties.UseChno;
-  cbDownloadLogo.Checked := Backend.List.ListProperties.ChannelsDownloadLogo;
 
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
@@ -130,22 +118,61 @@ begin
   cbMMkeys.Checked := BackEnd.PluginsProperties.EnableMMKeys;
   rgKeyCaptureMode.ItemIndex := BackEnd.PluginsProperties.MMKeysMode;
 
+  lbLists.Clear;
+  if ConfigObj.ListManager.Count > 0 then
+  begin
+    for List in ConfigObj.ListManager do
+      lbLists.AddItem(List.Name, List);
+    lbLists.Selected[0] := True;
+  end;
+
+end;
+
+procedure TfConfig.ListItemToScreen(CurrItem: TM3UList);
+begin
+  ValueListEditor1.Values[ValueListEditor1.Keys[0]] := CurrItem.Name;
+  ValueListEditor1.Values[ValueListEditor1.Keys[1]] := CurrItem.ChannelsUrl;
+  ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[4]] := BoolToStr(CurrItem.EPGFromM3U, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[5]] := CurrItem.EPGUrl;
+  ValueListEditor1.Modified:= false;
+  ValueListEditor1.Invalidate;
+  ;
+end;
+
+procedure TfConfig.ScreenToListItem(CurrItem: TM3UList);
+begin
+  CurrItem.Name := ValueListEditor1.Values[ValueListEditor1.Keys[0]];
+  CurrItem.ChannelsUrl := ValueListEditor1.Values[ValueListEditor1.Keys[1]];
+  CurrItem.UseChno := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[2]]);
+  CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
+  CurrItem.EPGFromM3U := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[4]]);
+  CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[5]];
+  lbLists.Items[PreviousIndex] := CurrItem.Name;
+  if ValueListEditor1.Modified then
+    ConfigObj.ListManager.ListAdd(CurrItem);
+end;
+
+procedure TfConfig.lbListsSelectionChange(Sender: TObject; User: boolean);
+begin
+  if PreviousIndex = -1 then
+  begin
+    PreviousIndex := lbLists.ItemIndex;
+    ListItemToScreen(TM3UList(lbLists.Items.Objects[PreviousIndex]));
+    exit;
+  end;
+  if (PreviousIndex <> -1) and (PreviousIndex <> lbLists.ItemIndex) then
+    ScreenToListItem(TM3UList(lbLists.Items.Objects[PreviousIndex]));
+  PreviousIndex := lbLists.ItemIndex;
+  ListItemToScreen(TM3UList(lbLists.Items.Objects[PreviousIndex]));
+
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
 var
   ListProperties: TListProperties;
 begin
-
-  Backend.List.ListProperties.ChannelsKind := TProviderKind(cbChannelsKind.ItemIndex);
-  Backend.List.ListProperties.ChannelsFileName := edtChannelsFileName.Text;
-  Backend.List.ListProperties.ChannelsUrl := edtChannelsUrl.Text;
-  Backend.List.ListProperties.ChannelsDownloadLogo := cbDownloadLogo.Checked;
-  Backend.List.ListProperties.UseChno := cbUseChno.Checked;
-
-  Backend.EpgData.EpgProperties.EpgKind := TProviderKind(cbEpgKind.ItemIndex);
-  Backend.EpgData.EpgProperties.EpgFileName := edtEpgFileName.Text;
-  Backend.EpgData.EpgProperties.EpgUrl := edtEpgUrl.Text;
 
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
@@ -154,15 +181,15 @@ begin
   BackEnd.PluginsProperties.EnableMPRIS2 := cbMpris2.Checked;
   BackEnd.PluginsProperties.EnableMMKeys := cbMMkeys.Checked;
   BackEnd.PluginsProperties.MMKeysMode := rgKeyCaptureMode.ItemIndex;
+  ScreenToListItem(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
 
-  ModalResult := mrOk;
   try
     if Assigned(FOnWorkDone) then
       FOnWorkDone(self);
   finally
     ConfigObj.SaveConfig;
   end;
-
+  ModalResult := mrOk;
 end;
 
 procedure TfConfig.SpeedButton1Click(Sender: TObject);
@@ -180,44 +207,38 @@ begin
   pcSettings.ActivePage := tsPlugins;
 end;
 
+procedure TfConfig.tbAddClick(Sender: TObject);
+var
+  NewList: TM3UList;
+begin
+  NewList := TM3UList.Create('Untitled');
+  ConfigObj.ListManager.ListAdd(NewList);
+  lbLists.AddItem('Untitled', NewList);
+  lbLists.Selected[lbLists.Count - 1] := True;
+end;
+
+procedure TfConfig.SetEditMode(Editing: boolean);
+begin
+end;
+
+procedure TfConfig.tbRemoveClick(Sender: TObject);
+var
+  CurrentItem: TM3UList;
+begin
+  CurrentItem := TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
+  if Dialogs.MessageDlg('', 'Delete list ?', mtConfirmation, mbYesNo, 0) = mrYes then
+  begin
+    if CurrentItem.ListID <> 0 then
+      ConfigObj.ListManager.ListDelete(CurrentItem);
+    lbLists.DeleteSelected;
+  end;
+end;
+
 procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);
 begin
 
   FOnWorkDone := AValue;
 end;
-
-procedure TfConfig.cbChannelsKindChange(Sender: TObject);
-begin
-  case cbChannelsKind.ItemIndex of
-    0:
-    begin
-      edtChannelsFileName.Enabled := True;
-      edtChannelsUrl.Enabled := False;
-    end;
-    1:
-    begin
-      edtChannelsFileName.Enabled := False;
-      edtChannelsUrl.Enabled := True;
-    end;
-  end;
-end;
-
-procedure TfConfig.cbEpgKindChange(Sender: TObject);
-begin
-  case cbEpgKind.ItemIndex of
-    0:
-    begin
-      edtEpgFileName.Enabled := True;
-      edtEpgUrl.Enabled := False;
-    end;
-    1:
-    begin
-      edtEpgFileName.Enabled := False;
-      edtEpgUrl.Enabled := True;
-    end;
-  end;
-end;
-
 
 procedure TfConfig.CancelButtonClick(Sender: TObject);
 begin
@@ -225,6 +246,52 @@ begin
   if Assigned(FOnWorkDone) then
     FOnWorkDone(self);
 end;
+
+procedure TfConfig.FormCreate(Sender: TObject);
+begin
+  {$IfNDef USE_MPRIS}
+  cbMpris2.Enabled:= false;
+  cbMpris2.Checked:= false;
+  {$ENDIF}
+
+  {$IfNDef USE_LIBCEC}
+  cbLibCEC.Enabled:= false;
+  cbLibCEC.Checked:= false;
+  {$ENDIF}
+
+  {$IfNDef USE_MMKEYS}
+  cbMMkeys.Enabled:= false;
+  cbMMkeys.Checked:= false;
+  {$ENDIF}
+
+  init;
+end;
+
+procedure TfConfig.Init;
+begin
+  PreviousIndex := -1;
+  with ValueListEditor1.ItemProps[0] do
+    EditStyle := esSimple;
+  with ValueListEditor1.ItemProps[1] do
+    EditStyle := esSimple;
+  with ValueListEditor1.ItemProps[2] do
+  begin
+    EditStyle := esPickList;
+    PickList.Text := 'True' + sLineBreak + 'False';
+  end;
+  with ValueListEditor1.ItemProps[3] do
+  begin
+    EditStyle := esPickList;
+    PickList.Text := 'True' + sLineBreak + 'False';
+  end;
+  with ValueListEditor1.ItemProps[4] do
+  begin
+    EditStyle := esPickList;
+    PickList.Text := 'True' + sLineBreak + 'False';
+  end;
+
+end;
+
 
 initialization
 

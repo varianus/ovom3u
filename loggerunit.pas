@@ -28,19 +28,24 @@ uses
 Type
   TOvoLogLevel = (llTRACE, llDEBUG, llINFO, llWARN, llERROR, llFORCED, llNO_LOG);
 
+  TOnLogMessage = procedure(Sender: TObject; const Message: string) of object;
+
   { TOvoLogger }
 
   TOvoLogger = class
 
   private
     FLevel: TOvoLogLevel;
+    FOnLogMessage: TOnLogMessage;
     function GetLogName: string;
     procedure SetLevel(AValue: TOvoLogLevel);
     function DecodeLevel(ALevel:TOvoLogLevel): string;
     procedure SetLogName(AValue: string);
+    procedure SetOnLogMessage(AValue: TOnLogMessage);
   public
     property Level : TOvoLogLevel read FLevel write SetLevel;
     Property LogName: string read GetLogName write SetLogName;
+    property OnLogMessage: TOnLogMessage read FOnLogMessage write SetOnLogMessage;
     procedure LevelFromString(VerboseLevel:string);
     Procedure SaveOldLog;
     procedure Log(ALevel: TOvoLogLevel; const Msg: string);  overload;
@@ -91,6 +96,11 @@ begin
   DebugLogger.LogName := AValue;
 end;
 
+procedure TOvoLogger.SetOnLogMessage(AValue: TOnLogMessage);
+begin
+  FOnLogMessage := AValue;
+end;
+
 procedure TOvoLogger.LevelFromString(VerboseLevel: string);
 begin
   if VerboseLevel = 'TRACE' then
@@ -133,6 +143,8 @@ procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const Msg: string);
 begin
   if ALevel < FLevel then exit;
   DebugLogger.DebugLn(DateTimeToStr(now, true), DecodeLevel(ALevel),Msg);
+  if Assigned(FOnLogMessage) then
+    FOnLogMessage(self, DateTimeToStr(now, true)+' '+DecodeLevel(ALevel)+' '+Msg);
 end;
 
 procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const);

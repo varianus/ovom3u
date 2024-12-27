@@ -82,7 +82,9 @@ begin
       CEC_USER_CONTROL_CODE_F4_YELLOW: cec.DoCecKey(FakeKey+VK_F);
       CEC_USER_CONTROL_CODE_F2_RED: cec.DoCecKey($300);
       CEC_USER_CONTROL_CODE_F3_GREEN: cec.DoCecKey(FakeKey+VK_B);
-
+      CEC_USER_CONTROL_CODE_F1_BLUE: cec.DoCecKey(FakeKey+VK_TAB);
+      CEC_USER_CONTROL_CODE_FAST_FORWARD: cec.DoCecKey(FakeKey+VK_RIGHT);
+      CEC_USER_CONTROL_CODE_REWIND: cec.DoCecKey(FakeKey+VK_LEFT);
     end;
     OvoLogger.Log(llDEBUG, ' CEC Key %d',   [Key^.keycode]);
     end;

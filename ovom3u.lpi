@@ -33,7 +33,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="cec"/>
+            <OtherUnitFiles Value="cec;mmkeys"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
@@ -122,6 +122,12 @@
       <FormatVersion Value="2"/>
     </RunParams>
     <RequiredPackages>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="SQLDBLaz"/>
+      </Item>
       <Item>
         <PackageName Value="lazmouseandkeyinput"/>
       </Item>
@@ -239,6 +245,14 @@
         <Filename Value="mmkeys\multimediakeys.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="MultimediaKeys"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ulogviewer.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="fLogViewer"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uLogViewer"/>
       </Unit>
     </Units>
   </ProjectOptions>

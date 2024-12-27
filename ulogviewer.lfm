@@ -1,0 +1,19 @@
+object fLogViewer: TfLogViewer
+  Left = 350
+  Height = 240
+  Top = 250
+  Width = 1113
+  Caption = 'fLogViewer'
+  ClientHeight = 240
+  ClientWidth = 1113
+  OnDestroy = FormDestroy
+  object LogMemo: TMemo
+    Left = 0
+    Height = 240
+    Top = 0
+    Width = 1113
+    Align = alClient
+    ScrollBars = ssBoth
+    TabOrder = 0
+  end
+end
