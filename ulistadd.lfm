@@ -1,0 +1,80 @@
+object fListAdd: TfListAdd
+  AnchorSideBottom.Side = asrBottom
+  Left = 321
+  Height = 347
+  Top = 33
+  Width = 474
+  Anchors = [akTop, akLeft, akBottom]
+  Caption = 'fListAdd'
+  ClientHeight = 347
+  ClientWidth = 474
+  object leList: TLabeledEdit
+    Left = 24
+    Height = 27
+    Top = 40
+    Width = 392
+    EditLabel.Height = 17
+    EditLabel.Width = 392
+    EditLabel.Caption = 'File name or URL'
+    TabOrder = 0
+    Text = 'leList'
+  end
+  object BitBtn1: TBitBtn
+    AnchorSideLeft.Control = leList
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = leList
+    AnchorSideBottom.Control = leList
+    AnchorSideBottom.Side = asrBottom
+    Left = 418
+    Height = 27
+    Top = 40
+    Width = 33
+    Anchors = [akTop, akLeft, akBottom]
+    BorderSpacing.Left = 2
+    Caption = '...'
+    TabOrder = 1
+    OnClick = BitBtn1Click
+  end
+  object bTest: TButton
+    Left = 26
+    Height = 25
+    Top = 87
+    Width = 75
+    Caption = 'TEST'
+    TabOrder = 2
+    OnClick = bTestClick
+  end
+  object Memo1: TMemo
+    Left = 26
+    Height = 146
+    Top = 128
+    Width = 425
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 3
+  end
+  object ButtonPanel1: TButtonPanel
+    Left = 6
+    Height = 35
+    Top = 306
+    Width = 462
+    OKButton.Name = 'OKButton'
+    OKButton.DefaultCaption = True
+    HelpButton.Name = 'HelpButton'
+    HelpButton.DefaultCaption = True
+    CloseButton.Name = 'CloseButton'
+    CloseButton.DefaultCaption = True
+    CancelButton.Name = 'CancelButton'
+    CancelButton.DefaultCaption = True
+    TabOrder = 4
+    ShowButtons = [pbOK, pbCancel]
+  end
+  object OpenM3U: TOpenDialog
+    Title = 'Open M3U playlist'
+    DefaultExt = '.m3u8'
+    Filter = 'M3U playlist|*.m3u, *.m3u8|Any File|*.*'
+    Options = [ofFileMustExist, ofEnableSizing, ofViewDetail]
+    Left = 519
+    Top = 80
+  end
+end

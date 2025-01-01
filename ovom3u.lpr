@@ -44,7 +44,7 @@ uses
   {$IFDEF USE_MPRIS2}mpris2,{$ENDIF}
   {$IFDEF USE_LIBCEC}cec, CEC_intf,{$ENDIF}
   {$IFDEF USE_MMKEYS}MultimediaKeys,{$ENDIF}
-  uLogViewer;
+  uLogViewer, uListAdd;
 
   {$R *.res}
 var
@@ -68,5 +68,6 @@ begin
   Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
+  Application.CreateForm(TfListAdd, fListAdd);
   Application.Run;
 end.

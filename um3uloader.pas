@@ -42,6 +42,8 @@ type
     CurrProgram: string;
   end;
 
+  TLogMessage = procedure(Message: string) of object;
+
   TM3ULoader = class;
   { TFilteredList }
 
@@ -90,6 +92,7 @@ type
     function ItemByChno(chno: integer): integer;
     function Filter(aFilter: TFilterParam): TFilteredList;
     procedure LoadChannelList;
+    function TestList(List: TM3UList; Logger: TLogMessage): boolean;
 
 
   end;
@@ -284,12 +287,12 @@ begin
       exit;
     end;
     if FActiveList.EPGFromM3U then
-      begin
-        EPGURL := FindTag('url-tvg',S);
-        if EPGURL = '' then
-          OvoLogger.Log(llWARN, 'EPG Url from M3U missing or empty!');
-        FActiveList.EPGUrl:= EPGURL;
-      end;
+    begin
+      EPGURL := FindTag('url-tvg', S);
+      if EPGURL = '' then
+        OvoLogger.Log(llWARN, 'EPG Url from M3U missing or empty!');
+      FActiveList.EPGUrl := EPGURL;
+    end;
 
     fData := False;
     while EOF(f) <> True do
@@ -305,7 +308,7 @@ begin
           Item.Number := index;
           Item.Group := FindTag('group-title', s);
           if Groups.Find(Item.Group, CurrGroup) then
-            Groups.Objects[CurrGroup] := TObject(PtrInt(Groups.Objects[CurrGroup])+1)
+            Groups.Objects[CurrGroup] := TObject(PtrInt(Groups.Objects[CurrGroup]) + 1)
           else
             Groups.AddObject(Item.Group, TObject(1));
           item.Id := FindTag('tvg-id', s);
@@ -480,6 +483,67 @@ begin
   ConfigObj.TR.CommitRetaining;
 
 end;
+
+function TM3ULoader.TestList(List: TM3UList; Logger: TLogMessage): boolean;
+var
+  CacheDir, IPTVList: string;
+  Kind: TProviderKind;
+  ListName: string;
+begin
+  Result := False;
+  FActiveList := List;
+  Kind := List.ChannelKind;
+
+  if Kind = URL then
+  begin
+    CacheDir := ConfigObj.CacheDir;
+    IPTVList := List.ChannelsUrl;
+    try
+      ListName := CacheDir + 'list-TEST-iptv.m3u';
+      try
+        Logger('Downloding channels list from ' + IPTVList);
+        DownloadFromUrl(IPTVList, ListName);
+      except
+        on e: Exception do
+          Logger('Can''t download new list at: ' +
+            IPTVList + ' error:' +
+            E.Message);
+      end;
+
+      IPTVList := ListName;
+    finally
+    end;
+  end
+  else
+  begin
+    IPTVList := List.ChannelsUrl;
+    Logger('Loading list from ' + IPTVList);
+  end;
+
+  if FileExists(IPTVList) then
+  begin
+    if not Load(IPTVList) then
+    begin
+      Logger(format('Can''t load %. Error: %s', [IPTVList, LastMessage]));
+      exit;
+    end;
+  end
+  else
+  begin
+    Logger(format('List %s not found', [IPTVList, LastMessage]));
+    exit;
+  end;
+
+
+  Result := True;
+
+  if List.EPGUrl <> '' then
+    Logger('Contains EPG URL:' + List.EPGUrl);
+
+  Logger(format('Found %d channels in %d groups', [Count, Groups.Count]));
+
+end;
+
 
 procedure TM3ULoader.DoListChanged;
 begin

@@ -25,7 +25,7 @@ interface
 uses
   Classes, SysUtils, SQLDB, SQLite3Conn, DB, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ComCtrls, EditBtn, ButtonPanel, Buttons, ValEdit, Spin, ExtCtrls,
-  DBGrids, DBCtrls, Grids, Config, uBackEnd, LoggerUnit;
+  DBGrids, DBCtrls, Grids, Config, uBackEnd, LoggerUnit, uListAdd;
 
 type
 
@@ -68,6 +68,7 @@ type
     procedure SpeedButton3Click(Sender: TObject);
     procedure tbAddClick(Sender: TObject);
     procedure tbRemoveClick(Sender: TObject);
+    procedure ValueListEditor1ButtonClick(Sender: TObject; aCol, aRow: integer);
   private
     PreviousIndex: integer;
     FOnWorkDone: TNotifyEvent;
@@ -136,7 +137,7 @@ begin
   ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[4]] := BoolToStr(CurrItem.EPGFromM3U, True);
   ValueListEditor1.Values[ValueListEditor1.Keys[5]] := CurrItem.EPGUrl;
-  ValueListEditor1.Modified:= false;
+  ValueListEditor1.Modified := False;
   ValueListEditor1.Invalidate;
   ;
 end;
@@ -234,6 +235,30 @@ begin
   end;
 end;
 
+procedure TfConfig.ValueListEditor1ButtonClick(Sender: TObject; aCol,
+  aRow: integer);
+var
+  AEditor: TfListAdd;
+  CurrentItem: TM3UList;
+begin
+  CurrentItem := TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
+  if aRow = 1 then
+  begin
+    AEditor := TfListAdd.Create(self);
+    try
+      AEditor.leList.Text := CurrentItem.ChannelsUrl;
+      if AEditor.ShowModal = mrOk then
+        begin
+        CurrentItem.ChannelsUrl := AEditor.leList.Text;
+        ListItemToScreen(CurrentItem);
+        end;
+      ValueListEditor1.Invalidate;
+    finally
+      AEditor.Free;
+    end;
+  end;
+end;
+
 procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);
 begin
 
@@ -250,18 +275,18 @@ end;
 procedure TfConfig.FormCreate(Sender: TObject);
 begin
   {$IfNDef USE_MPRIS}
-  cbMpris2.Enabled:= false;
-  cbMpris2.Checked:= false;
+  cbMpris2.Enabled := False;
+  cbMpris2.Checked := False;
   {$ENDIF}
 
   {$IfNDef USE_LIBCEC}
-  cbLibCEC.Enabled:= false;
-  cbLibCEC.Checked:= false;
+  cbLibCEC.Enabled := False;
+  cbLibCEC.Checked := False;
   {$ENDIF}
 
   {$IfNDef USE_MMKEYS}
-  cbMMkeys.Enabled:= false;
-  cbMMkeys.Checked:= false;
+  cbMMkeys.Enabled := False;
+  cbMMkeys.Checked := False;
   {$ENDIF}
 
   init;
@@ -273,7 +298,7 @@ begin
   with ValueListEditor1.ItemProps[0] do
     EditStyle := esSimple;
   with ValueListEditor1.ItemProps[1] do
-    EditStyle := esSimple;
+    EditStyle := esEllipsis;
   with ValueListEditor1.ItemProps[2] do
   begin
     EditStyle := esPickList;

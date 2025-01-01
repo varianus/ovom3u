@@ -254,6 +254,14 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uLogViewer"/>
       </Unit>
+      <Unit>
+        <Filename Value="ulistadd.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="fListAdd"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uListAdd"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
