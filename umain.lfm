@@ -3,7 +3,6 @@ object fPlayer: TfPlayer
   Height = 512
   Top = 225
   Width = 1087
-  ActiveControl = tsList
   Caption = 'OvoM3U'
   ClientHeight = 512
   ClientWidth = 1087
@@ -182,9 +181,9 @@ object fPlayer: TfPlayer
       Height = 471
       Top = 40
       Width = 213
-      ActivePage = tsList
+      ActivePage = tsChannels
       Align = alClient
-      TabIndex = 0
+      TabIndex = 2
       TabOrder = 0
       object tsList: TTabSheet
         Caption = 'List'
@@ -244,7 +243,7 @@ object fPlayer: TfPlayer
           FixedCols = 0
           FixedRows = 0
           MouseWheelOption = mwGrid
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellHints, goCellEllipsis]
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goSmoothScroll, goCellEllipsis]
           ParentFont = False
           ParentShowHint = False
           ScrollBars = ssVertical
@@ -303,6 +302,7 @@ object fPlayer: TfPlayer
   end
   object AppProperties: TApplicationProperties
     OnException = AppPropertiesException
+    OnShowHint = AppPropertiesShowHint
     Left = 112
     Top = 272
   end
@@ -355,10 +355,6 @@ object fPlayer: TfPlayer
     object N1: TMenuItem
       Caption = '-'
     end
-  end
-  object ApplicationProperties1: TApplicationProperties
-    Left = 119
-    Top = 285
   end
   object MainMenu1: TMainMenu
     Left = 64

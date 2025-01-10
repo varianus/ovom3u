@@ -44,7 +44,7 @@ uses
   {$IFDEF USE_MPRIS2}mpris2,{$ENDIF}
   {$IFDEF USE_LIBCEC}cec, CEC_intf,{$ENDIF}
   {$IFDEF USE_MMKEYS}MultimediaKeys,{$ENDIF}
-  uLogViewer, uListAdd;
+  uLogViewer, uListAdd, uhint;
 
   {$R *.res}
 var
@@ -65,9 +65,9 @@ begin
   OvoLogger.Log(llFORCED, format(rBuildEnv, [lazVersion, fpcVersion]));
   OvoLogger.Log(llFORCED, format(rTarget, [TargetCPU, TargetOS]));
   RequireDerivedFormResource := True;
-  Application.Scaled := True;
+  Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
-  Application.CreateForm(TfListAdd, fListAdd);
+  Application.CreateForm(TChannelHintForm, ChannelHintForm);
   Application.Run;
 end.

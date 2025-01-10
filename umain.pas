@@ -23,11 +23,13 @@ unit umain;
 interface
 
 uses
-  System.UITypes, Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids, LCLIntf,
-  lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls, IniPropStorage,
-  um3uloader, OpenGLContext, Types, Math, SysUtils, MPV_Engine, Config,
+  System.UITypes, Classes, Forms, Controls, Graphics, Dialogs, ExtCtrls, Grids,
+  LCLIntf, lcltype, ComCtrls, Menus, ActnList, Buttons, StdCtrls,
+  IniPropStorage, PopupNotifier, um3uloader, OpenGLContext, Types, Math,
+  SysUtils, MPV_Engine, Config,
   {$IFDEF LINUX} clocale,{$endif}
-  GeneralFunc, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput, LoggerUnit;
+  GeneralFunc, epg, uMyDialog, uEPGFOrm, uBackEnd, BaseTypes, mouseandkeyinput,
+  LoggerUnit, uhint;
 
 type
 
@@ -39,8 +41,10 @@ type
   private
     FBoundsRect: TRect;
     FChannelGridWidth: integer;
+    FEmbeddedSubForm: boolean;
     procedure SetBoundRect(AValue: TRect);
     procedure SetChannelGridWidth(AValue: integer);
+    procedure SetEmbeddedSubForm(AValue: boolean);
     procedure SetViewCurrentProgram(AValue: boolean);
     procedure SetViewLogo(AValue: boolean);
   protected
@@ -50,6 +54,7 @@ type
     property ViewCurrentProgram: boolean read fViewCurrentProgram write SetViewCurrentProgram;
     property ChannelGridWidth: integer read FChannelGridWidth write SetChannelGridWidth;
     property BoundsRect: TRect read FBoundsRect write SetBoundRect;
+    property EmbeddedSubForm: boolean read FEmbeddedSubForm write SetEmbeddedSubForm;
     procedure Load; override;
     constructor Create(aOwner: TConfig; ABoundsRect: TRect); reintroduce;
   end;
@@ -66,7 +71,6 @@ type
     actViewLogo: TAction;
     actViewCurrentProgram: TAction;
     actList: TActionList;
-    ApplicationProperties1: TApplicationProperties;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
     EPGList: TDrawGrid;
@@ -108,6 +112,8 @@ type
     procedure actViewCurrentProgramExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
+    procedure AppPropertiesShowHint(var HintStr: string; var CanShow: boolean;
+      var HintInfo: THintInfo);
     procedure cbGroupsDblClick(Sender: TObject);
     procedure cbGroupsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure ChannelListDblClick(Sender: TObject);
@@ -139,7 +145,6 @@ type
     procedure ToolButton5MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
   private
     ChannelInfo: AREpgInfo;
-    GuiProperties: TGuiProperties;
     FLoading: boolean;
     ChannelSelecting: boolean;
     fLastMessage: string;
@@ -159,7 +164,6 @@ type
     procedure EmbedSubForm(AForm: TForm);
     procedure ExternalInput(Sender: TObject; var Key: word);
     procedure InitializeGui(Data: ptrint);
-    procedure InitializeLists;
     procedure LoadDailyEpg;
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
@@ -182,6 +186,9 @@ type
     procedure SetFullScreen;
     procedure LoadGroups;
   public
+    GuiProperties: TGuiProperties;
+    procedure InitializeLists;
+
   end;
 
 var
@@ -203,6 +210,13 @@ procedure TGuiProperties.SetChannelGridWidth(AValue: integer);
 begin
   if FChannelGridWidth = AValue then Exit;
   FChannelGridWidth := AValue;
+  Dirty := True;
+end;
+
+procedure TGuiProperties.SetEmbeddedSubForm(AValue: boolean);
+begin
+  if FEmbeddedSubForm = AValue then Exit;
+  FEmbeddedSubForm := AValue;
   Dirty := True;
 end;
 
@@ -233,6 +247,7 @@ begin
   Owner.WriteBoolean('gui/ViewCurrentProgram', ViewCurrentProgram);
   Owner.WriteInteger('gui/ChannelGridWidth', ChannelGridWidth);
   Owner.WriteRect('gui/MainForm/Position', BoundsRect);
+  Owner.WriteBoolean('gui/EmbeddedSubForm', EmbeddedSubForm);
 end;
 
 procedure TGuiProperties.Load;
@@ -241,6 +256,7 @@ begin
   ViewCurrentProgram := Owner.ReadBoolean('gui/ViewCurrentProgram', False);
   ChannelGridWidth := Owner.ReadInteger('gui/ChannelGridWidth', 215);
   BoundsRect := Owner.ReadRect('gui/MainForm/Position', BoundsRect);
+  EmbeddedSubForm := Owner.ReadBoolean('gui/EmbeddedSubForm', True);
 
   Dirty := False;
 end;
@@ -732,6 +748,8 @@ begin
   HintText := Format('%3.3d: %s', [Element.Number, Element.title]) + sLineBreak +
     FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True) + sLineBreak + EpgInfo.Title;
 
+  HintText := HintText + sLineBreak + epgInfo.Plot;
+
 end;
 
 procedure TfPlayer.ChannelListKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
@@ -852,6 +870,38 @@ begin
   end;
 end;
 
+procedure TfPlayer.AppPropertiesShowHint(var HintStr: string;
+  var CanShow: boolean; var HintInfo: THintInfo);
+var
+  ACol, ARow: integer;
+  Element: TM3UItem;
+  epgInfo: REpgInfo;
+begin
+  if HintInfo.HintControl = ChannelList then
+  begin
+    // Determine the cell under the mouse pointer
+    ChannelList.MouseToCell(HintInfo.CursorPos.X, HintInfo.CursorPos.Y, ACol, ARow);
+    Element := fFilteredList[arow];
+    epgInfo := BackEnd.epgdata.GetEpgInfo(fFilteredList.Map(arow), now);
+    ChannelHintForm.UpdateDetail(epgInfo);
+
+    //ChannelHintForm.Left := ChannelList.Width + 5;
+    //ChannelHintForm.Top := HintInfo.HintPos.y;
+    //ChannelHintForm.MakeFullyVisible();
+
+    HintInfo.HintWindowClass:=TChannelHint;
+//    ChannelHintForm.Show;
+    CanShow := true;
+    HintStr:='custom';
+
+  end
+  else
+  begin
+   // ChannelHintForm.Hide;
+  end;
+end;
+
+
 procedure TfPlayer.SelectGroup;
 var
   Filter: TFilterParam;
@@ -886,13 +936,16 @@ end;
 
 procedure TfPlayer.EmbedSubForm(AForm: TForm);
 begin
-  if Assigned(SubForm) then
-    CloseSubForm;
-  AForm.BorderIcons := [];
-  AForm.BorderStyle := bsNone;
-  AForm.Parent := pnlSubForm;
-  pnlSubForm.Height := min(600, pnlcontainer.Height - 100);
-  AForm.Align := alclient;
+  if GuiProperties.EmbeddedSubForm then
+  begin
+    if Assigned(SubForm) then
+      CloseSubForm;
+    AForm.BorderIcons := [];
+    AForm.BorderStyle := bsNone;
+    AForm.Parent := pnlSubForm;
+    pnlSubForm.Height := min(600, pnlcontainer.Height - 100);
+    AForm.Align := alclient;
+  end;
   SubFormVisible := True;
   SubForm := AForm;
   AForm.Show;
@@ -902,13 +955,17 @@ end;
 procedure TfPlayer.CloseSubForm;
 begin
   SubForm.Hide;
-  pnlSubForm.Height := 0;
-  BackEnd.MpvEngine.Refresh;
-  SubForm.Parent := nil;
+  if GuiProperties.EmbeddedSubForm then
+  begin
+    pnlSubForm.Height := 0;
+    BackEnd.MpvEngine.Refresh;
+    SubForm.Parent := nil;
+    HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible and not SubFormVisible;
+  end;
+
   SubForm.Close;
   SubFormVisible := False;
   SubForm := nil;
-  HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible and not SubFormVisible;
 
 end;
 
@@ -931,12 +988,8 @@ end;
 
 procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
-
-  begin
-    InitializeLists;
-    fConfig.Close;
-  end;
-
+  InitializeLists;
+  fConfig.Close;
   CloseSubForm();
 end;
 
@@ -1013,7 +1066,7 @@ end;
 procedure TfPlayer.ComputeGridCellSize;
 begin
   if Assigned(BackEnd.EpgData.ActiveList) and
-     GuiProperties.ViewCurrentProgram and
+    GuiProperties.ViewCurrentProgram and
     (BackEnd.EpgData.ActiveList.EpgKind <> None) then
     ChannelList.DefaultRowHeight := Scale96ToScreen(64)
   else

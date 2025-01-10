@@ -1,21 +1,19 @@
 object MyDialog: TMyDialog
   Left = 646
-  Height = 380
+  Height = 184
   Top = 254
-  Width = 580
+  Width = 137
   Anchors = [akLeft]
   AutoSize = True
   Caption = 'Message'
-  ClientHeight = 380
-  ClientWidth = 580
-  LCLVersion = '2.3.0.0'
+  ClientHeight = 184
+  ClientWidth = 137
   object lbText: TLabel
     Left = 12
-    Height = 213
+    Height = 17
     Top = 86
-    Width = 556
+    Width = 113
     Align = alClient
-    Anchors = []
     AutoSize = False
     BorderSpacing.Around = 12
     Caption = 'lbtext'
@@ -27,8 +25,8 @@ object MyDialog: TMyDialog
     AnchorSideTop.Side = asrBottom
     Left = 9
     Height = 50
-    Top = 311
-    Width = 562
+    Top = 115
+    Width = 119
     Align = alBottom
     BorderSpacing.Around = 9
     BevelOuter = bvNone
@@ -39,10 +37,9 @@ object MyDialog: TMyDialog
     AnchorSideTop.Side = asrBottom
     Left = 9
     Height = 1
-    Top = 370
-    Width = 562
+    Top = 174
+    Width = 119
     Align = alBottom
-    Anchors = [akLeft, akRight]
     AutoSize = True
     BorderSpacing.Around = 9
     BevelOuter = bvNone
@@ -52,10 +49,10 @@ object MyDialog: TMyDialog
     Left = 0
     Height = 74
     Top = 0
-    Width = 580
+    Width = 137
     Align = alTop
     ClientHeight = 74
-    ClientWidth = 580
+    ClientWidth = 137
     TabOrder = 2
     object imgIcon: TImage
       Left = 10
@@ -63,17 +60,15 @@ object MyDialog: TMyDialog
       Top = 10
       Width = 58
       Align = alLeft
-      Anchors = []
       BorderSpacing.Around = 9
     end
     object lbTitle: TLabel
       Left = 77
       Height = 54
       Top = 10
-      Width = 493
+      Width = 50
       Align = alClient
       Alignment = taCenter
-      Anchors = [akRight]
       AutoSize = False
       BorderSpacing.Around = 9
       Caption = 'lbTitle'

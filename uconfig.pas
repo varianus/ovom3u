@@ -38,6 +38,7 @@ type
     cbMMkeys: TCheckBox;
     cbHardwareAcceleration: TCheckBox;
     cbLibCEC: TCheckBox;
+    cbEmbeddedForm: TCheckBox;
     GroupBox1: TGroupBox;
     ImageList1: TImageList;
     lbLists: TListBox;
@@ -49,6 +50,7 @@ type
     SpeedButton3: TSpeedButton;
     SpeedButton4: TSpeedButton;
     SpeedButton5: TSpeedButton;
+    tsGeneral: TTabSheet;
     ToolBar1: TToolBar;
     tbAdd: TToolButton;
     tbRemove: TToolButton;
@@ -66,6 +68,7 @@ type
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
+    procedure SpeedButton4Click(Sender: TObject);
     procedure tbAddClick(Sender: TObject);
     procedure tbRemoveClick(Sender: TObject);
     procedure ValueListEditor1ButtonClick(Sender: TObject; aCol, aRow: integer);
@@ -90,7 +93,7 @@ function ShowConfig: integer;
 
 implementation
 
-uses um3uloader;
+uses um3uloader, umain;
 
 function ShowConfig: integer;
 begin
@@ -109,7 +112,6 @@ var
   Kind: TProviderKind;
   List: TM3UList;
 begin
-  ConfigObj.ReadConfig;
 
   cbHardwareAcceleration.Checked := BackEnd.MpvEngine.MPVProperties.HardwareAcceleration;
   vleCustomOptions.Strings.Assign(BackEnd.MpvEngine.MPVProperties.CustomOptions);
@@ -118,6 +120,8 @@ begin
   cbMpris2.Checked := BackEnd.PluginsProperties.EnableMPRIS2;
   cbMMkeys.Checked := BackEnd.PluginsProperties.EnableMMKeys;
   rgKeyCaptureMode.ItemIndex := BackEnd.PluginsProperties.MMKeysMode;
+
+  cbEmbeddedForm.Checked := fPlayer.GuiProperties.EmbeddedSubForm;
 
   lbLists.Clear;
   if ConfigObj.ListManager.Count > 0 then
@@ -184,6 +188,8 @@ begin
   BackEnd.PluginsProperties.MMKeysMode := rgKeyCaptureMode.ItemIndex;
   ScreenToListItem(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
 
+  fPlayer.GuiProperties.EmbeddedSubForm := cbEmbeddedForm.Checked;
+
   try
     if Assigned(FOnWorkDone) then
       FOnWorkDone(self);
@@ -208,6 +214,11 @@ begin
   pcSettings.ActivePage := tsPlugins;
 end;
 
+procedure TfConfig.SpeedButton4Click(Sender: TObject);
+begin
+  pcSettings.ActivePage := tsGeneral;
+end;
+
 procedure TfConfig.tbAddClick(Sender: TObject);
 var
   NewList: TM3UList;
@@ -216,6 +227,7 @@ begin
   ConfigObj.ListManager.ListAdd(NewList);
   lbLists.AddItem('Untitled', NewList);
   lbLists.Selected[lbLists.Count - 1] := True;
+  fPlayer.InitializeLists;
 end;
 
 procedure TfConfig.SetEditMode(Editing: boolean);
@@ -227,11 +239,12 @@ var
   CurrentItem: TM3UList;
 begin
   CurrentItem := TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
-  if Dialogs.MessageDlg('', 'Delete list ?', mtConfirmation, mbYesNo, 0) = mrYes then
+  if Dialogs.MessageDlg('', 'Delete list?', mtConfirmation, mbYesNo, 0) = mrYes then
   begin
     if CurrentItem.ListID <> 0 then
       ConfigObj.ListManager.ListDelete(CurrentItem);
     lbLists.DeleteSelected;
+    fPlayer.InitializeLists;
   end;
 end;
 
@@ -248,10 +261,10 @@ begin
     try
       AEditor.leList.Text := CurrentItem.ChannelsUrl;
       if AEditor.ShowModal = mrOk then
-        begin
+      begin
         CurrentItem.ChannelsUrl := AEditor.leList.Text;
         ListItemToScreen(CurrentItem);
-        end;
+      end;
       ValueListEditor1.Invalidate;
     finally
       AEditor.Free;
@@ -294,6 +307,8 @@ end;
 
 procedure TfConfig.Init;
 begin
+  pcSettings.ActivePage := tsChannels;
+
   PreviousIndex := -1;
   with ValueListEditor1.ItemProps[0] do
     EditStyle := esSimple;

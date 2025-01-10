@@ -496,8 +496,6 @@ begin
   fConfigHolder := TJsonNode.Create;
 
   FListManager := TListsManager.Create(Self);
-  FListManager.Load;
-
 
   if not FileExists(FConfigFile) then
     SaveConfig;
@@ -941,7 +939,7 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U FROM m3ulists;';
+    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U FROM m3ulists order by ID;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
     begin
@@ -1083,6 +1081,8 @@ procedure TListsManager.ListAdd(var List: TM3UList);
 var
   tmpQuery: TSQLQuery;
   wItem: TM3UList;
+  isNew: boolean;
+  i: Integer;
 begin
   tmpQuery := TSQLQuery.Create(fOwner.fDB);
   try
@@ -1101,14 +1101,26 @@ begin
     tmpQuery.ParamByName('GetLogo').AsBoolean := List.ChannelsDownloadLogo;
     tmpQuery.ParamByName('EPG').AsString := List.EPGUrl;
     tmpQuery.ExecSQL;
+    isNew := false;
     if List.ListID = 0 then
     begin
       List.ListID := fOwner.fDB.GetInsertID;
+      isNew := True;
       tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO scans (LIST, epg, Channels, channelsMD5) ' +
         'VALUES (:LIST, 0, 0, 0);';
       tmpQuery.ParamByName('LIST').AsInteger := List.ListID;
       tmpQuery.ExecSQL;
     end;
+
+    if isNew then
+    begin
+      Add(List);
+    end
+    else
+      for i := 0 to Count - 1 do
+        if Items[i].ListID = List.ListID then
+          List.Load;
+
   finally
     tmpQuery.Free;
   end;
@@ -1119,6 +1131,7 @@ end;
 function TListsManager.ListDelete(List: TM3UList): boolean;
 var
   q: TSQLQuery;
+  i: Integer;
 begin
   Result := False;
   q := TSQLQuery.Create(fOwner.fDB);
@@ -1142,14 +1155,18 @@ begin
 
       fOwner.fTR.CommitRetaining;
       Result := True;
+      for i := 0 to Count - 1 do
+        if Items[i].ListID = List.ListID then
+        begin
+          Delete(I);
+        end;
+
     except
       fowner.fTR.RollbackRetaining;
     end;
 
-
   finally
     q.Free;
-
   end;
 
 end;
