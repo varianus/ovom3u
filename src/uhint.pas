@@ -35,11 +35,9 @@ type
   private
     procedure MakeFormVisible(var ARect: TRect);
   public
-    procedure ActivateHintData(ARect: TRect; const AHint: string;
-      AData: pointer); override;
-    function CalcHintRect(MaxWidth: integer; const AHint: string;
-      AData: pointer): TRect; override;
-
+    procedure ActivateHintData(ARect: TRect; const AHint: string; AData: pointer); override;
+    function CalcHintRect(MaxWidth: integer; const AHint: string; AData: pointer): TRect; override;
+    destructor Destroy; override;
 
   end;
 
@@ -72,7 +70,7 @@ var
   AMonitor: TMonitor;
   MonitorBounds: TRect;
 begin
-  AMonitor := Screen.MonitorFromPoint(ARect.TopLeft);
+  AMonitor      := Screen.MonitorFromPoint(ARect.TopLeft);
   MonitorBounds := AMonitor.WorkareaRect;
 
   // Adjust form position to ensure it's fully visible on the current monitor
@@ -90,29 +88,34 @@ begin
 
 end;
 
-procedure TChannelHint.ActivateHintData(ARect: TRect; const AHint: string;
-  AData: pointer);
+procedure TChannelHint.ActivateHintData(ARect: TRect; const AHint: string; AData: pointer);
 begin
   MakeFormVisible(ARect);
   HintRect := ARect;
   ChannelHintForm.Parent := self;
-  ChannelHintForm.Align := alClient;
+  ChannelHintForm.top := 0;
+  ChannelHintForm.Left := 0;
   ChannelHintForm.Visible := True;
-  Visible := True;
+  Visible  := True;
   ActivateRendered;
 end;
 
-function TChannelHint.CalcHintRect(MaxWidth: integer; const AHint: string;
-  AData: pointer): TRect;
+function TChannelHint.CalcHintRect(MaxWidth: integer; const AHint: string; AData: pointer): TRect;
 begin
   Result := Rect(0, 0, ChannelHintForm.Width, ChannelHintForm.Height); //ChannelHintForm.BoundsRect;
+end;
+
+destructor TChannelHint.Destroy;
+begin
+  ChannelHintForm.Parent := nil;
+  inherited Destroy;
 end;
 
 procedure TChannelHintForm.UpdateDetail(const EpgInfo: REpgInfo);
 begin
   stChannel.Caption := EpgInfo.Channel;
-  stTime.Caption := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, False);
-  stTitle.Caption := EpgInfo.Title;
+  stTime.Caption    := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, False);
+  stTitle.Caption   := EpgInfo.Title;
   mmPlot.Lines.Text := EpgInfo.Plot;
 end;
 
