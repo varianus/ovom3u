@@ -168,7 +168,7 @@ begin
   if TimeOffset > 0 then
   begin
     DatePart := Copy(iDateStr, 1, TimeOffset - 1);
-    OffsetPart := Copy(iDateStr,TimeOffset + 1, 5);
+    OffsetPart := Copy(iDateStr, TimeOffset + 1, 5);
   end
   else
     DatePart := iDateStr;
@@ -195,10 +195,15 @@ end;
 
 function FormatTimeRange(StartTime, EndTime: TDateTime; TimeOnly: boolean): string;
 begin
-  if TimeOnly then
-    Result := FormatDateTime('t', StartTime) + ' - ' + FormatDateTime('t', EndTime)
+  if (StartTime = 0) and (EndTime = 0) then
+    Result := EmptyStr
   else
-    Result := FormatDateTime('ddddd t', StartTime) + ' - ' + FormatDateTime('ddddd t', EndTime);
+  begin
+    if TimeOnly then
+      Result := FormatDateTime('t', StartTime) + ' - ' + FormatDateTime('t', EndTime)
+    else
+      Result := FormatDateTime('ddddd t', StartTime) + ' - ' + FormatDateTime('ddddd t', EndTime);
+  end;
 end;
 
 function FormatTimeRange(const Time: TDateTime; ShortMode: boolean = False): string;
