@@ -116,6 +116,7 @@ begin
   stChannel.Caption := EpgInfo.Channel;
   stTime.Caption    := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, False);
   stTitle.Caption   := EpgInfo.Title;
+  mmPlot.Visible    := EpgInfo.HaveData;
   mmPlot.Lines.Text := EpgInfo.Plot;
 end;
 

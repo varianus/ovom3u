@@ -882,22 +882,23 @@ begin
     // Determine the cell under the mouse pointer
     ChannelList.MouseToCell(HintInfo.CursorPos.X, HintInfo.CursorPos.Y, ACol, ARow);
     Element := fFilteredList[arow];
-    epgInfo := BackEnd.epgdata.GetEpgInfo(fFilteredList.Map(arow), now);
+    if (BackEnd.EpgData.ActiveList.EpgKind <> None) then
+      epgInfo := BackEnd.epgdata.GetEpgInfo(fFilteredList.Map(arow), now)
+    else
+      epgInfo := Default(REpgInfo);
+
+    if not epgInfo.HaveData then
+      epgInfo.Channel := Format('%3.3d: %s', [Element.Number, Element.title]);
+
     ChannelHintForm.UpdateDetail(epgInfo);
-
-    //ChannelHintForm.Left := ChannelList.Width + 5;
-    //ChannelHintForm.Top := HintInfo.HintPos.y;
-    //ChannelHintForm.MakeFullyVisible();
-
-    HintInfo.HintWindowClass:=TChannelHint;
-//    ChannelHintForm.Show;
-    CanShow := true;
-    HintStr:='custom';
+    HintInfo.HintWindowClass := TChannelHint;
+    CanShow := True;
+    HintStr := 'custom';
 
   end
   else
   begin
-   // ChannelHintForm.Hide;
+    // ChannelHintForm.Hide;
   end;
 end;
 
