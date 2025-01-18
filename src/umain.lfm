@@ -8,6 +8,7 @@ object fPlayer: TfPlayer
   ClientWidth = 1087
   KeyPreview = True
   Menu = MainMenu1
+  LCLVersion = '4.99.0.0'
   OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
@@ -92,7 +93,7 @@ object fPlayer: TfPlayer
         OnDrawCell = EPGListDrawCell
         OnSelectCell = EPGListSelectCell
         ColWidths = (
-          193
+          210
         )
       end
       object Panel2: TPanel
@@ -256,7 +257,7 @@ object fPlayer: TfPlayer
           OnGetCellHint = ChannelListGetCellHint
           OnKeyDown = ChannelListKeyDown
           ColWidths = (
-            190
+            207
           )
         end
       end

@@ -76,6 +76,7 @@ type
     fisGlEnabled: boolean;
     fIsRenderActive: boolean;
     FOnLoadingState: TNotifyEvent;
+    FOnPlayError: TGetStrProc;
     fOnTrackChange: TNotifyEvent;
     fTrackList: TTrackList;
     fMuted: boolean;
@@ -99,12 +100,14 @@ type
     procedure SetMainVolume(const AValue: integer);
     procedure SetOnLoadingState(AValue: TNotifyEvent);
     function GetLevelFromLogger: string;
+    procedure SetOnPlayError(AValue: TGetStrProc);
   public
     property GLRenderControl: TOpenGlControl read FGLRenderControl write SetGLRenderControl;
     property isRenderActive: boolean read fIsRenderActive write SetIsRenderActive;
     property isGlEnabled: boolean read fisGlEnabled write fisGlEnabled;
     property OnLoadingState: TNotifyEvent read FOnLoadingState write SetOnLoadingState;
     property OnTrackChange: TNotifyEvent read fOnTrackChange write fOnTrackChange;
+    property OnPlayError: TGetStrProc read FOnPlayError write SetOnPlayError;
     property TrackList: TTrackList read fTrackList;
     property Volume: integer read GetMainVolume write SetMainVolume;
     property MpvProperties: TMPVProperties read fMpvProperties;
@@ -139,7 +142,7 @@ uses
   {$endif};
 
 {$ifdef LINUX}
-function setlocale(category: cint; locale: PChar): PChar; cdecl; external 'c' Name 'setlocale';
+function setlocale(category: cint; locale: pchar): pchar; cdecl; external 'c' name 'setlocale';
 {$endif}
 
 // Callbacks
@@ -196,17 +199,17 @@ end;
 
 procedure TTrack.Init;
 begin
-  Kind := trkUnknown;
+  Kind  := trkUnknown;
   Selected := False;
-  Id := 0;
+  Id    := 0;
   Title := '';
-  Lang := '';
+  Lang  := '';
   Channels := 0;
   Codec := '';
-  w := 0;
-  h := 0;
+  w     := 0;
+  h     := 0;
   Bitrate := 0;
-  fps := 0;
+  fps   := 0;
 end;
 
 { TMPVEngine }
@@ -234,14 +237,24 @@ end;
 function TMPVEngine.GetLevelFromLogger: string;
 begin
   case OvoLogger.Level of
-    llTRACE: Result := 'trace';
-    llDEBUG: Result := 'debug';
-    llINFO: Result := 'info';
-    llWARN: Result := 'warn';
-    llERROR: Result := 'error'
+    llTRACE:
+      Result := 'trace';
+    llDEBUG:
+      Result := 'debug';
+    llINFO:
+      Result := 'info';
+    llWARN:
+      Result := 'warn';
+    llERROR:
+      Result := 'error'
     else
       Result := 'no';  // llNO_LOG
   end;
+end;
+
+procedure TMPVEngine.SetOnPlayError(AValue: TGetStrProc);
+begin
+  FOnPlayError := AValue;
 end;
 
 procedure TMPVEngine.OnRenderInitialized(AValue: TObject);
@@ -251,7 +264,7 @@ end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
 var
-  ServerVersion: PChar;
+  ServerVersion: pchar;
   i: integer;
 begin
   Result := True;
@@ -261,12 +274,14 @@ begin
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_set_option_string(fHandle^, 'idle', 'yes');
+    mpv_set_option_string(fHandle^, 'keep-open', 'always');
+    //    mpv_set_option_string(fHandle^, 'force-windows', 'yes');
     mpv_request_log_messages(fhandle^, PChar(GetLevelFromLogger));
     mpv_set_option_string(fHandle^, 'msg-level', PChar('all=' + GetLevelFromLogger));
     mpv_initialize(fHandle^);
     ClientVersion := mpv_client_api_version;
 
-    fdecoupler := TDecoupler.Create;
+    fdecoupler    := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
     ServerVersion := mpv_get_property_string(fHandle^, 'mpv-version');
     OvoLogger.Log(llFORCED, StrPas(ServerVersion));
@@ -291,7 +306,7 @@ begin
   setlocale(1, 'C');
   {$endif}
   fMpvProperties := TMPVProperties.Create(ConfigObj);
-  fdecoupler := nil;
+  fdecoupler     := nil;
 
   if not Load_libmpv(External_libraryV2) then
     Load_libmpv(External_libraryV1);
@@ -299,14 +314,14 @@ begin
   if not Loadrender(External_libraryV2) then
     Loadrender(External_libraryV1);
   EngineState := ENGINE_IDLE;
-  fHandle := nil;
-  fMuted := False;
+  fHandle     := nil;
+  fMuted      := False;
 end;
 
 destructor TMPVEngine.Destroy;
 begin
-  If Assigned(fdecoupler) then
-    fdecoupler.OnCommand :=  nil;
+  if Assigned(fdecoupler) then
+    fdecoupler.OnCommand := nil;
 
   if Assigned(fHandle) then
   begin
@@ -354,12 +369,22 @@ begin
         MPV_EVENT_LOG_MESSAGE:
           OvoLogger.Log(llINFO, Pmpv_event_log_message(Event^.Data)^.Text);
         MPV_EVENT_QUEUE_OVERFLOW:
-          OvoLogger.Log(llERROR, 'Event owerflow');
+          OvoLogger.Log(llERROR, 'Event overflow');
+        MPV_EVENT_END_FILE:
+          if _mpv_event_end_file(Event^.Data^).reason = Ord(MPV_END_FILE_REASON_ERROR) then
+          begin
+            if Assigned(FOnPlayError) then
+              FOnPlayError(string(mpv_error_string(_mpv_event_end_file(Event^.Data^).error)));
+          end;
+
         MPV_EVENT_PLAYBACK_RESTART:
         begin
-          Loading := False;
-          if Assigned(FOnLoadingState) then
-            FOnLoadingState(self);
+          if not ImgMode then
+          begin
+            Loading := False;
+            if Assigned(FOnLoadingState) then
+              FOnLoadingState(self);
+          end;
         end;
         MPV_EVENT_PROPERTY_CHANGE:
         begin
@@ -369,7 +394,7 @@ begin
               mpv_get_property(fhandle^, 'core-idle', MPV_FORMAT_FLAG, @p);
               Loading := P = 1;
 
-              if not loading then
+              if not loading and not ImgMode then
                 if Assigned(FOnLoadingState) then
                   FOnLoadingState(self);
             end;
@@ -401,18 +426,18 @@ end;
 
 procedure TMPVEngine.Play(mrl: string);
 var
-  Args: array of PChar;
+  Args: array of pchar;
   ArgIdx: integer;
   Options: string;
 begin
   ImgMode := False;
-  args := nil;
+  args    := nil;
   setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0));
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
 
-  ArgIdx := 3;
+  ArgIdx  := 3;
   Options := GetCustomOptions;
   if Options <> EmptyStr then
   begin
@@ -427,17 +452,17 @@ end;
 
 procedure TMPVEngine.PlayIMG(mrl: string);
 var
-  Args: array of PChar;
+  Args: array of pchar;
   Options: string;
   ArgIdx: integer;
 begin
   ImgMode := True;
-  args := nil;
+  args    := nil;
   setlength(args, 6);
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
-  ArgIdx := 3;
+  ArgIdx  := 3;
   Options := GetCustomOptions;
   if Options <> EmptyStr then
   begin
@@ -458,7 +483,7 @@ end;
 
 procedure TMPVEngine.ShowStats;
 var
-  Args: array of PChar;
+  Args: array of pchar;
   res: longint;
 begin
 
@@ -467,7 +492,7 @@ begin
   args[0] := 'script-binding';
   args[1] := 'display-stats-toggle';
   args[2] := nil;
-  res := mpv_command(fhandle^, ppchar(@args[0]));
+  res     := mpv_command(fhandle^, ppchar(@args[0]));
 
 end;
 
@@ -487,12 +512,12 @@ begin
     for i := 0 to Node.u.list_^.num - 1 do
     begin
       map := Node.u.list_^.values[i]; // pmpv_node(PtrUInt(Node.u.list_^.values) + i * 16)^;
-      pc := map.u.list_^.keys;
+      pc  := map.u.list_^.keys;
       TrackList[i].Init;
       for j := 0 to map.u.list_^.num - 1 do
       begin
         Detail := map.u.list_^.values[j]; // Pmpv_node(PtrUInt(map.u.list_^.values) + j * 16)^;
-        Value := strpas(pc^);
+        Value  := strpas(pc^);
         if Value = 'id' then
           fTrackList[i].Id := Detail.u.int64_;
         if Value = 'title' then
@@ -559,7 +584,10 @@ end;
 
 function TMPVEngine.IsIdle: boolean;
 begin
-  Result := GetBoolProperty('core-idle');
+  Result := ImgMode;
+  if not Result then
+    Result :=  GetBoolProperty('core-idle') ;
+
   if Result then
     EngineState := ENGINE_IDLE
   else
@@ -610,7 +638,7 @@ end;
 
 procedure TMPVEngine.Stop;
 var
-  Args: array of PChar;
+  Args: array of pchar;
 begin
   setlength(args, 2);
   args[0] := 'stop';
@@ -622,7 +650,7 @@ end;
 
 procedure TMPVEngine.Seek(Seconds: integer);
 var
-  Args: array of PChar;
+  Args: array of pchar;
 begin
 
   args := nil;
@@ -640,7 +668,7 @@ var
   num: int64;
   Node: mpv_node;
   List: mpv_node_list;
-  Keys: array of PChar;
+  Keys: array of pchar;
   values: mpv_node_array;
   res: mpv_node;
 begin
@@ -658,25 +686,25 @@ begin
   else
   begin
     SetLength(Keys, 4);
-    Keys[0] := 'name';
+    Keys[0]      := 'name';
     values[0].format := MPV_FORMAT_STRING;
     values[0].u.string_ := 'osd-overlay';
-    Keys[1] := 'id';
+    Keys[1]      := 'id';
     values[1].format := MPV_FORMAT_INT64;
     values[1].u.int64_ := 1;
-    Keys[2] := 'format';
+    Keys[2]      := 'format';
     values[2].format := MPV_FORMAT_STRING;
     //  if True then
     values[2].u.string_ := 'ass-events';
     //   else
     //     values[2].u.string_ := 'none';
-    Keys[3] := 'data';
+    Keys[3]      := 'data';
     values[3].format := MPV_FORMAT_STRING;
     values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]));
-    List.num := 4;
-    List.keys := @Keys[0];
-    List.values := @values[0];
-    Node.format := MPV_FORMAT_NODE_MAP;
+    List.num     := 4;
+    List.keys    := @Keys[0];
+    List.values  := @values[0];
+    Node.format  := MPV_FORMAT_NODE_MAP;
     Node.u.list_ := @list;
 
     mpv_command_node(fHandle^, node, res);
@@ -689,7 +717,7 @@ var
   num: int64;
   Node: mpv_node;
   List: mpv_node_list;
-  Keys: array of PChar;
+  Keys: array of pchar;
   values: mpv_node_array;
   res: mpv_node;
 begin
@@ -730,10 +758,10 @@ begin
       format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
       [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
 
-    List.num := 4;
-    List.keys := @Keys[0];
-    List.values := @values[0];
-    Node.format := MPV_FORMAT_NODE_MAP;
+    List.num     := 4;
+    List.keys    := @Keys[0];
+    List.values  := @values[0];
+    Node.format  := MPV_FORMAT_NODE_MAP;
     Node.u.list_ := @list;
 
     mpv_command_node(fHandle^, node, res);
@@ -748,13 +776,13 @@ begin
   if (EngineState = ENGINE_PAUSE) then
   begin
     SetBoolProperty('pause', False);
-    Result := False;
+    Result      := False;
     EngineState := ENGINE_PLAY;
   end
   else if EngineState = ENGINE_PLAY then
   begin
     SetBoolProperty('pause', True);
-    Result := True;
+    Result      := True;
     EngineState := ENGINE_Pause;
   end;
 
@@ -770,8 +798,8 @@ begin
   else
   begin
     fOldVolume := Volume;
-    Volume := 0;
-    fMuted := True;
+    Volume     := 0;
+    fMuted     := True;
   end;
 end;
 

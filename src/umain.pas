@@ -167,6 +167,7 @@ type
     procedure LoadDailyEpg;
     procedure OnListChanged(Sender: TObject);
     procedure OnLoadingState(Sender: TObject);
+    procedure OnPlayError(const msg: string);
     procedure OnTrackChange(Sender: TObject);
     procedure Play(Row: integer);
     procedure SelectGroup;
@@ -395,6 +396,7 @@ begin
   begin
     backend.InitializeEngine(GLRenderer);
     backend.mpvengine.OnLoadingState := OnLoadingState;
+    backend.mpvengine.OnPlayError := OnPlayError;
     backend.mpvengine.OnTrackChange := OnTrackChange;
   end
   else
@@ -414,6 +416,13 @@ begin
     Loading := backend.mpvengine.IsIdle;
   if not Loading then
     Backend.OsdMessage('', False);
+end;
+
+procedure TfPlayer.OnPlayError(const msg:string);
+begin
+  Backend.MpvEngine.PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  Application.ProcessMessages;
+  Backend.OsdMessage(msg, False);
 end;
 
 procedure TfPlayer.OnTrackChange(Sender: TObject);
