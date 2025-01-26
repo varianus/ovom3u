@@ -885,6 +885,7 @@ var
   ACol, ARow: integer;
   Element: TM3UItem;
   epgInfo: REpgInfo;
+  CellRect: TRect;
 begin
   if HintInfo.HintControl = ChannelList then
   begin
@@ -902,8 +903,11 @@ begin
     ChannelHintForm.UpdateDetail(epgInfo);
     HintInfo.HintWindowClass := TChannelHint;
     CanShow := True;
+    CellRect := ChannelList.ClientToScreen(ChannelList.CellRect(Acol, ARow));
+    HintInfo.HintPos.X:= CellRect.Right+ GetSystemMetrics(SM_CXVSCROLL);
+    HintInfo.HintPos.y:= CellRect.Top;
     HintStr := 'custom';
-
+    HintInfo.HideTimeout:=7000;
   end
   else
   begin
