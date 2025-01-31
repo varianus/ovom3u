@@ -1,7 +1,6 @@
 {"version":1,"strings":[
 {"hash":91046021,"name":"tfplayer.caption","sourcebytes":[79,118,111,77,51,85],"value":"OvoM3U"},
 {"hash":239223852,"name":"tfplayer.pnlepg.caption","sourcebytes":[78,111,32,69,80,71,32,102,111,114,32,99,117,114,114,101,110,116,32,99,104,97,110,110,101,108],"value":"No EPG for current channel"},
-{"hash":165757372,"name":"tfplayer.pnlchannel.caption","sourcebytes":[112,110,108,67,104,97,110,110,101,108],"value":"pnlChannel"},
 {"hash":264892380,"name":"tfplayer.toolbutton5.caption","sourcebytes":[86,105,101,119,32,226,150,188],"value":"View \u25BC"},
 {"hash":340132,"name":"tfplayer.tslist.caption","sourcebytes":[76,105,115,116],"value":"List"},
 {"hash":82406515,"name":"tfplayer.tsgroups.caption","sourcebytes":[71,114,111,117,112,115],"value":"Groups"},

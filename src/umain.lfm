@@ -8,6 +8,7 @@ object fPlayer: TfPlayer
   ClientWidth = 1087
   KeyPreview = True
   Menu = MainMenu1
+  LCLVersion = '4.99.0.0'
   OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
@@ -92,7 +93,7 @@ object fPlayer: TfPlayer
         OnDrawCell = EPGListDrawCell
         OnSelectCell = EPGListSelectCell
         ColWidths = (
-          193
+          210
         )
       end
       object Panel2: TPanel
@@ -126,7 +127,6 @@ object fPlayer: TfPlayer
     Top = 0
     Width = 215
     Align = alLeft
-    Caption = 'pnlChannel'
     ClientHeight = 512
     ClientWidth = 215
     ParentFont = False
@@ -181,9 +181,9 @@ object fPlayer: TfPlayer
       Height = 471
       Top = 40
       Width = 213
-      ActivePage = tsChannels
+      ActivePage = tsList
       Align = alClient
-      TabIndex = 2
+      TabIndex = 0
       TabOrder = 0
       object tsList: TTabSheet
         Caption = 'List'
@@ -256,7 +256,7 @@ object fPlayer: TfPlayer
           OnGetCellHint = ChannelListGetCellHint
           OnKeyDown = ChannelListKeyDown
           ColWidths = (
-            190
+            207
           )
         end
       end

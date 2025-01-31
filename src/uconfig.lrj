@@ -1,9 +1,8 @@
 {"version":1,"strings":[
 {"hash":78007543,"name":"tfconfig.caption","sourcebytes":[67,111,110,102,105,103],"value":"Config"},
 {"hash":243617955,"name":"tfconfig.tschannels.caption","sourcebytes":[67,104,97,110,110,101,108,115],"value":"Channels"},
-{"hash":8021924,"name":"tfconfig.tbadd.caption","sourcebytes":[116,98,65,100,100],"value":"tbAdd"},
-{"hash":126632293,"name":"tfconfig.tbremove.caption","sourcebytes":[116,98,82,101,109,111,118,101],"value":"tbRemove"},
-{"hash":128351842,"name":"tfconfig.tbspacer.caption","sourcebytes":[116,98,83,112,97,99,101,114],"value":"tbSpacer"},
+{"hash":18340,"name":"tfconfig.tbadd.caption","sourcebytes":[65,100,100],"value":"Add"},
+{"hash":93079237,"name":"tfconfig.tbremove.caption","sourcebytes":[82,101,109,111,118,101],"value":"Remove"},
 {"hash":21622,"name":"tfconfig.tsmpv.caption","sourcebytes":[77,112,118],"value":"Mpv"},
 {"hash":191829758,"name":"tfconfig.cbhardwareacceleration.caption","sourcebytes":[69,110,97,98,108,101,32,104,97,114,100,119,97,114,101,32,97,99,99,101,108,101,114,97,116,105,111,110],"value":"Enable hardware acceleration"},
 {"hash":31563070,"name":"tfconfig.lbwarning.caption","sourcebytes":[87,65,82,78,73,78,71,58,32,84,104,101,32,102,111,108,108,111,119,105,110,103,32,103,114,105,100,32,97,108,108,111,119,115,32,121,111,117,32,116,111,32,115,101,116,32,99,117,115,116,111,109,32,111,112,116,105,111,110,115,32,102,111,114,32,108,105,98,77,80,86,46,32,83,101,116,116,105,110,103,32,105,110,99,111,114,114,101,99,116,32,111,114,32,117,110,115,117,112,112,111,114,116,101,100,32,118,97,108,117,101,115,32,109,97,121,32,109,97,107,101,32,112,108,97,121,98,97,99,107,32,105,109,112,111,115,115,105,98,108,101,46,32,89,111,117,32,110,101,101,100,32,116,111,32,114,101,115,116,97,114,116,32,111,118,111,77,51,85,32,116,111,32,97,112,112,108,121,32,116,104,105,115,32,111,112,116,105,111,110,115,46],"value":"WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options."},
