@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":84477956,"name":"tchannelhintform.caption","sourcebytes":[67,104,97,110,110,101,108,72,105,110,116],"value":"ChannelHint"},
+{"hash":32,"name":"tchannelhintform.stchannel.caption","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tchannelhintform.sttime.caption","sourcebytes":[32],"value":" "},
+{"hash":32,"name":"tchannelhintform.sttitle.caption","sourcebytes":[32],"value":" "}
+]}

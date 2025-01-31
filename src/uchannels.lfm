@@ -8,7 +8,6 @@ object fChannels: TfChannels
   ClientHeight = 452
   ClientWidth = 894
   KeyPreview = True
-  LCLVersion = '3.99.0.0'
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   object Panel1: TPanel
@@ -136,10 +135,10 @@ object fChannels: TfChannels
     OnDrawCell = ChannelListDrawCell
     OnSelectCell = ChannelListSelectCell
     ColWidths = (
-      224
-      224
-      223
-      223
+      220
+      219
+      219
+      219
     )
   end
 end

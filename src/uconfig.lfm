@@ -7,6 +7,7 @@ object fConfig: TfConfig
   ClientHeight = 512
   ClientWidth = 902
   KeyPreview = True
+  LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   OnShow = FormShow
   object pcSettings: TPageControl
@@ -14,14 +15,14 @@ object fConfig: TfConfig
     Height = 465
     Top = 0
     Width = 717
-    ActivePage = tsChannels
+    ActivePage = tsGeneral
     Align = alClient
     ShowTabs = False
-    TabIndex = 0
+    TabIndex = 3
     TabOrder = 0
     object tsChannels: TTabSheet
-      Caption = 'tsChannels'
-      ClientHeight = 459
+      Caption = 'Channels'
+      ClientHeight = 430
       ClientWidth = 711
       object lbLists: TListBox
         AnchorSideLeft.Control = tsChannels
@@ -55,7 +56,6 @@ object fConfig: TfConfig
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
         BorderWidth = 3
-        Caption = 'ToolBar1'
         EdgeBorders = []
         EdgeInner = esNone
         EdgeOuter = esNone
@@ -80,7 +80,7 @@ object fConfig: TfConfig
         end
         object tbSpacer: TToolButton
           Left = 46
-          Height = 22
+          Height = 8
           Top = 0
           Caption = 'tbSpacer'
           Style = tbsSeparator
@@ -121,8 +121,8 @@ object fConfig: TfConfig
       end
     end
     object tsMpv: TTabSheet
-      Caption = 'tsMpv'
-      ClientHeight = 459
+      Caption = 'Mpv'
+      ClientHeight = 430
       ClientWidth = 711
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -175,8 +175,8 @@ object fConfig: TfConfig
       end
     end
     object tsPlugins: TTabSheet
-      Caption = 'tsPlugins'
-      ClientHeight = 459
+      Caption = 'Plugins'
+      ClientHeight = 430
       ClientWidth = 711
       object cbLibCEC: TCheckBox
         Left = 12
@@ -231,8 +231,8 @@ object fConfig: TfConfig
       end
     end
     object tsGeneral: TTabSheet
-      Caption = 'tsGeneral'
-      ClientHeight = 459
+      Caption = 'General'
+      ClientHeight = 430
       ClientWidth = 711
       object cbEmbeddedForm: TCheckBox
         Left = 24

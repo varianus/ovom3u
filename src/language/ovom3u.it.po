@@ -1,0 +1,417 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ovom3u\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Marco Caselli <marcocas@gmail.com>\n"
+"Language-Team: Marco Caselli\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#: appconsts.rbuildenv
+#, object-pascal-format
+msgid "Build environment: Lazarus %0:s  FPC %1:s"
+msgstr "Ambiente di compilazione: Lazarus %0:s  FPC %1:s"
+
+#: appconsts.rtarget
+#, object-pascal-format
+msgid "Target: CPU %0:s  OS %1:s"
+msgstr "Destinazione: CPU %0:s  OS %1:s"
+
+#: appconsts.rversionstring
+#, object-pascal-format
+msgid "Version: %0:s (Date %2:s)"
+msgstr "Versione: %0:s (Data %2:s)"
+
+#: jsontools.sindexoutofbounds
+msgid "Index out of bounds"
+msgstr "Indice fuori dai limiti"
+
+#: jsontools.snodenotcollection
+msgid "Node is not a container"
+msgstr "Il nodo non è un contenitore"
+
+#: jsontools.sparsingerror
+msgid "Error while parsing text"
+msgstr "Errore durante l'analisi del testo"
+
+#: jsontools.srootnodekind
+msgid "Root node must be an array or object"
+msgstr "Il nodo radice deve essere un array o un oggetto"
+
+#: tchannelhintform.caption
+msgid "ChannelHint"
+msgstr "Suggerimento Canale"
+
+#: tchannelhintform.stchannel.caption
+msgctxt "tchannelhintform.stchannel.caption"
+msgid " "
+msgstr ""
+
+#: tchannelhintform.sttime.caption
+msgctxt "tchannelhintform.sttime.caption"
+msgid " "
+msgstr ""
+
+#: tchannelhintform.sttitle.caption
+msgctxt "tchannelhintform.sttitle.caption"
+msgid " "
+msgstr ""
+
+#: tepgform.actbackward.caption
+msgid "actBackward"
+msgstr ""
+
+#: tepgform.actforward.caption
+msgid "actForward"
+msgstr ""
+
+#: tepgform.actnow.caption
+msgid "Now"
+msgstr "Ora"
+
+#: tepgform.bback.caption
+msgid "<- &Back"
+msgstr "<- &Indietro"
+
+#: tepgform.bback1.caption
+msgid "<- Back"
+msgstr "<- Indietro"
+
+#: tepgform.bforcereload.caption
+msgid "&Force Reload"
+msgstr "&Forza Ricarica"
+
+#: tepgform.bnow.caption
+msgid "&Now"
+msgstr "&Ora"
+
+#: tepgform.bviewsearch.caption
+msgid "&Search..."
+msgstr "&Cerca..."
+
+#: tepgform.caption
+msgid "EPG Guide"
+msgstr "Guida EPG"
+
+#: tepgform.detailgrid.columns[0].title.caption
+msgctxt "tepgform.detailgrid.columns[0].title.caption"
+msgid "Day"
+msgstr "Giorno"
+
+#: tepgform.detailgrid.columns[1].title.caption
+msgctxt "tepgform.detailgrid.columns[1].title.caption"
+msgid "Time"
+msgstr "Ora"
+
+#: tepgform.detailgrid.columns[2].title.caption
+msgctxt "tepgform.detailgrid.columns[2].title.caption"
+msgid "Title"
+msgstr "Titolo"
+
+#: tepgform.detailgrid.columns[3].title.caption
+msgctxt "tepgform.detailgrid.columns[3].title.caption"
+msgid "Plot"
+msgstr "Trama"
+
+#: tepgform.lbesearch.editlabel.caption
+msgid "Search term"
+msgstr "Termine di ricerca"
+
+#: tepgform.lbmessage.caption
+msgid "lbMessage"
+msgstr ""
+
+#: tepgform.resultgrid.columns[0].title.caption
+msgctxt "tepgform.resultgrid.columns[0].title.caption"
+msgid "Channel"
+msgstr "Canale"
+
+#: tepgform.resultgrid.columns[1].title.caption
+msgctxt "tepgform.resultgrid.columns[1].title.caption"
+msgid "Day"
+msgstr "Giorno"
+
+#: tepgform.resultgrid.columns[2].title.caption
+msgctxt "tepgform.resultgrid.columns[2].title.caption"
+msgid "Time"
+msgstr "Ora"
+
+#: tepgform.resultgrid.columns[3].title.caption
+msgctxt "tepgform.resultgrid.columns[3].title.caption"
+msgid "Title"
+msgstr "Titolo"
+
+#: tepgform.resultgrid.columns[4].title.caption
+msgctxt "tepgform.resultgrid.columns[4].title.caption"
+msgid "Plot"
+msgstr "Trama"
+
+#: tepgform.search.caption
+msgid "&Search"
+msgstr "&Cerca"
+
+#: tepgform.stchannel.caption
+msgctxt "tepgform.stchannel.caption"
+msgid " "
+msgstr ""
+
+#: tepgform.sttime.caption
+msgctxt "tepgform.sttime.caption"
+msgid " "
+msgstr ""
+
+#: tepgform.sttitle.caption
+msgctxt "tepgform.sttitle.caption"
+msgid " "
+msgstr ""
+
+#: tepgform.timegrid.columns[0].title.caption
+msgctxt "tepgform.timegrid.columns[0].title.caption"
+msgid "Channel"
+msgstr "Canale"
+
+#: tepgform.timegrid.hint
+msgid "Click a broadcast for details"
+msgstr "Clicca su una trasmissione per i dettagli"
+
+#: tepgform.tsdetail.caption
+msgid "Detail"
+msgstr "Dettagli"
+
+#: tepgform.tsfullguide.caption
+msgid "FullGuide"
+msgstr "Guida Completa"
+
+#: tepgform.tssearch.caption
+msgid "Search"
+msgstr "Cerca"
+
+#: tfchannels.caption
+msgid "Channel search"
+msgstr "Ricerca canali"
+
+#: tfchannels.cbviewepg.caption
+msgid "Current program"
+msgstr "Programma corrente"
+
+#: tfchannels.cbviewlogo.caption
+msgctxt "tfchannels.cbviewlogo.caption"
+msgid "Logo"
+msgstr "Logo"
+
+#: tfchannels.label1.caption
+msgid "Channel name"
+msgstr "Nome canale"
+
+#: tfconfig.caption
+msgid "Config"
+msgstr "Configurazione"
+
+#: tfconfig.cbembeddedform.caption
+msgid "Embed Config, EPG and channel list in main form"
+msgstr "Incorpora Config, EPG e lista canali nel modulo principale"
+
+#: tfconfig.cbhardwareacceleration.caption
+msgid "Enable hardware acceleration"
+msgstr "Abilita accelerazione hardware"
+
+#: tfconfig.cblibcec.caption
+msgid "Enable HDMI-CEC remote control"
+msgstr "Abilita controllo remoto HDMI-CEC"
+
+#: tfconfig.cbmmkeys.caption
+msgid "Enable Multimedia keys"
+msgstr "Abilita tasti multimediali"
+
+#: tfconfig.cbmpris2.caption
+msgid "Enable Mpris2 integration"
+msgstr "Abilita integrazione Mpris2"
+
+#: tfconfig.groupbox1.caption
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: tfconfig.lbwarning.caption
+msgid "WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options."
+msgstr "ATTENZIONE: La seguente griglia permette di impostare opzioni personalizzate per libMPV. Impostare valori errati o non supportati può rendere impossibile la riproduzione. È necessario riavviare ovoM3U per applicare queste opzioni."
+
+#: tfconfig.rgkeycapturemode.caption
+msgid "Keys Capture Mode"
+msgstr "Modalità di acquisizione tasti"
+
+#: tfconfig.speedbutton1.caption
+msgctxt "tfconfig.speedbutton1.caption"
+msgid "Channels"
+msgstr "Canali"
+
+#: tfconfig.speedbutton2.caption
+msgid "MPV"
+msgstr "MPV"
+
+#: tfconfig.speedbutton3.caption
+msgctxt "tfconfig.speedbutton3.caption"
+msgid "Plugins"
+msgstr "Plugin"
+
+#: tfconfig.speedbutton4.caption
+msgctxt "tfconfig.speedbutton4.caption"
+msgid "General"
+msgstr "Generale"
+
+#: tfconfig.tbadd.caption
+msgid "tbAdd"
+msgstr "Aggiungi"
+
+#: tfconfig.tbremove.caption
+msgid "tbRemove"
+msgstr "Rimuovi"
+
+#: tfconfig.tbspacer.caption
+msgid "tbSpacer"
+msgstr ""
+
+#: tfconfig.tschannels.caption
+msgctxt "tfconfig.tschannels.caption"
+msgid "Channels"
+msgstr "Canali"
+
+#: tfconfig.tsgeneral.caption
+msgctxt "tfconfig.tsgeneral.caption"
+msgid "General"
+msgstr "Generale"
+
+#: tfconfig.tsmpv.caption
+msgid "Mpv"
+msgstr "Mpv"
+
+#: tfconfig.tsplugins.caption
+msgctxt "tfconfig.tsplugins.caption"
+msgid "Plugins"
+msgstr "Estensioni"
+
+#: tflistadd.bitbtn1.caption
+msgid "..."
+msgstr "..."
+
+#: tflistadd.btest.caption
+msgid "TEST"
+msgstr "TEST"
+
+#: tflistadd.caption
+msgid "fListAdd"
+msgstr "Aggiungi a Lista"
+
+#: tflistadd.lelist.editlabel.caption
+msgid "File name or URL"
+msgstr "Nome file o URL"
+
+#: tflistadd.lelist.text
+msgid "leList"
+msgstr ""
+
+#: tflistadd.openm3u.title
+msgid "Open M3U playlist"
+msgstr "Apri playlist M3U"
+
+#: tflogviewer.caption
+msgid "fLogViewer"
+msgstr "Visualizzatore Log"
+
+#: tfplayer.actshowconfig.caption
+msgid "⚙"
+msgstr "⚙"
+
+#: tfplayer.actshowepg.caption
+msgid "Epg"
+msgstr "EPG"
+
+#: tfplayer.actshowlist.caption
+msgid "Show List"
+msgstr "Mostra Lista"
+
+#: tfplayer.actshowlog.caption
+msgid "Show Log"
+msgstr "Mostra Log"
+
+#: tfplayer.actviewcurrentprogram.caption
+msgid "actViewCurrentProgram"
+msgstr "Visualizza Programma Corrente"
+
+#: tfplayer.actviewlogo.caption
+msgctxt "tfplayer.actviewlogo.caption"
+msgid "Logo"
+msgstr "Logo"
+
+#: tfplayer.caption
+msgid "OvoM3U"
+msgstr "OvoM3U"
+
+#: tfplayer.menuitem2.caption
+msgid "Current Program"
+msgstr "Programma Corrente"
+
+#: tfplayer.mnuaudio.caption
+msgid "Audio Tracks"
+msgstr "Tracce Audio"
+
+#: tfplayer.mnusub.caption
+msgid "Subtitle"
+msgstr "Sottotitoli"
+
+#: tfplayer.mnuvideo.caption
+msgid "Video tracks"
+msgstr "Tracce Video"
+
+#: tfplayer.pnlchannel.caption
+msgid "pnlChannel"
+msgstr "pnlCanale"
+
+#: tfplayer.pnlepg.caption
+msgid "No EPG for current channel"
+msgstr "Nessun EPG disponibile per il canale corrente"
+
+#: tfplayer.toolbutton5.caption
+msgid "View ▼"
+msgstr "Mostra ▼"
+
+#: tfplayer.tschannels.caption
+msgctxt "tfplayer.tschannels.caption"
+msgid "Channels"
+msgstr "Canali"
+
+#: tfplayer.tsgroups.caption
+msgid "Groups"
+msgstr "Gruppi"
+
+#: tfplayer.tslist.caption
+msgid "List"
+msgstr "Lista"
+
+#: tmydialog.caption
+msgid "Message"
+msgstr "Messaggio"
+
+#: tmydialog.lbtext.caption
+msgid "lbtext"
+msgstr ""
+
+#: tmydialog.lbtitle.caption
+msgid "lbTitle"
+msgstr ""
+
+#: um3uloader.rsanygroup
+msgid "<all groups>"
+msgstr "<tutti i gruppi>"
+
+#: um3uloader.rsempty
+msgid "M3U file is empty"
+msgstr "Il file M3U è vuoto"
+
+#: um3uloader.rsmissingheader
+msgid "Missing #EXTM3U Header"
+msgstr "Intestazione #EXTM3U mancante"

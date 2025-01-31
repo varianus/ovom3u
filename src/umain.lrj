@@ -1,0 +1,19 @@
+{"version":1,"strings":[
+{"hash":91046021,"name":"tfplayer.caption","sourcebytes":[79,118,111,77,51,85],"value":"OvoM3U"},
+{"hash":239223852,"name":"tfplayer.pnlepg.caption","sourcebytes":[78,111,32,69,80,71,32,102,111,114,32,99,117,114,114,101,110,116,32,99,104,97,110,110,101,108],"value":"No EPG for current channel"},
+{"hash":165757372,"name":"tfplayer.pnlchannel.caption","sourcebytes":[112,110,108,67,104,97,110,110,101,108],"value":"pnlChannel"},
+{"hash":264892380,"name":"tfplayer.toolbutton5.caption","sourcebytes":[86,105,101,119,32,226,150,188],"value":"View \u25BC"},
+{"hash":340132,"name":"tfplayer.tslist.caption","sourcebytes":[76,105,115,116],"value":"List"},
+{"hash":82406515,"name":"tfplayer.tsgroups.caption","sourcebytes":[71,114,111,117,112,115],"value":"Groups"},
+{"hash":243617955,"name":"tfplayer.tschannels.caption","sourcebytes":[67,104,97,110,110,101,108,115],"value":"Channels"},
+{"hash":20171315,"name":"tfplayer.mnuaudio.caption","sourcebytes":[65,117,100,105,111,32,84,114,97,99,107,115],"value":"Audio Tracks"},
+{"hash":41408051,"name":"tfplayer.mnuvideo.caption","sourcebytes":[86,105,100,101,111,32,116,114,97,99,107,115],"value":"Video tracks"},
+{"hash":194711685,"name":"tfplayer.mnusub.caption","sourcebytes":[83,117,98,116,105,116,108,101],"value":"Subtitle"},
+{"hash":60473,"name":"tfplayer.actshowconfig.caption","sourcebytes":[226,154,153],"value":"\u2699"},
+{"hash":19559,"name":"tfplayer.actshowepg.caption","sourcebytes":[69,112,103],"value":"Epg"},
+{"hash":341471,"name":"tfplayer.actviewlogo.caption","sourcebytes":[76,111,103,111],"value":"Logo"},
+{"hash":48415213,"name":"tfplayer.actviewcurrentprogram.caption","sourcebytes":[97,99,116,86,105,101,119,67,117,114,114,101,110,116,80,114,111,103,114,97,109],"value":"actViewCurrentProgram"},
+{"hash":110463316,"name":"tfplayer.actshowlist.caption","sourcebytes":[83,104,111,119,32,76,105,115,116],"value":"Show List"},
+{"hash":258562247,"name":"tfplayer.actshowlog.caption","sourcebytes":[83,104,111,119,32,76,111,103],"value":"Show Log"},
+{"hash":236582125,"name":"tfplayer.menuitem2.caption","sourcebytes":[67,117,114,114,101,110,116,32,80,114,111,103,114,97,109],"value":"Current Program"}
+]}

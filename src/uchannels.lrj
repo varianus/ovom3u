@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":153012200,"name":"tfchannels.caption","sourcebytes":[67,104,97,110,110,101,108,32,115,101,97,114,99,104],"value":"Channel search"},
+{"hash":341471,"name":"tfchannels.cbviewlogo.caption","sourcebytes":[76,111,103,111],"value":"Logo"},
+{"hash":236582093,"name":"tfchannels.cbviewepg.caption","sourcebytes":[67,117,114,114,101,110,116,32,112,114,111,103,114,97,109],"value":"Current program"},
+{"hash":259638133,"name":"tfchannels.label1.caption","sourcebytes":[67,104,97,110,110,101,108,32,110,97,109,101],"value":"Channel name"}
+]}
