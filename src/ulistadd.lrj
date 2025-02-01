@@ -1,7 +1,6 @@
 {"version":1,"strings":[
-{"hash":51020052,"name":"tflistadd.caption","sourcebytes":[102,76,105,115,116,65,100,100],"value":"fListAdd"},
+{"hash":174535892,"name":"tflistadd.caption","sourcebytes":[65,100,100,32,108,105,115,116],"value":"Add list"},
 {"hash":34924860,"name":"tflistadd.lelist.editlabel.caption","sourcebytes":[70,105,108,101,32,110,97,109,101,32,111,114,32,85,82,76],"value":"File name or URL"},
-{"hash":120205476,"name":"tflistadd.lelist.text","sourcebytes":[108,101,76,105,115,116],"value":"leList"},
 {"hash":12558,"name":"tflistadd.bitbtn1.caption","sourcebytes":[46,46,46],"value":"..."},
 {"hash":363140,"name":"tflistadd.btest.caption","sourcebytes":[84,69,83,84],"value":"TEST"},
 {"hash":131222484,"name":"tflistadd.openm3u.title","sourcebytes":[79,112,101,110,32,77,51,85,32,112,108,97,121,108,105,115,116],"value":"Open M3U playlist"}

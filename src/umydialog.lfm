@@ -1,22 +1,21 @@
 object MyDialog: TMyDialog
   Left = 646
-  Height = 184
+  Height = 168
   Top = 254
-  Width = 137
+  Width = 88
   Anchors = [akLeft]
   AutoSize = True
   Caption = 'Message'
-  ClientHeight = 184
-  ClientWidth = 137
+  ClientHeight = 168
+  ClientWidth = 88
   object lbText: TLabel
     Left = 12
-    Height = 17
+    Height = 1
     Top = 86
-    Width = 113
+    Width = 64
     Align = alClient
     AutoSize = False
     BorderSpacing.Around = 12
-    Caption = 'lbtext'
     ParentColor = False
     WordWrap = True
   end
@@ -25,8 +24,8 @@ object MyDialog: TMyDialog
     AnchorSideTop.Side = asrBottom
     Left = 9
     Height = 50
-    Top = 115
-    Width = 119
+    Top = 99
+    Width = 70
     Align = alBottom
     BorderSpacing.Around = 9
     BevelOuter = bvNone
@@ -37,8 +36,8 @@ object MyDialog: TMyDialog
     AnchorSideTop.Side = asrBottom
     Left = 9
     Height = 1
-    Top = 174
-    Width = 119
+    Top = 158
+    Width = 70
     Align = alBottom
     AutoSize = True
     BorderSpacing.Around = 9
@@ -49,10 +48,10 @@ object MyDialog: TMyDialog
     Left = 0
     Height = 74
     Top = 0
-    Width = 137
+    Width = 88
     Align = alTop
     ClientHeight = 74
-    ClientWidth = 137
+    ClientWidth = 88
     TabOrder = 2
     object imgIcon: TImage
       Left = 10
@@ -66,12 +65,11 @@ object MyDialog: TMyDialog
       Left = 77
       Height = 54
       Top = 10
-      Width = 50
+      Width = 1
       Align = alClient
       Alignment = taCenter
       AutoSize = False
       BorderSpacing.Around = 9
-      Caption = 'lbTitle'
       Font.Color = clHighlight
       Font.Height = -16
       Font.Style = [fsBold]

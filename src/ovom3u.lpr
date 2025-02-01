@@ -41,6 +41,7 @@ uses
   Renderer,
   uChannels,
   uBackEnd,
+  DefaultTranslator,
   {$IFDEF USE_MPRIS2}mpris2,{$ENDIF}
   {$IFDEF USE_LIBCEC}cec, CEC_intf,{$ENDIF}
   {$IFDEF USE_MMKEYS}MultimediaKeys,{$ENDIF}

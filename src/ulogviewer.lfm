@@ -3,7 +3,7 @@ object fLogViewer: TfLogViewer
   Height = 240
   Top = 250
   Width = 1113
-  Caption = 'fLogViewer'
+  Caption = 'Log Viewer'
   ClientHeight = 240
   ClientWidth = 1113
   OnDestroy = FormDestroy

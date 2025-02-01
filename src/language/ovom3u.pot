@@ -36,27 +36,12 @@ msgstr ""
 msgid "ChannelHint"
 msgstr ""
 
-#: tchannelhintform.stchannel.caption
-msgctxt "tchannelhintform.stchannel.caption"
-msgid " "
-msgstr ""
-
-#: tchannelhintform.sttime.caption
-msgctxt "tchannelhintform.sttime.caption"
-msgid " "
-msgstr ""
-
-#: tchannelhintform.sttitle.caption
-msgctxt "tchannelhintform.sttitle.caption"
-msgid " "
-msgstr ""
-
 #: tepgform.actbackward.caption
-msgid "actBackward"
+msgid "Backward"
 msgstr ""
 
 #: tepgform.actforward.caption
-msgid "actForward"
+msgid "Forward"
 msgstr ""
 
 #: tepgform.actnow.caption
@@ -111,10 +96,6 @@ msgstr ""
 msgid "Search term"
 msgstr ""
 
-#: tepgform.lbmessage.caption
-msgid "lbMessage"
-msgstr ""
-
 #: tepgform.resultgrid.columns[0].title.caption
 msgctxt "tepgform.resultgrid.columns[0].title.caption"
 msgid "Channel"
@@ -142,21 +123,6 @@ msgstr ""
 
 #: tepgform.search.caption
 msgid "&Search"
-msgstr ""
-
-#: tepgform.stchannel.caption
-msgctxt "tepgform.stchannel.caption"
-msgid " "
-msgstr ""
-
-#: tepgform.sttime.caption
-msgctxt "tepgform.sttime.caption"
-msgid " "
-msgstr ""
-
-#: tepgform.sttitle.caption
-msgctxt "tepgform.sttitle.caption"
-msgid " "
 msgstr ""
 
 #: tepgform.timegrid.columns[0].title.caption
@@ -288,15 +254,11 @@ msgid "TEST"
 msgstr ""
 
 #: tflistadd.caption
-msgid "fListAdd"
+msgid "Add list"
 msgstr ""
 
 #: tflistadd.lelist.editlabel.caption
 msgid "File name or URL"
-msgstr ""
-
-#: tflistadd.lelist.text
-msgid "leList"
 msgstr ""
 
 #: tflistadd.openm3u.title
@@ -304,7 +266,7 @@ msgid "Open M3U playlist"
 msgstr ""
 
 #: tflogviewer.caption
-msgid "fLogViewer"
+msgid "Log Viewer"
 msgstr ""
 
 #: tfplayer.actshowconfig.caption
@@ -324,7 +286,7 @@ msgid "Show Log"
 msgstr ""
 
 #: tfplayer.actviewcurrentprogram.caption
-msgid "actViewCurrentProgram"
+msgid "View current  program"
 msgstr ""
 
 #: tfplayer.actviewlogo.caption
@@ -377,12 +339,30 @@ msgstr ""
 msgid "Message"
 msgstr ""
 
-#: tmydialog.lbtext.caption
-msgid "lbtext"
+#: uconfig.rs_delete_list
+msgid "Delete list?"
 msgstr ""
 
-#: tmydialog.lbtitle.caption
-msgid "lbTitle"
+#: uconfig.rs_list_options
+msgid ""
+"Name=\n"
+"Channel source=\n"
+"Use channel number from M3U=\n"
+"Dowload channels icon=\n"
+"Use EPG from M3U=\n"
+"EPG Source=\n"
+msgstr ""
+
+#: uconfig.rs_untitled
+msgid "Untitled"
+msgstr ""
+
+#: uepgform.rs_loading
+msgid "EPG Loading"
+msgstr ""
+
+#: uepgform.rs_notavalilable
+msgid "EPG Data not available"
 msgstr ""
 
 #: um3uloader.rsanygroup
@@ -395,5 +375,27 @@ msgstr ""
 
 #: um3uloader.rsmissingheader
 msgid "Missing #EXTM3U Header"
+msgstr ""
+
+#: umain.rs_cannot_initialize
+msgid "Cannot initialize libMPV"
+msgstr ""
+
+#: umain.rs_missing_mpv
+msgid ""
+"LibMPV shared library is missing or could not be initialized.\n"
+"OvoM3U uses this library to decode and play video.\n"
+"Click the following link to open a wiki page with information on\n"
+"how to install libMPV on your platform"
+msgstr ""
+
+#: umain.rs_no_list
+msgid ""
+"No list configured\n"
+"Message for configuration"
+msgstr ""
+
+#: umain.rs_welcome
+msgid "Welcome to OvoM3U"
 msgstr ""
 

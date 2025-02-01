@@ -59,6 +59,16 @@ type
     constructor Create(aOwner: TConfig; ABoundsRect: TRect); reintroduce;
   end;
 
+Resourcestring
+  RS_Cannot_Initialize = 'Cannot initialize libMPV';
+  RS_Missing_MPV =
+          'LibMPV shared library is missing or could not be initialized.' + #10 +
+          'OvoM3U uses this library to decode and play video.' + #10 +
+          'Click the following link to open a wiki page with information on' + #10 +
+          'how to install libMPV on your platform';
+  RS_Welcome = 'Welcome to OvoM3U';
+  RS_No_List = 'No list configured' + #10 +
+        'Message for configuration';
 
   { TfPlayer }
 type
@@ -279,12 +289,8 @@ begin
     Retry := False;
     if not Tmpvengine.CheckMPV then
     begin
-      OvoLogger.Log(llERROR, 'Cannot initialize libMPV');
-      case ShowMyDialog(mtWarning, 'Can''t initialize libMPV',
-          'LibMPV shared library is missing or could not be initialized.' + #10 +
-          'OvoM3U uses this library to decode and play video.' + #10 +
-          'Click the following link to open a wiki page with information on' + #10 +
-          'how to install libMPV on your platform', [mbRetry, mbClose], [WIKI_MPV_LINK]) of
+      OvoLogger.Log(llERROR, RS_Cannot_initialize);
+      case ShowMyDialog(mtWarning, RS_Cannot_initialize, RS_Missing_MPV, [mbRetry, mbClose], [WIKI_MPV_LINK]) of
 
         mrClose:
         begin
@@ -307,8 +313,7 @@ begin
   Result := True;
 
   if ConfigObj.ListManager.Count = 0 then
-    case ShowMyDialog(mtWarning, 'Welcome to OvoM3U', 'No list configured' + #10 +
-        'Message for configuration', [mbClose], ['Open Config']) of
+    case ShowMyDialog(mtWarning, RS_Welcome, RS_No_List, [mbClose], ['Open Config']) of
       mrClose:
       begin
         Result := False;

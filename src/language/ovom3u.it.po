@@ -47,28 +47,13 @@ msgstr "Il nodo radice deve essere un array o un oggetto"
 msgid "ChannelHint"
 msgstr "Suggerimento Canale"
 
-#: tchannelhintform.stchannel.caption
-msgctxt "tchannelhintform.stchannel.caption"
-msgid " "
-msgstr ""
-
-#: tchannelhintform.sttime.caption
-msgctxt "tchannelhintform.sttime.caption"
-msgid " "
-msgstr ""
-
-#: tchannelhintform.sttitle.caption
-msgctxt "tchannelhintform.sttitle.caption"
-msgid " "
-msgstr ""
-
 #: tepgform.actbackward.caption
-msgid "actBackward"
-msgstr ""
+msgid "Backward"
+msgstr "Indietro"
 
 #: tepgform.actforward.caption
-msgid "actForward"
-msgstr ""
+msgid "Forward"
+msgstr "Avanti"
 
 #: tepgform.actnow.caption
 msgid "Now"
@@ -122,10 +107,6 @@ msgstr "Trama"
 msgid "Search term"
 msgstr "Termine di ricerca"
 
-#: tepgform.lbmessage.caption
-msgid "lbMessage"
-msgstr ""
-
 #: tepgform.resultgrid.columns[0].title.caption
 msgctxt "tepgform.resultgrid.columns[0].title.caption"
 msgid "Channel"
@@ -154,21 +135,6 @@ msgstr "Trama"
 #: tepgform.search.caption
 msgid "&Search"
 msgstr "&Cerca"
-
-#: tepgform.stchannel.caption
-msgctxt "tepgform.stchannel.caption"
-msgid " "
-msgstr ""
-
-#: tepgform.sttime.caption
-msgctxt "tepgform.sttime.caption"
-msgid " "
-msgstr ""
-
-#: tepgform.sttitle.caption
-msgctxt "tepgform.sttitle.caption"
-msgid " "
-msgstr ""
 
 #: tepgform.timegrid.columns[0].title.caption
 msgctxt "tepgform.timegrid.columns[0].title.caption"
@@ -264,14 +230,10 @@ msgid "General"
 msgstr "Generale"
 
 #: tfconfig.tbadd.caption
-#, fuzzy
-#| msgid "tbAdd"
 msgid "Add"
 msgstr "Aggiungi"
 
 #: tfconfig.tbremove.caption
-#, fuzzy
-#| msgid "tbRemove"
 msgid "Remove"
 msgstr "Rimuovi"
 
@@ -303,23 +265,19 @@ msgid "TEST"
 msgstr "TEST"
 
 #: tflistadd.caption
-msgid "fListAdd"
-msgstr "Aggiungi a Lista"
+msgid "Add list"
+msgstr "Aggiungi lista"
 
 #: tflistadd.lelist.editlabel.caption
 msgid "File name or URL"
 msgstr "Nome file o URL"
-
-#: tflistadd.lelist.text
-msgid "leList"
-msgstr ""
 
 #: tflistadd.openm3u.title
 msgid "Open M3U playlist"
 msgstr "Apri playlist M3U"
 
 #: tflogviewer.caption
-msgid "fLogViewer"
+msgid "Log Viewer"
 msgstr "Visualizzatore Log"
 
 #: tfplayer.actshowconfig.caption
@@ -339,7 +297,7 @@ msgid "Show Log"
 msgstr "Mostra Log"
 
 #: tfplayer.actviewcurrentprogram.caption
-msgid "actViewCurrentProgram"
+msgid "View current  program"
 msgstr "Visualizza Programma Corrente"
 
 #: tfplayer.actviewlogo.caption
@@ -392,13 +350,37 @@ msgstr "Lista"
 msgid "Message"
 msgstr "Messaggio"
 
-#: tmydialog.lbtext.caption
-msgid "lbtext"
-msgstr ""
+#: uconfig.rs_delete_list
+msgid "Delete list?"
+msgstr "Elimina lista?"
 
-#: tmydialog.lbtitle.caption
-msgid "lbTitle"
+#: uconfig.rs_list_options
+msgid ""
+"Name=\n"
+"Channel source=\n"
+"Use channel number from M3U=\n"
+"Dowload channels icon=\n"
+"Use EPG from M3U=\n"
+"EPG Source=\n"
 msgstr ""
+"Nome=\n"
+"Fonte canali=\n"
+"Utilizza numero canale da M3U=\n"
+"Scarica icona canale=\n"
+"Utilizza EPG da M3U=\n"
+"Fonte EPG=\n"
+
+#: uconfig.rs_untitled
+msgid "Untitled"
+msgstr "Senza titolo"
+
+#: uepgform.rs_loading
+msgid "EPG Loading"
+msgstr "EPG in caricamento"
+
+#: uepgform.rs_notavalilable
+msgid "EPG Data not available"
+msgstr "EPG non disponibile"
 
 #: um3uloader.rsanygroup
 msgid "<all groups>"
@@ -412,3 +394,30 @@ msgstr "Il file M3U è vuoto"
 msgid "Missing #EXTM3U Header"
 msgstr "Intestazione #EXTM3U mancante"
 
+#: umain.rs_cannot_initialize
+msgid "Cannot initialize libMPV"
+msgstr "Impossibile inizializzare libMPV"
+
+#: umain.rs_missing_mpv
+msgid ""
+"LibMPV shared library is missing or could not be initialized.\n"
+"OvoM3U uses this library to decode and play video.\n"
+"Click the following link to open a wiki page with information on\n"
+"how to install libMPV on your platform"
+msgstr ""
+"La libreria condivisa LibMPV è mancante o non può essere inizializzata.\n"
+"OvoM3U usa questa libreria per decodificare e riprodurre video.\n"
+"Fai clic sul seguente collegamento per aprire una pagina wiki con informazioni su\n"
+"come installare libMPV sulla tua piattaforma"
+
+#: umain.rs_no_list
+msgid ""
+"No list configured\n"
+"Message for configuration"
+msgstr ""
+"Nessuna lista configurata\n"
+"Messaggio per configurazione"
+
+#: umain.rs_welcome
+msgid "Welcome to OvoM3U"
+msgstr "Benvenuto in OvoM3U"

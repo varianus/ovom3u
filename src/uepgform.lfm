@@ -23,9 +23,8 @@ object EPGForm: TEPGForm
       Left = 14
       Height = 21
       Top = 2
-      Width = 7
+      Width = 4
       AutoSize = True
-      Caption = ' '
       TabOrder = 0
     end
     object stTime: TStaticText
@@ -33,13 +32,12 @@ object EPGForm: TEPGForm
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = stChannel
       AnchorSideTop.Side = asrCenter
-      Left = 30
+      Left = 27
       Height = 21
       Top = 2
-      Width = 7
+      Width = 4
       AutoSize = True
       BorderSpacing.Around = 9
-      Caption = ' '
       TabOrder = 1
     end
     object stTitle: TStaticText
@@ -47,13 +45,12 @@ object EPGForm: TEPGForm
       AnchorSideLeft.Side = asrBottom
       AnchorSideTop.Control = stTime
       AnchorSideTop.Side = asrCenter
-      Left = 46
+      Left = 40
       Height = 27
       Top = -1
-      Width = 8
+      Width = 4
       AutoSize = True
       BorderSpacing.Around = 9
-      Caption = ' '
       Font.Height = -16
       Font.Style = [fsBold]
       ParentFont = False
@@ -173,13 +170,12 @@ object EPGForm: TEPGForm
           AnchorSideTop.Control = pnlControl
           AnchorSideRight.Control = pnlControl
           AnchorSideRight.Side = asrBottom
-          Left = 790
-          Height = 17
+          Left = 850
+          Height = 1
           Top = 10
-          Width = 61
+          Width = 1
           Anchors = [akTop, akRight]
           BorderSpacing.Around = 9
-          Caption = 'lbMessage'
           ParentFont = False
           Transparent = False
         end
@@ -419,11 +415,11 @@ object EPGForm: TEPGForm
     Left = 110
     Top = 156
     object actBackward: TAction
-      Caption = 'actBackward'
+      Caption = 'Backward'
       OnExecute = actBackwardExecute
     end
     object actForward: TAction
-      Caption = 'actForward'
+      Caption = 'Forward'
       OnExecute = actForwardExecute
     end
     object actNow: TAction

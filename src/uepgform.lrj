@@ -1,13 +1,9 @@
 {"version":1,"strings":[
 {"hash":156169701,"name":"tepgform.caption","sourcebytes":[69,80,71,32,71,117,105,100,101],"value":"EPG Guide"},
-{"hash":32,"name":"tepgform.stchannel.caption","sourcebytes":[32],"value":" "},
-{"hash":32,"name":"tepgform.sttime.caption","sourcebytes":[32],"value":" "},
-{"hash":32,"name":"tepgform.sttitle.caption","sourcebytes":[32],"value":" "},
 {"hash":51311205,"name":"tepgform.tsfullguide.caption","sourcebytes":[70,117,108,108,71,117,105,100,101],"value":"FullGuide"},
 {"hash":76203731,"name":"tepgform.timegrid.hint","sourcebytes":[67,108,105,99,107,32,97,32,98,114,111,97,100,99,97,115,116,32,102,111,114,32,100,101,116,97,105,108,115],"value":"Click a broadcast for details"},
 {"hash":166221052,"name":"tepgform.timegrid.columns[0].title.caption","sourcebytes":[67,104,97,110,110,101,108],"value":"Channel"},
 {"hash":4294967295,"name":"tepgform.timegrid.columns[1].title.caption","sourcebytes":[],"value":""},
-{"hash":63628709,"name":"tepgform.lbmessage.caption","sourcebytes":[108,98,77,101,115,115,97,103,101],"value":"lbMessage"},
 {"hash":177511,"name":"tepgform.bnow.caption","sourcebytes":[38,78,111,119],"value":"&Now"},
 {"hash":143338174,"name":"tepgform.bviewsearch.caption","sourcebytes":[38,83,101,97,114,99,104,46,46,46],"value":"&Search..."},
 {"hash":257866788,"name":"tepgform.bforcereload.caption","sourcebytes":[38,70,111,114,99,101,32,82,101,108,111,97,100],"value":"&Force Reload"},
@@ -26,7 +22,7 @@
 {"hash":5966629,"name":"tepgform.resultgrid.columns[3].title.caption","sourcebytes":[84,105,116,108,101],"value":"Title"},
 {"hash":357220,"name":"tepgform.resultgrid.columns[4].title.caption","sourcebytes":[80,108,111,116],"value":"Plot"},
 {"hash":254444667,"name":"tepgform.bback.caption","sourcebytes":[60,45,32,38,66,97,99,107],"value":"<- &Back"},
-{"hash":134574084,"name":"tepgform.actbackward.caption","sourcebytes":[97,99,116,66,97,99,107,119,97,114,100],"value":"actBackward"},
-{"hash":225419780,"name":"tepgform.actforward.caption","sourcebytes":[97,99,116,70,111,114,119,97,114,100],"value":"actForward"},
+{"hash":128113668,"name":"tepgform.actbackward.caption","sourcebytes":[66,97,99,107,119,97,114,100],"value":"Backward"},
+{"hash":225040580,"name":"tepgform.actforward.caption","sourcebytes":[70,111,114,119,97,114,100],"value":"Forward"},
 {"hash":21863,"name":"tepgform.actnow.caption","sourcebytes":[78,111,119],"value":"Now"}
 ]}

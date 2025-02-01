@@ -5,7 +5,7 @@ object fListAdd: TfListAdd
   Top = 33
   Width = 474
   Anchors = [akTop, akLeft, akBottom]
-  Caption = 'fListAdd'
+  Caption = 'Add list'
   ClientHeight = 347
   ClientWidth = 474
   object leList: TLabeledEdit
@@ -17,7 +17,6 @@ object fListAdd: TfListAdd
     EditLabel.Width = 392
     EditLabel.Caption = 'File name or URL'
     TabOrder = 0
-    Text = 'leList'
   end
   object BitBtn1: TBitBtn
     AnchorSideLeft.Control = leList

@@ -88,6 +88,15 @@ type
 var
   fConfig: TfConfig;
 
+resourcestring
+  RS_Untitled = 'Untitled';
+  RS_Delete_List = 'Delete list?';
+  RS_List_Options = 'Name=' + sLineBreak +
+    'Channel source=' + sLineBreak +
+    'Use channel number from M3U=' + sLineBreak +
+    'Dowload channels icon=' + sLineBreak +
+    'Use EPG from M3U=' + sLineBreak +
+    'EPG Source=' + sLineBreak;
 
 function ShowConfig: integer;
 
@@ -99,7 +108,7 @@ function ShowConfig: integer;
 begin
   if not Assigned(fConfig) then
     fConfig := TfConfig.Create(nil);
-  Result := fConfig.ShowModal;
+  Result    := fConfig.ShowModal;
 end;
 
 
@@ -148,12 +157,12 @@ end;
 
 procedure TfConfig.ScreenToListItem(CurrItem: TM3UList);
 begin
-  CurrItem.Name := ValueListEditor1.Values[ValueListEditor1.Keys[0]];
+  CurrItem.Name    := ValueListEditor1.Values[ValueListEditor1.Keys[0]];
   CurrItem.ChannelsUrl := ValueListEditor1.Values[ValueListEditor1.Keys[1]];
   CurrItem.UseChno := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[2]]);
   CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
   CurrItem.EPGFromM3U := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[4]]);
-  CurrItem.EPGUrl := ValueListEditor1.Values[ValueListEditor1.Keys[5]];
+  CurrItem.EPGUrl  := ValueListEditor1.Values[ValueListEditor1.Keys[5]];
   lbLists.Items[PreviousIndex] := CurrItem.Name;
   if ValueListEditor1.Modified then
     ConfigObj.ListManager.ListAdd(CurrItem);
@@ -182,10 +191,10 @@ begin
   BackEnd.MpvEngine.MPVProperties.HardwareAcceleration := cbHardwareAcceleration.Checked;
   BackEnd.MpvEngine.MPVProperties.CustomOptions.Assign(vleCustomOptions.Strings);
 
-  BackEnd.PluginsProperties.EnableCEC := cbLibCEC.Checked;
+  BackEnd.PluginsProperties.EnableCEC    := cbLibCEC.Checked;
   BackEnd.PluginsProperties.EnableMPRIS2 := cbMpris2.Checked;
   BackEnd.PluginsProperties.EnableMMKeys := cbMMkeys.Checked;
-  BackEnd.PluginsProperties.MMKeysMode := rgKeyCaptureMode.ItemIndex;
+  BackEnd.PluginsProperties.MMKeysMode   := rgKeyCaptureMode.ItemIndex;
   ScreenToListItem(TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]));
 
   fPlayer.GuiProperties.EmbeddedSubForm := cbEmbeddedForm.Checked;
@@ -223,9 +232,9 @@ procedure TfConfig.tbAddClick(Sender: TObject);
 var
   NewList: TM3UList;
 begin
-  NewList := TM3UList.Create('Untitled');
+  NewList := TM3UList.Create(RS_Untitled);
   ConfigObj.ListManager.ListAdd(NewList);
-  lbLists.AddItem('Untitled', NewList);
+  lbLists.AddItem(RS_Untitled, NewList);
   lbLists.Selected[lbLists.Count - 1] := True;
   fPlayer.InitializeLists;
 end;
@@ -239,7 +248,7 @@ var
   CurrentItem: TM3UList;
 begin
   CurrentItem := TM3UList(lbLists.Items.Objects[lbLists.ItemIndex]);
-  if Dialogs.MessageDlg('', 'Delete list?', mtConfirmation, mbYesNo, 0) = mrYes then
+  if Dialogs.MessageDlg('', RS_Delete_List, mtConfirmation, mbYesNo, 0) = mrYes then
   begin
     if CurrentItem.ListID <> 0 then
       ConfigObj.ListManager.ListDelete(CurrentItem);
@@ -302,6 +311,8 @@ begin
   cbMMkeys.Checked := False;
   {$ENDIF}
 
+  ValueListEditor1.Strings.Text:= RS_List_Options;
+
   init;
 end;
 
@@ -316,17 +327,17 @@ begin
     EditStyle := esEllipsis;
   with ValueListEditor1.ItemProps[2] do
   begin
-    EditStyle := esPickList;
+    EditStyle     := esPickList;
     PickList.Text := 'True' + sLineBreak + 'False';
   end;
   with ValueListEditor1.ItemProps[3] do
   begin
-    EditStyle := esPickList;
+    EditStyle     := esPickList;
     PickList.Text := 'True' + sLineBreak + 'False';
   end;
   with ValueListEditor1.ItemProps[4] do
   begin
-    EditStyle := esPickList;
+    EditStyle     := esPickList;
     PickList.Text := 'True' + sLineBreak + 'False';
   end;
 

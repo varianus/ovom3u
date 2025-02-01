@@ -14,10 +14,10 @@ object fConfig: TfConfig
     Height = 465
     Top = 0
     Width = 717
-    ActivePage = tsMpv
+    ActivePage = tsChannels
     Align = alClient
     ShowTabs = False
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'Channels'
@@ -105,12 +105,12 @@ object fConfig: TfConfig
         DisplayOptions = [doAutoColResize, doKeyColFixed]
         DoubleBuffered = True
         Strings.Strings = (
-          'Name='
-          'Channel source='
-          'Use channel number from M3U='
-          'Dowload channels icon='
-          'Use EPG from M3U='
-          'EPG Source='
+          ''
+          ''
+          ''
+          ''
+          ''
+          ''
         )
         ColWidths = (
           150
