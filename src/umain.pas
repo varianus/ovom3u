@@ -425,7 +425,8 @@ end;
 
 procedure TfPlayer.OnPlayError(const msg:string);
 begin
-  Backend.MpvEngine.PlayIMG('ovoimg://empty.png'); //PlayIMG(ConfigObj.GetResourcesPath + 'prova.png');
+  Backend.MpvEngine.PlayIMG('ovoimg://empty.png');
+//  Backend.MpvEngine.PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
   Application.ProcessMessages;
   Backend.OsdMessage(msg, False);
 end;
