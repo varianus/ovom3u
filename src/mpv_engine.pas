@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, libmpv, decoupler, BaseTypes, render,
-  OpenGLContext, Forms, LoggerUnit, LCLType, Renderer, config;
+  OpenGLContext, Forms, LoggerUnit, LCLType, Renderer, config, images_handler;
 
 type
   TTrackType = (trkAudio, trkVideo, trkSub, trkUnknown);
@@ -259,7 +259,7 @@ end;
 
 procedure TMPVEngine.OnRenderInitialized(AValue: TObject);
 begin
-  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  PlayIMG('ovoimg://empty.png'); //PlayIMG(ConfigObj.GetResourcesPath + 'prova.png');
 end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
@@ -271,6 +271,8 @@ begin
   try
     fhandle := mpv_create();
 
+
+
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_set_option_string(fHandle^, 'idle', 'yes');
@@ -279,6 +281,8 @@ begin
     mpv_request_log_messages(fhandle^, PChar(GetLevelFromLogger));
     mpv_set_option_string(fHandle^, 'msg-level', PChar('all=' + GetLevelFromLogger));
     mpv_initialize(fHandle^);
+
+    mpv_stream_cb_add_ro(fHandle^, 'ovoimg', self, @openfn);
     ClientVersion := mpv_client_api_version;
 
     fdecoupler    := TDecoupler.Create;
@@ -455,6 +459,8 @@ var
   Args: array of pchar;
   Options: string;
   ArgIdx: integer;
+Const
+  BASE_OPTIONS = 'image-display-duration=inf,alpha=yes';
 begin
   ImgMode := True;
   args    := nil;
@@ -466,12 +472,12 @@ begin
   Options := GetCustomOptions;
   if Options <> EmptyStr then
   begin
-    Args[ArgIdx] := PChar('image-display-duration=inf,' + Options);
+    Args[ArgIdx] := PChar(BASE_OPTIONS +','+ Options);
     Inc(ArgIdx);
   end
   else
   begin
-    Args[ArgIdx] := 'image-display-duration=inf';
+    Args[ArgIdx] := BASE_OPTIONS;
     Inc(ArgIdx);
   end;
 

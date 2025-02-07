@@ -425,7 +425,7 @@ end;
 
 procedure TfPlayer.OnPlayError(const msg:string);
 begin
-  Backend.MpvEngine.PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  Backend.MpvEngine.PlayIMG('ovoimg://empty.png'); //PlayIMG(ConfigObj.GetResourcesPath + 'prova.png');
   Application.ProcessMessages;
   Backend.OsdMessage(msg, False);
 end;
@@ -715,7 +715,7 @@ begin
     else
     begin
       bmp := TPicture.Create;
-      bmp.LoadFromFile(ConfigObj.GetResourcesPath + 'no-logo.png');
+      bmp.LoadFromResourceName(HINSTANCE, 'NO-LOGO.PNG');//lo LoadFromFile(ConfigObj.GetResourcesPath + 'no-logo.png');
       cv.StretchDraw(rect(arect.left, arect.Top, arect.Left + h, aRect.Top + h), bmp.Graphic);
       bmp.Free;
     end;
@@ -1008,7 +1008,7 @@ end;
 procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
   InitializeLists;
-  fConfig.Close;
+//  fConfig.Close;
   CloseSubForm();
 end;
 

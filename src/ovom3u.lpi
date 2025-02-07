@@ -15,6 +15,10 @@
         <TextDesc Value="A Simple IPTV player"/>
       </XPManifest>
       <Icon Value="0"/>
+      <Resources Count="2">
+        <Resource_0 FileName="images/empty.png" Type="RCDATA" ResourceName="OVOIMG://EMPTY.PNG"/>
+        <Resource_1 FileName="images/no-logo.png" Type="RCDATA" ResourceName="NO-LOGO.PNG"/>
+      </Resources>
     </General>
     <i18n>
       <EnableI18N Value="True"/>
@@ -272,6 +276,10 @@
         <ComponentName Value="ChannelHintForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="images_handler.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>

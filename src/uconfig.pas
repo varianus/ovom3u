@@ -205,7 +205,7 @@ begin
   finally
     ConfigObj.SaveConfig;
   end;
-  ModalResult := mrOk;
+
 end;
 
 procedure TfConfig.SpeedButton1Click(Sender: TObject);

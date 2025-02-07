@@ -45,7 +45,7 @@ uses
   {$IFDEF USE_MPRIS2}mpris2,{$ENDIF}
   {$IFDEF USE_LIBCEC}cec, CEC_intf,{$ENDIF}
   {$IFDEF USE_MMKEYS}MultimediaKeys,{$ENDIF}
-  uLogViewer, uListAdd, uhint;
+  uLogViewer, uListAdd, uhint, images_handler;
 
   {$R *.res}
 var

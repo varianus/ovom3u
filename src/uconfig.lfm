@@ -96,10 +96,12 @@ object fConfig: TfConfig
         Width = 695
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
-        DefaultColWidth = 150
+        DefaultColWidth = 200
         FixedCols = 0
         Flat = True
+        ParentShowHint = False
         RowCount = 6
+        ShowHint = True
         TabOrder = 2
         OnButtonClick = ValueListEditor1ButtonClick
         DisplayOptions = [doAutoColResize, doKeyColFixed]
@@ -113,8 +115,8 @@ object fConfig: TfConfig
           ''
         )
         ColWidths = (
-          150
-          544
+          200
+          494
         )
       end
     end

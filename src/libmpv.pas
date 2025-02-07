@@ -1998,6 +1998,27 @@ var
  *)
  mpv_get_sub_api: function(var ctx: mpv_handle; sub_api: mpv_sub_api): Pointer; cdecl; //new
 
+type
+ mpv_stream_cb_read_fn = function (cookie: Pointer; buf: PChar; nbytes: UInt64): Int64; cdecl;
+ mpv_stream_cb_seek_fn = function (cookie: Pointer; offset: Int64): Int64; cdecl;
+ mpv_stream_cb_size_fn = function (cookie: Pointer): Int64; cdecl;
+ mpv_stream_cb_close_fn = procedure (cookie: Pointer); cdecl;
+ mpv_stream_cb_cancel_fn = procedure (cookie: Pointer); cdecl;
+
+ mpv_stream_cb_info = packed record
+     cookie: Pointer;
+     read_fn: mpv_stream_cb_read_fn;
+     seek_fn: mpv_stream_cb_seek_fn;
+     size_fn: mpv_stream_cb_size_fn;
+     close_fn: mpv_stream_cb_close_fn;
+     cancel_fn: mpv_stream_cb_cancel_fn; // since API 1.106
+   end;
+
+  mpv_stream_cb_open_ro_fn = function (user_data: Pointer; uri: PChar; var info: mpv_stream_cb_info): Integer; cdecl;
+
+var
+  mpv_stream_cb_add_ro : function(var ctx: mpv_handle; protocol: PChar; user_data: Pointer; open_fn: mpv_stream_cb_open_ro_fn): Integer; cdecl;
+
  Function Check_libmpv:boolean;
  function Load_libmpv(lib : pchar):boolean;
  procedure Free_libmpv;
@@ -2049,6 +2070,8 @@ implementation
       mpv_wakeup:=nil;
       mpv_set_wakeup_callback:=nil;
       mpv_get_wakeup_pipe:=nil;
+      mpv_stream_cb_add_ro := nil;
+
     end;
 
 
@@ -2095,6 +2118,7 @@ implementation
       pointer(mpv_wakeup):=GetProcAddress(hlib,'mpv_wakeup');
       pointer(mpv_set_wakeup_callback):=GetProcAddress(hlib,'mpv_set_wakeup_callback');
       pointer(mpv_get_wakeup_pipe):=GetProcAddress(hlib,'mpv_get_wakeup_pipe');
+      pointer(mpv_stream_cb_add_ro):=GetProcAddress(hlib,'mpv_stream_cb_add_ro');
     end;
 
 function Check_libmpv: boolean;
