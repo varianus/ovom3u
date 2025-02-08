@@ -716,7 +716,8 @@ begin
     else
     begin
       bmp := TPicture.Create;
-      bmp.LoadFromResourceName(HINSTANCE, 'NO-LOGO.PNG');//lo LoadFromFile(ConfigObj.GetResourcesPath + 'no-logo.png');
+      bmp.LoadFromResourceName(HINSTANCE, 'OVOIMG://NO-LOGO.PNG');
+      //bmp.LoadFromFile(ConfigObj.GetResourcesPath + 'no-logo.png');
       cv.StretchDraw(rect(arect.left, arect.Top, arect.Left + h, aRect.Top + h), bmp.Graphic);
       bmp.Free;
     end;

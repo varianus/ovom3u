@@ -15,9 +15,10 @@
         <TextDesc Value="A Simple IPTV player"/>
       </XPManifest>
       <Icon Value="0"/>
-      <Resources Count="2">
+      <Resources Count="3">
         <Resource_0 FileName="images/empty.png" Type="RCDATA" ResourceName="OVOIMG://EMPTY.PNG"/>
-        <Resource_1 FileName="images/no-logo.png" Type="RCDATA" ResourceName="NO-LOGO.PNG"/>
+        <Resource_1 FileName="images/no-logo.png" Type="RCDATA" ResourceName="OVOIMG://NO-LOGO.PNG"/>
+        <Resource_2 FileName="images/logo.png" Type="RCDATA" ResourceName="OVOIMG://LOGO.PNG"/>
       </Resources>
     </General>
     <i18n>

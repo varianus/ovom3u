@@ -1999,7 +1999,7 @@ var
  mpv_get_sub_api: function(var ctx: mpv_handle; sub_api: mpv_sub_api): Pointer; cdecl; //new
 
 type
- mpv_stream_cb_read_fn = function (cookie: Pointer; buf: PChar; nbytes: UInt64): Int64; cdecl;
+ mpv_stream_cb_read_fn = function (cookie: Pointer; buf: PByte; nbytes: UInt64): Int64; cdecl;
  mpv_stream_cb_seek_fn = function (cookie: Pointer; offset: Int64): Int64; cdecl;
  mpv_stream_cb_size_fn = function (cookie: Pointer): Int64; cdecl;
  mpv_stream_cb_close_fn = procedure (cookie: Pointer); cdecl;

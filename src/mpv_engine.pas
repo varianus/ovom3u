@@ -259,8 +259,8 @@ end;
 
 procedure TMPVEngine.OnRenderInitialized(AValue: TObject);
 begin
-  //PlayIMG('ovoimg://empty.png');
-  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  PlayIMG('ovoimg://empty.png');
+//  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
 end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;

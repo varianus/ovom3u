@@ -23,7 +23,7 @@ unit images_handler;
 interface
 
 uses
-  SysUtils, classes, libmpv;
+  SysUtils, classes, Math, libmpv;
 
 function OpenFn(user_data: Pointer; uri: pansichar; var info: mpv_stream_cb_info): integer;
 
@@ -32,19 +32,28 @@ implementation
 
 function SizeFn(cookie: Pointer): int64;
 begin
-//  Result := TResourceStream(cookie).Size
-  Result := MPV_ERROR_UNSUPPORTED ;
+  Result := TResourceStream(cookie).Size
 end;
 
-function ReadFn(cookie: Pointer; buf: pansichar; nbytes: uint64): int64;
+function ReadFn(cookie: Pointer; buf: PByte; nbytes: uint64): int64;
+var
+  Offset, Remaining: UINT64;
+  St: TResourceStream;
 begin
-  move(TResourceStream(cookie).Memory, buf^, TResourceStream(cookie).Size);
-  Result := 0;
+  st := TResourceStream(cookie);
+  Offset :=  St.Position;
+  Remaining := min(QWord(St.Size - St.Position), nbytes);
+  if Remaining > 0 then
+    begin
+      move((st.Memory +offset)^, buf^, Remaining);
+      st.Position:= St.Position+Remaining;
+    end;
+  Result := max(Remaining, 0);
 end;
 
 function SeekFn(cookie: Pointer; offset: int64): int64;
 begin
-  Result := MPV_ERROR_UNSUPPORTED ;
+  Result := min(TResourceStream(cookie).Seek(offset,soBeginning), TResourceStream(cookie).Size);
 end;
 
 procedure CloseFn(cookie: Pointer);
@@ -56,9 +65,9 @@ function OpenFn(user_data: Pointer; uri: pansichar; var info: mpv_stream_cb_info
 begin
   try
     info.cookie := TResourceStream.Create(HINSTANCE,uppercase(Uri),RT_RCDATA);
-    info.size_fn := nil;//@SizeFn;
+    info.size_fn := @SizeFn;
     info.read_fn := @ReadFn;
-    info.seek_fn := nil;//@SeekFn;
+    info.seek_fn := @SeekFn;
     info.close_fn := @CloseFn;
     Result := 0;
   except
