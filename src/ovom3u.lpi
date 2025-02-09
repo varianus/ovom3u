@@ -118,9 +118,10 @@
           </Linking>
         </CompilerOptions>
       </Item>
-      <SharedMatrixOptions Count="2">
-        <Item1 ID="011836363148" Type="IDEMacro" MacroName="LCLWidgetType" Value="gtk3"/>
+      <SharedMatrixOptions Count="3">
+        <Item1 ID="011836363148" Type="IDEMacro" MacroName="LCLWidgetType" Value="gtk2"/>
         <Item2 ID="701883486244" Type="IDEMacro" MacroName="LCLWidgetType" Value="customdrawn"/>
+        <Item3 ID="668489613945" Type="IDEMacro" MacroName="LCLWidgetType" Value="qt5"/>
       </SharedMatrixOptions>
     </BuildModes>
     <PublishOptions>
