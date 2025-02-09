@@ -29,7 +29,7 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 8
-        Height = 74
+        Height = 151
         Top = 8
         Width = 695
         Anchors = [akTop, akLeft, akRight]
@@ -49,7 +49,7 @@ object fConfig: TfConfig
         AnchorSideRight.Side = asrBottom
         Left = 16
         Height = 26
-        Top = 90
+        Top = 167
         Width = 687
         Align = alNone
         Anchors = [akTop, akLeft, akRight]
@@ -92,7 +92,7 @@ object fConfig: TfConfig
         AnchorSideRight.Side = asrBottom
         Left = 8
         Height = 156
-        Top = 124
+        Top = 201
         Width = 695
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
