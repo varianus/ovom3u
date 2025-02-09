@@ -1,0 +1,2 @@
+ovom3u: hardening-no-relro usr/bin/ovom3u
+ovom3u: extended-description-contains-empty-paragraph
