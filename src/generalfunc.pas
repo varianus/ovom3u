@@ -190,7 +190,7 @@ begin
     else
       TimeOffset := 0;
   end;
-  Result := incMinute(Result, TimeOffset - GetLocalTimeOffset(Result, True));
+  Result := incMinute(Result, TimeOffset - GetLocalTimeOffset({Result, True}));
 end;
 
 function FormatTimeRange(StartTime, EndTime: TDateTime; TimeOnly: boolean): string;
