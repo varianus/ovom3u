@@ -165,7 +165,7 @@ type
     SubFormVisible: boolean;
     OldLogLevel: TOvoLogLevel;
     function CheckConfigAndSystem: boolean;
-    procedure CloseSubForm(Dummy: int64=0);
+    procedure CloseSubForm(Dummy: ptrint=0);
     procedure ComputeGridCellSize;
     function ComputeTrackTitle(Track: TTrack): string;
     procedure ConfigDone(Sender: TObject);
@@ -973,7 +973,7 @@ begin
 
 end;
 
-procedure TfPlayer.CloseSubForm(Dummy:int64);
+procedure TfPlayer.CloseSubForm(Dummy:ptrint=0);
 begin
   SubForm.Hide;
   if GuiProperties.EmbeddedSubForm then
