@@ -22,6 +22,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   {$mode DELPHI}{$H+}
   {$interfaces corba}
 
+  {$MACRO ON}
+  {$if FPC_fullVersion > 30202}
+  {$define GENERIC_CONST:=const}
+  {$ELSEIF}
+  {$define GENERIC_CONST:=constref}
+  {$endif}
+
+
   /// Platform dependant code
   {$IFDEF UNIX}
   {$DEFINE NEED_C_LIBS} //threading and locales use C library
