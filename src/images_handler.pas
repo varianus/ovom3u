@@ -23,7 +23,10 @@ unit images_handler;
 interface
 
 uses
-  SysUtils, classes, Math, libmpv;
+ {$ifdef MSWINDOWS}
+  windows,
+{$endif}
+ SysUtils, classes, Math, libmpv;
 
 function OpenFn(user_data: Pointer; uri: pansichar; var info: mpv_stream_cb_info): integer;
 
