@@ -74,7 +74,7 @@ type
     function LoadList: boolean;
     procedure SetActiveList(AValue: TM3UList);
     procedure SetOnListChange(AValue: TNotifyEvent);
-    function SortbyNumber(const Left, Right: TM3UItem): integer;
+    function SortbyNumber(GENERIC_CONST Left, Right: TM3UItem): integer;
     procedure FixChannelNumbering;
     procedure UpdateLogo;
   protected
@@ -196,7 +196,7 @@ end;
 constructor TM3ULoader.Create;
 begin
   inherited Create(True);
-  Groups := TStringList.Create(False);
+  Groups := TStringList.Create;
   Groups.Sorted := True;
 end;
 
@@ -390,7 +390,7 @@ begin
 
 end;
 
-function TM3ULoader.SortbyNumber(const Left, Right: TM3UItem): integer;
+function TM3ULoader.SortbyNumber(GENERIC_CONST Left, Right: TM3UItem): integer;
 begin
   Result := CompareValue(left.Number, Right.Number);
 end;
