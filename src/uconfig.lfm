@@ -29,7 +29,7 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 8
-        Height = 151
+        Height = 85
         Top = 8
         Width = 695
         Anchors = [akTop, akLeft, akRight]
@@ -49,7 +49,7 @@ object fConfig: TfConfig
         AnchorSideRight.Side = asrBottom
         Left = 16
         Height = 26
-        Top = 167
+        Top = 101
         Width = 687
         Align = alNone
         Anchors = [akTop, akLeft, akRight]
@@ -91,8 +91,8 @@ object fConfig: TfConfig
         AnchorSideRight.Control = tsChannels
         AnchorSideRight.Side = asrBottom
         Left = 8
-        Height = 156
-        Top = 201
+        Height = 149
+        Top = 135
         Width = 695
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
@@ -101,6 +101,7 @@ object fConfig: TfConfig
         Flat = True
         ParentShowHint = False
         RowCount = 6
+        ScrollBars = ssVertical
         ShowHint = True
         TabOrder = 2
         OnButtonClick = ValueListEditor1ButtonClick
@@ -116,7 +117,7 @@ object fConfig: TfConfig
         )
         ColWidths = (
           200
-          494
+          479
         )
       end
     end
