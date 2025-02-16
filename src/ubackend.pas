@@ -24,8 +24,10 @@ interface
 
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
-  GeneralFunc, BaseTypes, OpenGLContext, cec_intf, MultimediaKeys
-  {$IFDEF LINUX}, mpris2{$ENDIF}
+  GeneralFunc, BaseTypes, OpenGLContext
+  {$IFDEF USE_MPRIS2}, cec_intf {$ENDIF}
+  {$IFDEF USE_MPRIS2}, MultimediaKeys{$ENDIF}
+  {$IFDEF USE_MPRIS2}, mpris2{$ENDIF}
   ;
 
 type
@@ -71,10 +73,9 @@ type
     M3ULoader: TM3ULoader;
     EpgData: TEpg;
     M3UList: TM3UList;
-    HDMI_CEC: THDMI_CEC;
-    mmkey: TMultimediaKeys;
-    {$IFDEF LINUX}
-    Mpris: TMpris2;
+    {$IFDEF USE_LIBCEC}HDMI_CEC: THDMI_CEC;{$ENDIF}
+    {$IFDEF USE_MMKEYS}mmkey: TMultimediaKeys;{$ENDIF}
+    {$IFDEF USE_MPRIS2} Mpris: TMpris2;
     {$ENDIF}
     MpvEngine: TMPVEngine;
     OSDTimer: TFPTimer;
@@ -300,8 +301,9 @@ begin
     end;
   end
   else
-  {$ENDIF}
     HDMI_CEC := nil;
+  {$ENDIF}
+
 
   {$IFDEF USE_MMKEYS}
   if PluginsProperties.EnableMMKeys then
@@ -316,8 +318,9 @@ begin
     end;
   end
   else
-  {$ENDIF}
     mmkey := nil;
+  {$ENDIF}
+
 
   {$IFDEF USE_MPRIS2}
   if PluginsProperties.EnableMPRIS2 then
@@ -333,9 +336,8 @@ begin
     end;
   end
   else
-  {$ENDIF}
     Mpris := nil;
-
+  {$ENDIF}
 
   OSDTimer := TFPTimer.Create(nil);
   OSDTimer.Enabled := False;
@@ -353,10 +355,14 @@ begin
   OsdTimer.Free;
   EpgData.Free;
   M3ULoader.Free;
-  HDMI_CEC.Free;
+  {$IFDEF USE_MMKEYS}
   mmkey.Free;
+  {$ENDIF}
+  {$IFDEF USE_LIBCEC}
+  HDMI_CEC.Free;
+  {$ENDIF}
 
-  {$IFDEF LINUX}
+  {$IFDEF USE_MPRIS2}
   Mpris.Free;
   {$ENDIF}
   inherited Destroy;
