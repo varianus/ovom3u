@@ -25,8 +25,8 @@ interface
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
   GeneralFunc, BaseTypes, OpenGLContext
-  {$IFDEF USE_MPRIS2}, cec_intf {$ENDIF}
-  {$IFDEF USE_MPRIS2}, MultimediaKeys{$ENDIF}
+  {$IFDEF USE_LIBCEC}, cec_intf {$ENDIF}
+  {$IFDEF USE_MMKEYS}, MultimediaKeys{$ENDIF}
   {$IFDEF USE_MPRIS2}, mpris2{$ENDIF}
   ;
 
