@@ -37,7 +37,13 @@ const
   {* libCEC's minor version number}
   CEC_LIB_VERSION_PATCH = 2;
 
+  {$IFDEF LINUX}
   libcec = 'libcec.so';
+  {$ENDIF LINUX}
+  {$IFDEF WINDOWS}
+  libcec = 'libcec.dll';
+  {$ENDIF WINDOWS}
+
   _PU = '';
 
 function LIBCEC_UINT_TO_VERSION_MAJOR(x: longint): longint;

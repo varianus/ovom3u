@@ -32,7 +32,7 @@ const
   {$IFDEF WINDOWS}
      External_libraryV1='mpv-1.dll';
      External_libraryV2='libmpv-2.dll';
-  {$ENDIF LINUX}
+  {$ENDIF WINDOWS}
   {$IFDEF DARWIN}
      External_libraryV1 = 'libmpv.dylib';
      External_libraryV2 = 'libmpv.dylib';
