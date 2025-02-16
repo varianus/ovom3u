@@ -23,11 +23,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   {$interfaces corba}
 
   {$MACRO ON}
-  {$if FPC_fullVersion > 30202}
-  {$define GENERIC_CONST:=const}
-  {$ELSEIF}
-  {$define GENERIC_CONST:=constref}
-  {$endif}
+  {$if FPC_FULLVERSION > 30202}
+  {$DEFINE GENERIC_CONST:=const}
+  {$ELSE}
+  {$DEFINE GENERIC_CONST:=constref}
+  {$ENDIF}
 
 
   /// Platform dependant code
