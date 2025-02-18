@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.varianus.ovom3u</id>
+  
+  <name>OvoM3U</name>
+  <summary>A simple but complete IPTV player</summary>
+  
+  <metadata_license>CC-BY-SA-4.0</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+
+  <url type="homepage">https://github.com/varianus/ovom3u/</url>
+
+  <description>
+    <p>
+      OvoM3U is my attempt to develop a m3u based IPTV player.
+    </p>
+    <p>
+      Is uses libMPV as video player and is developed in Lazarus/FreePascal
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">io.github.varianus.ovom3u.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://imgur.com/WkXm8aY.png</image>
+    </screenshot>
+  </screenshots>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Video</category>
+    <category>Player</category>
+  </categories>
+
+  <release version="0.0.1" date="2025-02-18">
+    <description>
+      <p>First release</p>
+    </description>
+  </release>
+  
+  <content_rating type="oars-1.1" />
+
+</component>
