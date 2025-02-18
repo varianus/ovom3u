@@ -6,9 +6,9 @@ fi
 
 ARCH=$(./get_architecture.sh )
 
-BIN_DIR=$BASE/bin/
-DEBSRCDIR=$BASE/packages/debian/
-PACKAGES_DIR=$BASE/packages
+BIN_DIR=$BASE/bin
+DEBSRCDIR=$BASE/packages/debianbuild
+PACKAGES_DIR=$BASE/packages/debian
 SRCDIR=$BASE/src
 
 MKDIR="install -m 755 -d "
@@ -63,7 +63,7 @@ gzip -c --best $PACKAGES_DIR/changelog > $DEBSRCDIR/usr/share/doc/ovom3u/changel
 chmod 0644 $DEBSRCDIR/usr/share/doc/ovom3u/changelog.gz
 
 INSTALLEDSIZE=$(du -0 -xs --apparent-size --block-size=1024 $DEBSRCDIR/usr | cut -f 1)
-sed -e 's/:INSTALLEDSIZE/'$INSTALLEDSIZE'/;s/:VERSION/'$PROG_VER'/;s/:ARCHITECTURE/'$ARCH'/' $BASE/packages/control > $DEBSRCDIR/DEBIAN/control
+sed -e 's/:INSTALLEDSIZE/'$INSTALLEDSIZE'/;s/:VERSION/'$PROG_VER'/;s/:ARCHITECTURE/'$ARCH'/' $PACKAGES_DIR/control > $DEBSRCDIR/DEBIAN/control
 chmod 0644 $DEBSRCDIR/DEBIAN/control
 
 cd $DEBSRCDIR
