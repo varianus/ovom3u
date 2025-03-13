@@ -153,16 +153,20 @@ end;
 
 procedure TfChannels.Init;
 begin
+  cbGroups.Items.clear;
+  cbGroups.items.add(um3uloader.RSAnyGroup);
+  cbGroups.ItemIndex:=0;
+
   if (BackEnd.M3ULoader.Groups.Count > 1) then
     begin
-      cbGroups.Items.clear;
-      cbGroups.items.add(um3uloader.RSAnyGroup);
       cbGroups.Items.AddStrings(BackEnd.M3ULoader.Groups, false);
       cbGroups.ItemIndex:=0;
       cbGroups.Visible:=true;
     end
   else
-    cbGroups.Visible:=false;
+    begin
+      cbGroups.Visible:=false;
+    end;
   ChannelList.RowCount:=ceil(ffilter.Count / 4 );
   ComputeGridCellSize(0);
   ChannelList.Invalidate;
