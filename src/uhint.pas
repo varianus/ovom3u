@@ -36,6 +36,7 @@ type
     procedure MakeFormVisible(var ARect: TRect);
   public
     procedure ActivateHintData(ARect: TRect; const AHint: string; AData: pointer); override;
+    procedure ActivateHint(ARect: TRect; const AHint: string); override;
     function CalcHintRect(MaxWidth: integer; const AHint: string; AData: pointer): TRect; override;
     destructor Destroy; override;
 
@@ -90,6 +91,11 @@ end;
 
 procedure TChannelHint.ActivateHintData(ARect: TRect; const AHint: string; AData: pointer);
 begin
+  ActivateHint(ARect, AHint);
+end;
+
+procedure TChannelHint.ActivateHint(ARect: TRect; const AHint: string);
+begin
   MakeFormVisible(ARect);
   HintRect := ARect;
   ChannelHintForm.Parent := self;
@@ -98,6 +104,7 @@ begin
   ChannelHintForm.Visible := True;
   Visible  := True;
   ActivateRendered;
+
 end;
 
 function TChannelHint.CalcHintRect(MaxWidth: integer; const AHint: string; AData: pointer): TRect;
