@@ -378,9 +378,17 @@ msgstr ""
 "Utilizza EPG da M3U=\n"
 "Fonte EPG=\n"
 
+#: uconfig.rs_no
+msgid "No"
+msgstr "No"
+
 #: uconfig.rs_untitled
 msgid "Untitled"
 msgstr "Senza titolo"
+
+#: uconfig.rs_yes
+msgid "Yes"
+msgstr "Sì"
 
 #: uepgform.rs_loading
 msgid "EPG Loading"

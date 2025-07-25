@@ -7,7 +7,6 @@ object fConfig: TfConfig
   ClientHeight = 512
   ClientWidth = 902
   KeyPreview = True
-  LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   OnShow = FormShow
   object pcSettings: TPageControl
@@ -22,7 +21,7 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'Channels'
-      ClientHeight = 430
+      ClientHeight = 459
       ClientWidth = 711
       object lbLists: TListBox
         AnchorSideLeft.Control = tsChannels
@@ -80,7 +79,7 @@ object fConfig: TfConfig
         end
         object tbSpacer: TToolButton
           Left = 46
-          Height = 8
+          Height = 22
           Top = 0
           Style = tbsSeparator
         end
@@ -117,13 +116,13 @@ object fConfig: TfConfig
         )
         ColWidths = (
           200
-          494
+          479
         )
       end
     end
     object tsMpv: TTabSheet
       Caption = 'Mpv'
-      ClientHeight = 430
+      ClientHeight = 459
       ClientWidth = 711
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -176,7 +175,7 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'Plugins'
-      ClientHeight = 430
+      ClientHeight = 459
       ClientWidth = 711
       object cbLibCEC: TCheckBox
         Left = 12
@@ -232,7 +231,7 @@ object fConfig: TfConfig
     end
     object tsGeneral: TTabSheet
       Caption = 'General'
-      ClientHeight = 430
+      ClientHeight = 459
       ClientWidth = 711
       object cbEmbeddedForm: TCheckBox
         Left = 24

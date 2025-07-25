@@ -98,6 +98,8 @@ resourcestring
     'Dowload channels icon=' + sLineBreak +
     'Use EPG from M3U=' + sLineBreak +
     'EPG Source=' + sLineBreak;
+  RS_Yes = 'Yes';
+  RS_No = 'No';
 
 function ShowConfig: integer;
 
@@ -147,9 +149,9 @@ procedure TfConfig.ListItemToScreen(CurrItem: TM3UList);
 begin
   ValueListEditor1.Values[ValueListEditor1.Keys[0]] := CurrItem.Name;
   ValueListEditor1.Values[ValueListEditor1.Keys[1]] := CurrItem.ChannelsUrl;
-  ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, True);
-  ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, True);
-  ValueListEditor1.Values[ValueListEditor1.Keys[4]] := BoolToStr(CurrItem.EPGFromM3U, True);
+  ValueListEditor1.Values[ValueListEditor1.Keys[2]] := BoolToStr(CurrItem.UseChno, RS_Yes, RS_No);
+  ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, RS_Yes, RS_No);
+  ValueListEditor1.Values[ValueListEditor1.Keys[4]] := BoolToStr(CurrItem.EPGFromM3U, RS_Yes, RS_No);
   ValueListEditor1.Values[ValueListEditor1.Keys[5]] := CurrItem.EPGUrl;
   ValueListEditor1.Modified := False;
   ValueListEditor1.Invalidate;
@@ -325,6 +327,8 @@ end;
 procedure TfConfig.Init;
 begin
   pcSettings.ActivePage := tsChannels;
+  TrueBoolStrs := ['True',RS_Yes];
+  FalseBoolStrs := ['False',RS_No];
 
   PreviousIndex := -1;
   with ValueListEditor1.ItemProps[0] do
@@ -334,17 +338,17 @@ begin
   with ValueListEditor1.ItemProps[2] do
   begin
     EditStyle     := esPickList;
-    PickList.Text := 'True' + sLineBreak + 'False';
+    PickList.Text := RS_Yes + sLineBreak + RS_No;
   end;
   with ValueListEditor1.ItemProps[3] do
   begin
     EditStyle     := esPickList;
-    PickList.Text := 'True' + sLineBreak + 'False';
+    PickList.Text := RS_Yes + sLineBreak + RS_No;
   end;
   with ValueListEditor1.ItemProps[4] do
   begin
     EditStyle     := esPickList;
-    PickList.Text := 'True' + sLineBreak + 'False';
+    PickList.Text := RS_Yes + sLineBreak + RS_No;
   end;
 
 end;

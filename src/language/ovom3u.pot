@@ -361,8 +361,16 @@ msgid ""
 "EPG Source=\n"
 msgstr ""
 
+#: uconfig.rs_no
+msgid "No"
+msgstr ""
+
 #: uconfig.rs_untitled
 msgid "Untitled"
+msgstr ""
+
+#: uconfig.rs_yes
+msgid "Yes"
 msgstr ""
 
 #: uepgform.rs_loading
