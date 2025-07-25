@@ -7,6 +7,7 @@ object EPGForm: TEPGForm
   ClientHeight = 417
   ClientWidth = 867
   KeyPreview = True
+  LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   object pnlDetail: TPanel
     Left = 0
@@ -16,8 +17,8 @@ object EPGForm: TEPGForm
     Align = alBottom
     BevelInner = bvLowered
     BorderStyle = bsSingle
-    ClientHeight = 128
-    ClientWidth = 865
+    ClientHeight = 130
+    ClientWidth = 867
     TabOrder = 0
     object stChannel: TStaticText
       Left = 14
@@ -89,7 +90,7 @@ object EPGForm: TEPGForm
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
       Caption = 'FullGuide'
-      ClientHeight = 281
+      ClientHeight = 252
       ClientWidth = 861
       object TimeGrid: TDrawGrid
         Left = 0
@@ -222,7 +223,7 @@ object EPGForm: TEPGForm
     end
     object tsDetail: TTabSheet
       Caption = 'Detail'
-      ClientHeight = 281
+      ClientHeight = 252
       ClientWidth = 861
       object DetailGrid: TDrawGrid
         AnchorSideLeft.Control = tsDetail
@@ -297,7 +298,7 @@ object EPGForm: TEPGForm
     end
     object tsSearch: TTabSheet
       Caption = 'Search'
-      ClientHeight = 281
+      ClientHeight = 252
       ClientWidth = 861
       object lbeSearch: TLabeledEdit
         Left = 88

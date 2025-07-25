@@ -58,7 +58,7 @@ begin
 
   OvoLogger.LogName := ConfigObj.ConfigDir + LogFileName;
   OvoLogger.SaveOldLog;
-  Verbose := Application.GetOptionValue('v', 'verbose');
+  Verbose := UpperCase(Application.GetOptionValue('v', 'verbose'));;
   OvoLogger.LevelFromString(Verbose);
   OvoLogger.Log(llFORCED, '----------------------------');
   OvoLogger.Log(llFORCED, DisplayAppName);

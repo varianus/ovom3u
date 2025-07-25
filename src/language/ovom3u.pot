@@ -265,8 +265,16 @@ msgstr ""
 msgid "Open M3U playlist"
 msgstr ""
 
+#: tflogviewer.button1.caption
+msgid "Clear"
+msgstr ""
+
 #: tflogviewer.caption
 msgid "Log Viewer"
+msgstr ""
+
+#: tflogviewer.cbautoscroll.caption
+msgid "Auto scrolling"
 msgstr ""
 
 #: tfplayer.actshowconfig.caption

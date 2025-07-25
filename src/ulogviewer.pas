@@ -23,15 +23,25 @@ unit uLogViewer;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, LoggerUnit;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  LoggerUnit, LCLType;
 
 type
 
   { TfLogViewer }
 
   TfLogViewer = class(TForm)
+    Button1: TButton;
+    cbAutoScroll: TCheckBox;
+    cbLevel: TComboBox;
     LogMemo: TMemo;
+    Panel1: TPanel;
+    procedure Button1Click(Sender: TObject);
+    procedure cbAutoScrollChange(Sender: TObject);
+    procedure cbLevelChange(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure LogMemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState
+      );
   private
     procedure OnLog(Sender: TObject; const Message: string);
   public
@@ -53,14 +63,55 @@ begin
   OvoLogger.OnLogMessage := nil;
 end;
 
+procedure TfLogViewer.LogMemoKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_END then
+    if ssCtrl in Shift then
+      begin
+        LogMemo.SelStart  := Length(LogMemo.Lines.Text) - Length(LineEnding);
+        LogMemo.SelLength := 0;
+        Key:=0;
+      end;
+
+
+end;
+
+procedure TfLogViewer.Button1Click(Sender: TObject);
+begin
+  LogMemo.Clear;
+end;
+
+procedure TfLogViewer.cbAutoScrollChange(Sender: TObject);
+begin
+  if not cbAutoScroll.Checked then
+  begin
+    LogMemo.SelStart  := Length(LogMemo.Lines.Text) - Length(LineEnding);
+    LogMemo.SelLength := 0;
+  end;
+end;
+
+procedure TfLogViewer.cbLevelChange(Sender: TObject);
+begin
+  OvoLogger.LevelFromString(cbLevel.Items[cbLevel.ItemIndex]);
+end;
+
 procedure TfLogViewer.OnLog(Sender: TObject; const Message: string);
 begin
-  LogMemo.Append(Message);
+  LogMemo.Lines.BeginUpdate;
+  LogMemo.Lines.Append(Message);
+  LogMemo.Lines.EndUpdate;
+  if cbAutoScroll.Checked then
+  begin
+    LogMemo.SelStart  := MaxInt;
+    LogMemo.SelLength := 0;
+  end;
 end;
 
 procedure TfLogViewer.Init;
 begin
   LogMemo.Clear;
+  cbLevel.ItemIndex      := cbLevel.Items.IndexOf(OvoLogger.DecodeLevel);
   OvoLogger.OnLogMessage := onlog;
 
 end;

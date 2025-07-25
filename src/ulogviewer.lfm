@@ -9,11 +9,68 @@ object fLogViewer: TfLogViewer
   OnDestroy = FormDestroy
   object LogMemo: TMemo
     Left = 0
-    Height = 240
-    Top = 0
+    Height = 213
+    Top = 27
     Width = 1113
     Align = alClient
     ScrollBars = ssBoth
     TabOrder = 0
+    OnKeyDown = LogMemoKeyDown
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 27
+    Top = 0
+    Width = 1113
+    Align = alTop
+    AutoSize = True
+    ClientHeight = 27
+    ClientWidth = 1113
+    TabOrder = 1
+    object Button1: TButton
+      AnchorSideLeft.Control = cbAutoScroll
+      AnchorSideLeft.Side = asrBottom
+      AnchorSideTop.Control = Panel1
+      Left = 110
+      Height = 25
+      Top = 1
+      Width = 75
+      BorderSpacing.Left = 5
+      Caption = 'Clear'
+      TabOrder = 0
+      OnClick = Button1Click
+    end
+    object cbAutoScroll: TCheckBox
+      AnchorSideTop.Control = Panel1
+      Left = 6
+      Height = 21
+      Top = 1
+      Width = 99
+      BorderSpacing.Left = 5
+      Caption = 'Auto scrolling'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+      OnChange = cbAutoScrollChange
+    end
+    object cbLevel: TComboBox
+      AnchorSideTop.Control = Panel1
+      Left = 200
+      Height = 25
+      Top = 1
+      Width = 100
+      ItemHeight = 0
+      Items.Strings = (
+        'TRACE'
+        'DEBUG'
+        'INFO'
+        'WARNING'
+        'ERROR'
+        'NONE'
+      )
+      Style = csDropDownList
+      TabOrder = 2
+      OnChange = cbLevelChange
+    end
   end
 end

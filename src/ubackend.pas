@@ -69,6 +69,7 @@ type
     procedure CecKey(Sender: TObject; var Key: word);
     procedure SetOnListChanged(AValue: TNotifyEvent);
     procedure SetOnPlay(AValue: TNotifyEvent);
+    procedure LogLevelChange(Sender: TObject);
   public
     M3ULoader: TM3ULoader;
     EpgData: TEpg;
@@ -110,7 +111,7 @@ function BackEnd: TBackend;
 begin
   if not Assigned(fBackend) then
     fBackend := TBackend.Create;
-  Result := fBackend;
+  Result     := fBackend;
 end;
 { TPluginsProperties }
 
@@ -118,7 +119,7 @@ procedure TPluginsProperties.SetEnableCEC(AValue: boolean);
 begin
   if FEnableCEC = AValue then Exit;
   FEnableCEC := AValue;
-  Dirty := True;
+  Dirty      := True;
 end;
 
 procedure TPluginsProperties.SetEnableMMKeys(AValue: boolean);
@@ -170,7 +171,8 @@ end;
 function TBackend.InitializeEngine(Renderer: TOpenGLControl): boolean;
 begin
   mpvengine := TMPVEngine.Create;
-  Result := MpvEngine.Initialize(Renderer);
+  Result    := MpvEngine.Initialize(Renderer);
+  OvoLogger.OnLevelChange := LogLevelChange;
 end;
 
 procedure TBackend.OsdMessage(Message: string; TimeOut: boolean = True);
@@ -207,10 +209,10 @@ begin
   OvoLogger.Log(llINFO, 'Tuning to %s', [M3ULoader[Index].Title]);
 
   PreviousIndex := CurrentIndex;
-  CurrentIndex := Index;
+  CurrentIndex  := Index;
   mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
-  Loading := True;
-  fLastMessage := format('Load: %3.3d %s',[CurrentIndex+1, BackEnd.M3ULoader[CurrentIndex].title]);
+  Loading      := True;
+  fLastMessage := format('Load: %3.3d %s', [CurrentIndex + 1, BackEnd.M3ULoader[CurrentIndex].title]);
   OsdMessage(fLastMessage);
   if Assigned(FOnPlay) then
     FOnPlay(Self);
@@ -231,7 +233,7 @@ begin
   begin
     Info := epgData.GetEpgInfo(CurrentIndex, now);
     mpvengine.OsdEpg(Format('%3.3d: %s', [M3ULoader[CurrentIndex].Number, BackEnd.M3ULoader[CurrentIndex].title]), info, True);
-    ShowingInfo := True;
+    ShowingInfo      := True;
     OSDTimer.Enabled := True;
   end
   else
@@ -272,6 +274,12 @@ begin
   FOnPlay := AValue;
 end;
 
+procedure TBackend.LogLevelChange(Sender: TObject);
+begin
+  if Assigned(MpvEngine) then
+    MpvEngine.UpdateLogLevel;
+end;
+
 procedure TBackend.OnListChangedPlay(Sender: TObject);
 begin
 
@@ -285,7 +293,7 @@ constructor TBackend.Create;
 begin
   PluginsProperties := TPluginsProperties.Create(ConfigObj);
   M3ULoader := TM3ULoader.Create;
-  EpgData := TEpg.Create;
+  EpgData   := TEpg.Create;
 
   M3ULoader.OnListChanged := OnListChangedPlay;
   {$IFDEF USE_LIBCEC}
@@ -339,18 +347,19 @@ begin
     Mpris := nil;
   {$ENDIF}
 
-  OSDTimer := TFPTimer.Create(nil);
+  OSDTimer      := TFPTimer.Create(nil);
   OSDTimer.Enabled := False;
   OSDTimer.Interval := 8000;
   OSDTimer.OnTimer := OSDTimerTimer;
-  CurrentIndex := -1;
+  CurrentIndex  := -1;
   PreviousIndex := -1;
-  ShowingInfo := False;
+  ShowingInfo   := False;
 
 end;
 
 destructor TBackend.Destroy;
 begin
+  OvoLogger.OnLevelChange := nil;
   MpvEngine.Free;
   OsdTimer.Free;
   EpgData.Free;

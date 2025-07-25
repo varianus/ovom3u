@@ -114,6 +114,7 @@ type
     function Initialize(Renderer: TOpenGLControl): boolean;
     function IsIdle: boolean;
     procedure LoadTracks;
+    Procedure UpdateLogLevel;
     procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
     procedure OsdMessage(msg: string = '');
@@ -272,8 +273,6 @@ begin
   try
     fhandle := mpv_create();
 
-
-
     mpv_set_option_string(fHandle^, 'input-cursor', 'no');   // no mouse handling
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_set_option_string(fHandle^, 'idle', 'yes');
@@ -321,6 +320,7 @@ begin
   EngineState := ENGINE_IDLE;
   fHandle     := nil;
   fMuted      := False;
+
 end;
 
 destructor TMPVEngine.Destroy;
@@ -567,6 +567,12 @@ begin
   end;
   if Assigned(fOnTrackChange) then
     fOnTrackChange(self);
+end;
+
+procedure TMPVEngine.UpdateLogLevel;
+begin
+  mpv_request_log_messages(fhandle^, PChar(GetLevelFromLogger));
+  mpv_set_option_string(fHandle^, 'msg-level', PChar('all=' + GetLevelFromLogger));
 end;
 
 function TMPVEngine.GetBoolProperty(const PropertyName: string): boolean;

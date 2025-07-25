@@ -276,9 +276,17 @@ msgstr "Nome file o URL"
 msgid "Open M3U playlist"
 msgstr "Apri playlist M3U"
 
+#: tflogviewer.button1.caption
+msgid "Clear"
+msgstr "Pulisci"
+
 #: tflogviewer.caption
 msgid "Log Viewer"
 msgstr "Visualizzatore Log"
+
+#: tflogviewer.cbautoscroll.caption
+msgid "Auto scrolling"
+msgstr "Auto scorrimento"
 
 #: tfplayer.actshowconfig.caption
 msgid "⚙"
@@ -298,7 +306,7 @@ msgstr "Mostra Log"
 
 #: tfplayer.actviewcurrentprogram.caption
 msgid "View current  program"
-msgstr "Visualizza Programma Corrente"
+msgstr "Visualizza programma corrente"
 
 #: tfplayer.actviewlogo.caption
 msgctxt "tfplayer.actviewlogo.caption"

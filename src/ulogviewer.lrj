@@ -1,3 +1,5 @@
 {"version":1,"strings":[
-{"hash":97187922,"name":"tflogviewer.caption","sourcebytes":[76,111,103,32,86,105,101,119,101,114],"value":"Log Viewer"}
+{"hash":97187922,"name":"tflogviewer.caption","sourcebytes":[76,111,103,32,86,105,101,119,101,114],"value":"Log Viewer"},
+{"hash":4860802,"name":"tflogviewer.button1.caption","sourcebytes":[67,108,101,97,114],"value":"Clear"},
+{"hash":99898215,"name":"tflogviewer.cbautoscroll.caption","sourcebytes":[65,117,116,111,32,115,99,114,111,108,108,105,110,103],"value":"Auto scrolling"}
 ]}

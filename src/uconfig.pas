@@ -76,6 +76,7 @@ type
     PreviousIndex: integer;
     FOnWorkDone: TNotifyEvent;
     procedure ListItemToScreen(CurrItem: TM3UList);
+    procedure SaveChanges;
     procedure ScreenToListItem(CurrItem: TM3UList);
     procedure SetEditMode(Editing: boolean);
     procedure SetOnWorkDone(AValue: TNotifyEvent);
@@ -184,6 +185,11 @@ begin
 end;
 
 procedure TfConfig.OKButtonClick(Sender: TObject);
+begin
+  SaveChanges;
+end;
+
+procedure TfConfig.SaveChanges;
 var
   ListProperties: TListProperties;
 begin

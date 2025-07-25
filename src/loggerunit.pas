@@ -25,7 +25,7 @@ interface
 uses
   Classes, SysUtils, LazLogger;
 
-Type
+type
   TOvoLogLevel = (llTRACE, llDEBUG, llINFO, llWARN, llERROR, llFORCED, llNO_LOG);
 
   TOnLogMessage = procedure(Sender: TObject; const Message: string) of object;
@@ -36,33 +36,38 @@ Type
 
   private
     FLevel: TOvoLogLevel;
+    FOnLevelChange: TNotifyEvent;
     FOnLogMessage: TOnLogMessage;
     function GetLogName: string;
     procedure SetLevel(AValue: TOvoLogLevel);
-    function DecodeLevel(ALevel:TOvoLogLevel): string;
+    function DecodeLevel(ALevel: TOvoLogLevel; Simple: boolean = False): string; overload;
     procedure SetLogName(AValue: string);
+    procedure SetOnLevelChange(AValue: TNotifyEvent);
     procedure SetOnLogMessage(AValue: TOnLogMessage);
   public
-    property Level : TOvoLogLevel read FLevel write SetLevel;
-    Property LogName: string read GetLogName write SetLogName;
+    property Level: TOvoLogLevel read FLevel write SetLevel;
+    property LogName: string read GetLogName write SetLogName;
     property OnLogMessage: TOnLogMessage read FOnLogMessage write SetOnLogMessage;
-    procedure LevelFromString(VerboseLevel:string);
-    Procedure SaveOldLog;
-    procedure Log(ALevel: TOvoLogLevel; const Msg: string);  overload;
+    property OnLevelChange: TNotifyEvent read FOnLevelChange write SetOnLevelChange;
+    procedure LevelFromString(const VerboseLevel: string);
+    procedure SaveOldLog;
+    function DecodeLevel: string; overload;
+    procedure Log(ALevel: TOvoLogLevel; const Msg: string); overload;
     procedure Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const); overload;
-    Constructor Create;
+    constructor Create;
   end;
 
 function OvoLogger: TOvoLogger;
 
 implementation
-Var
+
+var
   FOvoLogger: TOvoLogger;
 
 function OvoLogger: TOvoLogger;
 begin
   Result := FOvoLogger;
-  DebugLogger.CloseLogFileBetweenWrites := true;
+  DebugLogger.CloseLogFileBetweenWrites := True;
 end;
 
 { TOvoLogger }
@@ -71,6 +76,8 @@ procedure TOvoLogger.SetLevel(AValue: TOvoLogLevel);
 begin
   if FLevel = AValue then Exit;
   FLevel := AValue;
+  if Assigned(FOnLevelChange) then
+    FOnLevelChange(self);
 end;
 
 function TOvoLogger.GetLogName: string;
@@ -78,17 +85,30 @@ begin
   Result := DebugLogger.LogName;
 end;
 
-function TOvoLogger.DecodeLevel(ALevel: TOvoLogLevel): string;
+function TOvoLogger.DecodeLevel(ALevel: TOvoLogLevel; Simple: boolean = False): string;
 begin
-  Case ALevel of
-    llTRACE: Result  := '   TRACE: ';
-    llDEBUG: Result  := '   DEBUG: ';
-    llINFO: Result   := '    INFO: ';
-    llWARN: Result   := ' WARNING: ';
-    llERROR: Result  := '   ERROR: ';
-  else
-    Result := '  NOTICE: '; // llFORCED
+  case ALevel of
+    llTRACE:
+      Result := '   TRACE';
+    llDEBUG:
+      Result := '   DEBUG';
+    llINFO:
+      Result := '    INFO';
+    llWARN:
+      Result := ' WARNING';
+    llERROR:
+      Result := '   ERROR';
+    else
+      if Simple then
+        Result := '  NONE' // llFORCED only
+      else
+        Result := '  NOTICE'; // llFORCED
+
   end;
+  if Simple then
+    Result := trim(Result)
+  else
+    Result := Result + ': ';
 end;
 
 procedure TOvoLogger.SetLogName(AValue: string);
@@ -96,12 +116,17 @@ begin
   DebugLogger.LogName := AValue;
 end;
 
+procedure TOvoLogger.SetOnLevelChange(AValue: TNotifyEvent);
+begin
+  FOnLevelChange := AValue;
+end;
+
 procedure TOvoLogger.SetOnLogMessage(AValue: TOnLogMessage);
 begin
   FOnLogMessage := AValue;
 end;
 
-procedure TOvoLogger.LevelFromString(VerboseLevel: string);
+procedure TOvoLogger.LevelFromString(const VerboseLevel: string);
 begin
   if VerboseLevel = 'TRACE' then
     Level := llTRACE
@@ -110,41 +135,46 @@ begin
     Level := llDEBUG
   else
   if VerboseLevel = 'INFO' then
-     Level := llINFO
+    Level := llINFO
   else
   if VerboseLevel = 'WARNING' then
-     Level := llWARN
+    Level := llWARN
   else
   if VerboseLevel = 'NONE' then
-     Level := llNO_LOG
+    Level := llNO_LOG
   else
-     Level := llERROR;
+    Level := llERROR;
 
 end;
 
 procedure TOvoLogger.SaveOldLog;
 var
-  OldLogName : string;
+  OldLogName: string;
 begin
   try
-  If not LogName.IsEmpty and FileExists(OvoLogger.LogName) then
+    if not LogName.IsEmpty and FileExists(OvoLogger.LogName) then
     begin
-      OldLogName := ChangeFileExt(LogName,'.old.log');
+      OldLogName := ChangeFileExt(LogName, '.old.log');
       if FileExists(OldLogName) then
-         DeleteFile(OldLogName);
-      RenameFile(LogName,  OldLogName);
+        DeleteFile(OldLogName);
+      RenameFile(LogName, OldLogName);
     end;
-  Except
+  except
     // no exception here, if rename fail try at least to write in existing file
   end;
+end;
+
+function TOvoLogger.DecodeLevel: string;
+begin
+  Result := DecodeLevel(FLevel, True);
 end;
 
 procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const Msg: string);
 begin
   if ALevel < FLevel then exit;
-  DebugLogger.DebugLn(DateTimeToStr(now, true), DecodeLevel(ALevel),Msg);
+  DebugLogger.DebugLn(DateTimeToStr(now, True), DecodeLevel(ALevel), Msg);
   if Assigned(FOnLogMessage) then
-    FOnLogMessage(self, DateTimeToStr(now, true)+' '+DecodeLevel(ALevel)+' '+Msg);
+    FOnLogMessage(self, DateTimeToStr(now, True) + ' ' + DecodeLevel(ALevel) + ' ' + Msg);
 end;
 
 procedure TOvoLogger.Log(ALevel: TOvoLogLevel; const fmt: string; Args: array of const);
@@ -157,11 +187,10 @@ begin
   FLevel := llWARN;
 end;
 
-Initialization
- FOvoLogger := TOvoLogger.Create;
+initialization
+  FOvoLogger := TOvoLogger.Create;
 
-Finalization
- If Assigned(FOvoLogger) then
-   FOvoLogger.Free;
+finalization
+  if Assigned(FOvoLogger) then
+    FOvoLogger.Free;
 end.
-
