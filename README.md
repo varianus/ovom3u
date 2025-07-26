@@ -18,7 +18,7 @@ Some features are:
 
 
 ### Screenshot
-[![https://imgur.com/sqyASwN.png](https://imgur.com/sqyASwN.png)](https://imgur.com/sqyASwN.png)
+[![https://imgur.com/O8EAwkg.png](https://imgur.com/O8EAwkg)](https://imgur.com/O8EAwkg)
 
 ### License
 See [LICENSE.txt](https://github.com/varianus/ovoplayer/blob/master/LICENSE.txt)
