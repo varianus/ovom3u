@@ -53,6 +53,7 @@ msgid "<- &Back"
 msgstr ""
 
 #: tepgform.bback1.caption
+msgctxt "tepgform.bback1.caption"
 msgid "<- Back"
 msgstr ""
 
@@ -92,8 +93,14 @@ msgctxt "tepgform.detailgrid.columns[3].title.caption"
 msgid "Plot"
 msgstr ""
 
-#: tepgform.lbesearch.editlabel.caption
+#: tepgform.lbsearch.caption
+msgctxt "tepgform.lbsearch.caption"
 msgid "Search term"
+msgstr ""
+
+#: tepgform.list.caption
+msgctxt "tepgform.list.caption"
+msgid "<- Back"
 msgstr ""
 
 #: tepgform.resultgrid.columns[0].title.caption

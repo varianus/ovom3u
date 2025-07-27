@@ -23,13 +23,16 @@ type
     bNow: TBitBtn;
     bViewSearch: TButton;
     bForceReload: TButton;
+    lbSearch: TLabel;
+    lbeSearch: TEdit;
+    pnlSearch: TPanel;
     ResultGrid: TDrawGrid;
     Search: TButton;
-    lbeSearch: TLabeledEdit;
     mmPlot: TMemo;
     pcView: TPageControl;
     pnlDetail: TPanel;
     bBack: TButton;
+    List: TButton;
     stChannel: TStaticText;
     stTime: TStaticText;
     stTitle: TStaticText;

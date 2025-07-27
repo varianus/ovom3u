@@ -189,8 +189,8 @@ begin
   try
     qSearch.Transaction := ConfigObj.TR;
     qSearch.SQL.Text := 'select c.name as sChannelName, p.Stitle, p.sPlot, p.dStartTime, p.dEndTime from programme p'
-      + ' JOIN channels c on c.ID = p.idChannel'
-      + ' where stitle like :search or sPlot like :search and list = :list'
+      + ' JOIN channels c on c.ID = p.idChannel and c.list = :list'
+      + ' where p.stitle like :search or p.sPlot like :search'
       + ' order by p.dStartTime';
     qSearch.ParamByName('search').AsString := '%' + SearchTerm + '%';
     qSearch.ParamByName('list').AsInteger := FActiveList.ListID;

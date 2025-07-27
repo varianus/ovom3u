@@ -64,6 +64,7 @@ msgid "<- &Back"
 msgstr "<- &Indietro"
 
 #: tepgform.bback1.caption
+msgctxt "tepgform.bback1.caption"
 msgid "<- Back"
 msgstr "<- Indietro"
 
@@ -103,9 +104,17 @@ msgctxt "tepgform.detailgrid.columns[3].title.caption"
 msgid "Plot"
 msgstr "Trama"
 
-#: tepgform.lbesearch.editlabel.caption
+#: tepgform.lbsearch.caption
+#, fuzzy
+msgctxt "tepgform.lbsearch.caption"
 msgid "Search term"
 msgstr "Termine di ricerca"
+
+#: tepgform.list.caption
+#, fuzzy
+msgctxt "tepgform.list.caption"
+msgid "<- Back"
+msgstr "<- Indietro"
 
 #: tepgform.resultgrid.columns[0].title.caption
 msgctxt "tepgform.resultgrid.columns[0].title.caption"
@@ -437,3 +446,4 @@ msgstr ""
 #: umain.rs_welcome
 msgid "Welcome to OvoM3U"
 msgstr "Benvenuto in OvoM3U"
+

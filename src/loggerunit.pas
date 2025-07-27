@@ -67,7 +67,6 @@ var
 function OvoLogger: TOvoLogger;
 begin
   Result := FOvoLogger;
-  DebugLogger.CloseLogFileBetweenWrites := True;
 end;
 
 { TOvoLogger }
@@ -189,6 +188,7 @@ end;
 
 initialization
   FOvoLogger := TOvoLogger.Create;
+  DebugLogger.CloseLogFileBetweenWrites := True;
 
 finalization
   if Assigned(FOvoLogger) then
