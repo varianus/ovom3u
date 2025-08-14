@@ -300,8 +300,16 @@ msgstr ""
 msgid "Show Log"
 msgstr ""
 
-#: tfplayer.actviewcurrentprogram.caption
-msgid "View current  program"
+#: tfplayer.actviewcurrentprogramalways.caption
+msgid "Always"
+msgstr ""
+
+#: tfplayer.actviewcurrentprogramautomatic.caption
+msgid "Automatic"
+msgstr ""
+
+#: tfplayer.actviewcurrentprogramnever.caption
+msgid "Never"
 msgstr ""
 
 #: tfplayer.actviewlogo.caption

@@ -34,10 +34,11 @@ uses
 type
 
   { TGuiProperties }
+  TViewCurrentProgram = (vcpAlways, vcpNever, vcpAutomatic);
 
   TGuiProperties = class(TConfigParam)
     fViewLogo: boolean;
-    fViewCurrentProgram: boolean;
+    fViewCurrentProgram: TViewCurrentProgram;
   private
     FBoundsRect: TRect;
     FChannelGridWidth: integer;
@@ -45,13 +46,13 @@ type
     procedure SetBoundRect(AValue: TRect);
     procedure SetChannelGridWidth(AValue: integer);
     procedure SetEmbeddedSubForm(AValue: boolean);
-    procedure SetViewCurrentProgram(AValue: boolean);
+    procedure SetViewCurrentProgram(AValue: TViewCurrentProgram);
     procedure SetViewLogo(AValue: boolean);
   protected
     procedure InternalSave; override;
   public
     property ViewLogo: boolean read fViewLogo write SetViewLogo;
-    property ViewCurrentProgram: boolean read fViewCurrentProgram write SetViewCurrentProgram;
+    property ViewCurrentProgram: TViewCurrentProgram read fViewCurrentProgram write SetViewCurrentProgram;
     property ChannelGridWidth: integer read FChannelGridWidth write SetChannelGridWidth;
     property BoundsRect: TRect read FBoundsRect write SetBoundRect;
     property EmbeddedSubForm: boolean read FEmbeddedSubForm write SetEmbeddedSubForm;
@@ -59,27 +60,29 @@ type
     constructor Create(aOwner: TConfig; ABoundsRect: TRect); reintroduce;
   end;
 
-Resourcestring
+resourcestring
   RS_Cannot_Initialize = 'Cannot initialize libMPV';
   RS_Missing_MPV =
-          'LibMPV shared library is missing or could not be initialized.' + #10 +
-          'OvoM3U uses this library to decode and play video.' + #10 +
-          'Click the following link to open a wiki page with information on' + #10 +
-          'how to install libMPV on your platform';
+    'LibMPV shared library is missing or could not be initialized.' + #10 +
+    'OvoM3U uses this library to decode and play video.' + #10 +
+    'Click the following link to open a wiki page with information on' + #10 +
+    'how to install libMPV on your platform';
   RS_Welcome = 'Welcome to OvoM3U';
   RS_No_List = 'No list configured' + #10 +
-        'Message for configuration';
+    'Message for configuration';
 
   { TfPlayer }
 type
 
   TfPlayer = class(TForm)
+    actViewCurrentProgramNever: TAction;
+    actViewCurrentProgramAutomatic: TAction;
     actShowLog: TAction;
     actShowList: TAction;
     actShowConfig: TAction;
     actShowEpg: TAction;
     actViewLogo: TAction;
-    actViewCurrentProgram: TAction;
+    actViewCurrentProgramAlways: TAction;
     actList: TActionList;
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
@@ -89,6 +92,9 @@ type
     MemoEpg: TMemo;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
+    MenuItem3: TMenuItem;
+    MenuItem4: TMenuItem;
+    MenuItem5: TMenuItem;
     N1: TMenuItem;
     mnuSub: TMenuItem;
     mnuAudio: TMenuItem;
@@ -119,7 +125,9 @@ type
     procedure actShowConfigExecute(Sender: TObject);
     procedure actShowListExecute(Sender: TObject);
     procedure actShowLogExecute(Sender: TObject);
-    procedure actViewCurrentProgramExecute(Sender: TObject);
+    procedure actViewCurrentProgramAlwaysExecute(Sender: TObject);
+    procedure actViewCurrentProgramAutomaticExecute(Sender: TObject);
+    procedure actViewCurrentProgramNeverExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
     procedure AppPropertiesShowHint(var HintStr: string; var CanShow: boolean;
@@ -164,8 +172,9 @@ type
     SubForm: TForm;
     SubFormVisible: boolean;
     OldLogLevel: TOvoLogLevel;
+    function CanShowEpg: boolean;
     function CheckConfigAndSystem: boolean;
-    procedure CloseSubForm(Dummy: ptrint=0);
+    procedure CloseSubForm(Dummy: ptrint = 0);
     procedure ComputeGridCellSize;
     function ComputeTrackTitle(Track: TTrack): string;
     procedure ConfigDone(Sender: TObject);
@@ -238,7 +247,7 @@ begin
   Dirty := True;
 end;
 
-procedure TGuiProperties.SetViewCurrentProgram(AValue: boolean);
+procedure TGuiProperties.SetViewCurrentProgram(AValue: TViewCurrentProgram);
 begin
   if fViewCurrentProgram = AValue then Exit;
   fViewCurrentProgram := AValue;
@@ -249,13 +258,13 @@ procedure TGuiProperties.SetViewLogo(AValue: boolean);
 begin
   if fViewLogo = AValue then Exit;
   fViewLogo := AValue;
-  Dirty := True;
+  Dirty     := True;
 end;
 
 procedure TGuiProperties.InternalSave;
 begin
   Owner.WriteBoolean('gui/ViewLogo', ViewLogo);
-  Owner.WriteBoolean('gui/ViewCurrentProgram', ViewCurrentProgram);
+  Owner.WriteString('gui/ViewCurrentProgram', TEnum<TViewCurrentProgram>.ToString(ViewCurrentProgram));
   Owner.WriteInteger('gui/ChannelGridWidth', ChannelGridWidth);
   Owner.WriteRect('gui/MainForm/Position', BoundsRect);
   Owner.WriteBoolean('gui/EmbeddedSubForm', EmbeddedSubForm);
@@ -263,8 +272,8 @@ end;
 
 procedure TGuiProperties.Load;
 begin
-  ViewLogo := Owner.ReadBoolean('gui/ViewLogo', False);
-  ViewCurrentProgram := Owner.ReadBoolean('gui/ViewCurrentProgram', False);
+  ViewLogo   := Owner.ReadBoolean('gui/ViewLogo', False);
+  ViewCurrentProgram := TEnum<TViewCurrentProgram>.FromString(Owner.ReadString('gui/ViewCurrentProgram', ''), vcpAutomatic);
   ChannelGridWidth := Owner.ReadInteger('gui/ChannelGridWidth', 215);
   BoundsRect := Owner.ReadRect('gui/MainForm/Position', BoundsRect);
   EmbeddedSubForm := Owner.ReadBoolean('gui/EmbeddedSubForm', True);
@@ -295,7 +304,7 @@ begin
         mrClose:
         begin
           Result := False;
-          Retry := False;
+          Retry  := False;
           exit;
         end;
         mrRetry:
@@ -401,8 +410,8 @@ begin
   begin
     backend.InitializeEngine(GLRenderer);
     backend.mpvengine.OnLoadingState := OnLoadingState;
-    backend.mpvengine.OnPlayError := OnPlayError;
-    backend.mpvengine.OnTrackChange := OnTrackChange;
+    backend.mpvengine.OnPlayError    := OnPlayError;
+    backend.mpvengine.OnTrackChange  := OnTrackChange;
   end
   else
     OvoLogger.Log(llWARN, 'Invalid config');
@@ -423,10 +432,10 @@ begin
     Backend.OsdMessage('', False);
 end;
 
-procedure TfPlayer.OnPlayError(const msg:string);
+procedure TfPlayer.OnPlayError(const msg: string);
 begin
   Backend.MpvEngine.PlayIMG('ovoimg://empty.png');
-//  Backend.MpvEngine.PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  //  Backend.MpvEngine.PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
   Application.ProcessMessages;
   Backend.OsdMessage(msg, False);
 end;
@@ -513,7 +522,7 @@ begin
         if not ChannelSelecting then
         begin
           ChannelSelecting := True;
-          ChannelSelected := Key - $30;
+          ChannelSelected  := Key - $30;
           if Key >= $60 then
             ChannelSelected := ChannelSelected - $30;
         end
@@ -559,6 +568,12 @@ begin
         end
         else
           pnlEpg.Visible := False;
+      VK_Q:
+      begin
+        hide;
+        application.ProcessMessages;
+        Application.Terminate;
+      end;
       VK_R:
       begin
         backend.mpvengine.Stop;
@@ -677,6 +692,13 @@ begin
   pnlContainer.Invalidate;
 end;
 
+function TfPlayer.CanShowEpg: boolean;
+begin
+  Result := (GuiProperties.ViewCurrentProgram = vcpAlways) or
+    ((GuiProperties.ViewCurrentProgram = vcpAutomatic) and
+    (BackEnd.EpgData.ActiveList.EpgKind <> None));
+end;
+
 procedure TfPlayer.ChannelListDrawCell(Sender: TObject; aCol, aRow: integer; aRect: TRect; aState: TGridDrawState);
 var
   cv: TCanvas;
@@ -691,7 +713,7 @@ begin
   if not Assigned(GuiProperties) then
     exit;
   Element := fFilteredList[Arow];
-  h := 0;
+  h  := 0;
   cv := ChannelList.Canvas;
   if GuiProperties.ViewLogo then
   begin
@@ -703,12 +725,12 @@ begin
       if bmp.Height > bmp.Width then
       begin
         scale := bmp.Width / bmp.Height;
-        r := rect(arect.left, arect.Top, arect.Left + round(h * scale), aRect.Top + round(h));
+        r     := rect(arect.left, arect.Top, arect.Left + round(h * scale), aRect.Top + round(h));
       end
       else
       begin
         scale := bmp.Height / bmp.Width;
-        r := rect(arect.left, arect.Top, arect.Left + round(h), aRect.Top + round(h * scale));
+        r     := rect(arect.left, arect.Top, arect.Left + round(h), aRect.Top + round(h * scale));
       end;
       cv.StretchDraw(r, bmp.Graphic);
       bmp.Free;
@@ -727,8 +749,8 @@ begin
   cv.Font.Height := Scale96Toscreen(-14);
   if Backend.CurrentIndex = fFilteredList.Map(aRow) then
   begin
-    cv.Font.Style := [fsBold, fsUnderline];
-    cv.Font.color := clHighlightText;
+    cv.Font.Style  := [fsBold, fsUnderline];
+    cv.Font.color  := clHighlightText;
     cv.Brush.color := clHighlight;
     cv.Rectangle(aRect);
   end
@@ -737,14 +759,13 @@ begin
 
   Spacing := Scale96ToScreen(2);
   cv.TextRect(aRect, h + Spacing * 2, aRect.top + Spacing * 2, Format('%3.3d: %s', [Element.Number, Element.title]));
-  if GuiProperties.ViewCurrentProgram and
-    (BackEnd.EpgData.ActiveList.EpgKind <> None) then
+  if CanShowEPG() then
   begin
     epgInfo := BackEnd.epgdata.GetEpgInfo(fFilteredList.Map(arow), now);
     if epgInfo.HaveData then
     begin
       cv.Font.Height := Scale96ToScreen(-12);
-      cv.Font.Style := [];
+      cv.Font.Style  := [];
       Element.CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
       cv.TextRect(aRect, h + Spacing, aRect.top + scale96toscreen(25), Element.CurrProgram);
       cv.TextRect(aRect, h + spacing, aRect.top + scale96toscreen(37), EpgInfo.Title);
@@ -803,13 +824,13 @@ var
   StartTime, EndTime: TDateTime;
   i: integer;
 begin
-  StartTime := Trunc(now);
-  EndTime := Trunc(now) + 1;
+  StartTime   := Trunc(now);
+  EndTime     := Trunc(now) + 1;
   ChannelInfo := BackEnd.EpgData.GetEpgInfo(BackEnd.CurrentIndex, StartTime, EndTime);
   if Length(ChannelInfo) > 0 then
   begin
     EPGList.RowCount := Length(ChannelInfo);
-    EPGList.Visible := True;
+    EPGList.Visible  := True;
   end
   else
     EPGList.Visible := False;
@@ -824,12 +845,12 @@ var
   CurrProgram: string;
 begin
   epgInfo := ChannelInfo[Arow];
-  cv := EPGList.Canvas;
+  cv      := EPGList.Canvas;
   if epgInfo.HaveData then
   begin
     cv.Font.Height := Scale96ToScreen(-12);
     cv.Font.Style := [];
-    Spacing := Scale96ToScreen(5);
+    Spacing     := Scale96ToScreen(5);
     CurrProgram := FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True);
     //    IF (EpgInfo.StartTime <= Now) and (EpgInfo.EndTime > Now) then
     //      CurrProgram := 'LIVE '+CurrProgram;
@@ -853,7 +874,7 @@ end;
 procedure TfPlayer.FormChangeBounds(Sender: TObject);
 begin
   if SubFormVisible then
-    pnlsubform.Height := min(600, pnlcontainer.Height - 100);
+    pnlsubform.Height      := min(600, pnlcontainer.Height - 100);
   GuiProperties.BoundsRect := BoundsRect;
 end;
 
@@ -909,12 +930,12 @@ begin
 
     ChannelHintForm.UpdateDetail(epgInfo);
     HintInfo.HintWindowClass := TChannelHint;
-    CanShow := True;
+    CanShow  := True;
     CellRect := ChannelList.ClientToScreen(ChannelList.CellRect(Acol, ARow));
-    HintInfo.HintPos.X:= CellRect.Right+ GetSystemMetrics(SM_CXVSCROLL);
-    HintInfo.HintPos.y:= CellRect.Top;
-    HintStr := 'custom';
-    HintInfo.HideTimeout:=7000;
+    HintInfo.HintPos.X := CellRect.Right + GetSystemMetrics(SM_CXVSCROLL);
+    HintInfo.HintPos.y := CellRect.Top;
+    HintStr  := 'custom';
+    HintInfo.HideTimeout := 7000;
   end
   else
   begin
@@ -930,7 +951,7 @@ begin
   Filter := Default(TFilterParam);
   if cbGroups.ItemIndex > 0 then
     Filter.Group := BackEnd.M3ULoader.Groups[cbGroups.ItemIndex - 1];
-  fFilteredList := BackEnd.M3ULoader.Filter(Filter);
+  fFilteredList  := BackEnd.M3ULoader.Filter(Filter);
   ChannelList.RowCount := fFilteredList.Count;
   ChannelList.Invalidate;
   pcLists.ActivePage := tsChannels;
@@ -973,14 +994,14 @@ begin
 
 end;
 
-procedure TfPlayer.CloseSubForm(Dummy:ptrint=0);
+procedure TfPlayer.CloseSubForm(Dummy: ptrint = 0);
 begin
   SubForm.Hide;
   if GuiProperties.EmbeddedSubForm then
   begin
     pnlSubForm.Height := 0;
     BackEnd.MpvEngine.Refresh;
-    SubForm.Parent := nil;
+    SubForm.Parent    := nil;
     HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible and not SubFormVisible;
   end;
 
@@ -1004,13 +1025,24 @@ begin
   if not Assigned(GuiProperties) then
     exit;
   actViewLogo.Checked := GuiProperties.ViewLogo;
-  actViewCurrentProgram.Checked := GuiProperties.ViewCurrentProgram;
+
+  case GuiProperties.ViewCurrentProgram of
+    vcpAlways:
+      actViewCurrentProgramAlways.Checked    := True;
+    vcpNever:
+      actViewCurrentProgramNever.Checked     := True;
+    vcpAutomatic:
+      actViewCurrentProgramAutomatic.Checked := True;
+  end;
+
+  ComputeGridCellSize;
+
 end;
 
 procedure TfPlayer.ConfigDone(Sender: TObject);
 begin
   InitializeLists;
-//  fConfig.Close;
+  //  fConfig.Close;
   Application.QueueAsyncCall(CloseSubForm, 0);
 end;
 
@@ -1042,16 +1074,30 @@ begin
   EmbedSubForm(fLogViewer);
 end;
 
-procedure TfPlayer.actViewCurrentProgramExecute(Sender: TObject);
+procedure TfPlayer.actViewCurrentProgramAlwaysExecute(Sender: TObject);
 begin
-  actViewCurrentProgram.Checked := not actViewCurrentProgram.Checked;
-  GuiProperties.ViewCurrentProgram := actViewCurrentProgram.Checked;
+  actViewCurrentProgramAlways.Checked := True;
+  GuiProperties.ViewCurrentProgram    := vcpAlways;
+  ComputeGridCellSize;
+end;
+
+procedure TfPlayer.actViewCurrentProgramAutomaticExecute(Sender: TObject);
+begin
+  actViewCurrentProgramAutomatic.Checked := True;
+  GuiProperties.ViewCurrentProgram := vcpAutomatic;
+  ComputeGridCellSize;
+end;
+
+procedure TfPlayer.actViewCurrentProgramNeverExecute(Sender: TObject);
+begin
+  actViewCurrentProgramNever.Checked := True;
+  GuiProperties.ViewCurrentProgram   := vcpNever;
   ComputeGridCellSize;
 end;
 
 procedure TfPlayer.actViewLogoExecute(Sender: TObject);
 begin
-  actViewLogo.Checked := not actViewLogo.Checked;
+  actViewLogo.Checked    := not actViewLogo.Checked;
   GuiProperties.ViewLogo := actViewLogo.Checked;
   ComputeGridCellSize;
   //mcmcmcmcmc
@@ -1063,7 +1109,7 @@ procedure TfPlayer.InitializeGui(Data: ptrint);
 begin
   GuiProperties := TGuiProperties.Create(ConfigObj, BoundsRect);
   ChannelSplitter.Left := Scale96ToScreen(GuiProperties.ChannelGridWidth);
-  BoundsRect := GuiProperties.BoundsRect;
+  BoundsRect    := GuiProperties.BoundsRect;
   ComputeGridCellSize;
   InitializeLists;
   pcLists.ActivePage := tsList;
@@ -1086,9 +1132,7 @@ end;
 
 procedure TfPlayer.ComputeGridCellSize;
 begin
-  if Assigned(BackEnd.EpgData.ActiveList) and
-    GuiProperties.ViewCurrentProgram and
-    (BackEnd.EpgData.ActiveList.EpgKind <> None) then
+  if Assigned(BackEnd.EpgData.ActiveList) and CanShowEpg then
     ChannelList.DefaultRowHeight := Scale96ToScreen(64)
   else
   if GuiProperties.ViewLogo then
@@ -1129,7 +1173,7 @@ procedure TfPlayer.GLRendererMouseMove(Sender: TObject; Shift: TShiftState; X, Y
 begin
   if flgFullScreen then
   begin
-    Screen.Cursor := crdefault;
+    Screen.Cursor     := crdefault;
     HideMouse.Enabled := flgFullScreen and not pnlChannel.Visible and not SubFormVisible;
   end;
 end;
@@ -1237,7 +1281,7 @@ begin
         Result := Result + format('%dx%d ', [Track.W, track.h]);
       if track.Fps <> 0 then
         Result := Result + format('%2.3ffps ', [Track.Fps]);
-      Result := trim(Result) + ') ';
+      Result   := trim(Result) + ') ';
       if track.BitRate <> 0 then
         Result := Result + format('(%d kbps) ', [trunc(Track.BitRate / 1024)]);
     end;
@@ -1254,7 +1298,7 @@ begin
         Result := Result + format('%dch ', [Track.Channels]);
       if track.SampleRate <> 0 then
         Result := Result + format('%dHz ', [Track.SampleRate]);
-      Result := trim(Result) + ') ';
+      Result   := trim(Result) + ') ';
       if track.BitRate <> 0 then
         Result := Result + format('(%d kbps) ', [trunc(Track.BitRate / 1024)]);
     end;
@@ -1290,7 +1334,7 @@ begin
       case Track.Kind of
         trkVideo:
         begin
-          mnu := tmenuitem.Create(mnuVideo);
+          mnu     := tmenuitem.Create(mnuVideo);
           mnu.RadioItem := True;
           mnu.Checked := Track.Selected;
           mnu.Caption := ComputeTrackTitle(track);
@@ -1301,7 +1345,7 @@ begin
         end;
         trkAudio:
         begin
-          mnu := tmenuitem.Create(mnuAudio);
+          mnu     := tmenuitem.Create(mnuAudio);
           mnu.RadioItem := True;
           mnu.Checked := Track.Selected;
           mnu.Caption := ComputeTrackTitle(track);
@@ -1312,7 +1356,7 @@ begin
         end;
         trkSub:
         begin
-          mnu := tmenuitem.Create(mnuSub);
+          mnu     := tmenuitem.Create(mnuSub);
           mnu.RadioItem := True;
           mnu.Checked := Track.Selected;
           mnu.Caption := ComputeTrackTitle(track);
@@ -1348,10 +1392,10 @@ begin
     OvoLogger.Log(llDEBUG, 'Going fullscreen');
     backend.mpvengine.isRenderActive := False;
     Application.ProcessMessages;
-    pnlChannel.Visible := False;
+    pnlChannel.Visible      := False;
     ChannelSplitter.Visible := False;
-    RestoredBorderStyle := BorderStyle;
-    RestoredWindowState := WindowState;
+    RestoredBorderStyle     := BorderStyle;
+    RestoredWindowState     := WindowState;
     {$IFDEF WINDOWS}
     // On windows this is required to go fullscreen
     // but there is a bug in LCL and I get only a black screen!!
@@ -1369,10 +1413,10 @@ begin
     OvoLogger.Log(llDEBUG, 'Going windowed');
     backend.mpvengine.isRenderActive := False;
     Application.ProcessMessages;
-    pnlChannel.Visible := True;
+    pnlChannel.Visible      := True;
     ChannelSplitter.Visible := True;
     ShowWindow(Handle, ShowCommands[RestoredWindowState]);
-    BorderStyle := RestoredBorderStyle;
+    BorderStyle   := RestoredBorderStyle;
     screen.cursor := crdefauLt;
     HideMouse.Enabled := False;
     backend.mpvengine.isRenderActive := True;

@@ -11,8 +11,10 @@
 {"hash":60473,"name":"tfplayer.actshowconfig.caption","sourcebytes":[226,154,153],"value":"\u2699"},
 {"hash":19559,"name":"tfplayer.actshowepg.caption","sourcebytes":[69,112,103],"value":"Epg"},
 {"hash":341471,"name":"tfplayer.actviewlogo.caption","sourcebytes":[76,111,103,111],"value":"Logo"},
-{"hash":63339117,"name":"tfplayer.actviewcurrentprogram.caption","sourcebytes":[86,105,101,119,32,99,117,114,114,101,110,116,32,32,112,114,111,103,114,97,109],"value":"View current  program"},
+{"hash":75749635,"name":"tfplayer.actviewcurrentprogramalways.caption","sourcebytes":[65,108,119,97,121,115],"value":"Always"},
 {"hash":110463316,"name":"tfplayer.actshowlist.caption","sourcebytes":[83,104,111,119,32,76,105,115,116],"value":"Show List"},
 {"hash":258562247,"name":"tfplayer.actshowlog.caption","sourcebytes":[83,104,111,119,32,76,111,103],"value":"Show Log"},
+{"hash":5557442,"name":"tfplayer.actviewcurrentprogramnever.caption","sourcebytes":[78,101,118,101,114],"value":"Never"},
+{"hash":191087155,"name":"tfplayer.actviewcurrentprogramautomatic.caption","sourcebytes":[65,117,116,111,109,97,116,105,99],"value":"Automatic"},
 {"hash":236582125,"name":"tfplayer.menuitem2.caption","sourcebytes":[67,117,114,114,101,110,116,32,80,114,111,103,114,97,109],"value":"Current Program"}
 ]}

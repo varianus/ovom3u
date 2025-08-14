@@ -8,6 +8,7 @@ object fListAdd: TfListAdd
   Caption = 'Add list'
   ClientHeight = 347
   ClientWidth = 474
+  LCLVersion = '4.99.0.0'
   object leList: TLabeledEdit
     Left = 24
     Height = 27

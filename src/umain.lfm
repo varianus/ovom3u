@@ -8,7 +8,6 @@ object fPlayer: TfPlayer
   ClientWidth = 1087
   KeyPreview = True
   Menu = MainMenu1
-  LCLVersion = '4.99.0.0'
   OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
@@ -93,7 +92,7 @@ object fPlayer: TfPlayer
         OnDrawCell = EPGListDrawCell
         OnSelectCell = EPGListSelectCell
         ColWidths = (
-          210
+          193
         )
       end
       object Panel2: TPanel
@@ -256,7 +255,7 @@ object fPlayer: TfPlayer
           OnGetCellHint = ChannelListGetCellHint
           OnKeyDown = ChannelListKeyDown
           ColWidths = (
-            207
+            200
           )
         end
       end
@@ -316,30 +315,49 @@ object fPlayer: TfPlayer
   object actList: TActionList
     OnUpdate = actListUpdate
     Left = 200
-    Top = 80
+    Top = 79
     object actShowConfig: TAction
+      Category = 'SubForm'
       Caption = '⚙'
       OnExecute = actShowConfigExecute
     end
     object actShowEpg: TAction
+      Category = 'SubForm'
       Caption = 'Epg'
       OnExecute = actShowEpgExecute
     end
     object actViewLogo: TAction
+      Category = 'Interface'
       Caption = 'Logo'
       OnExecute = actViewLogoExecute
     end
-    object actViewCurrentProgram: TAction
-      Caption = 'View current  program'
-      OnExecute = actViewCurrentProgramExecute
+    object actViewCurrentProgramAlways: TAction
+      Category = 'Interface'
+      Caption = 'Always'
+      GroupIndex = 1
+      OnExecute = actViewCurrentProgramAlwaysExecute
     end
     object actShowList: TAction
+      Category = 'SubForm'
       Caption = 'Show List'
       OnExecute = actShowListExecute
     end
     object actShowLog: TAction
+      Category = 'SubForm'
       Caption = 'Show Log'
       OnExecute = actShowLogExecute
+    end
+    object actViewCurrentProgramNever: TAction
+      Category = 'Interface'
+      Caption = 'Never'
+      GroupIndex = 1
+      OnExecute = actViewCurrentProgramNeverExecute
+    end
+    object actViewCurrentProgramAutomatic: TAction
+      Category = 'Interface'
+      Caption = 'Automatic'
+      GroupIndex = 1
+      OnExecute = actViewCurrentProgramAutomaticExecute
     end
   end
   object pmuView: TPopupMenu
@@ -349,8 +367,16 @@ object fPlayer: TfPlayer
       Action = actViewLogo
     end
     object MenuItem2: TMenuItem
-      Action = actViewCurrentProgram
       Caption = 'Current Program'
+      object MenuItem3: TMenuItem
+        Action = actViewCurrentProgramAutomatic
+      end
+      object MenuItem4: TMenuItem
+        Action = actViewCurrentProgramAlways
+      end
+      object MenuItem5: TMenuItem
+        Action = actViewCurrentProgramNever
+      end
     end
     object N1: TMenuItem
       Caption = '-'
