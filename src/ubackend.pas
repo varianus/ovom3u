@@ -24,7 +24,7 @@ interface
 
 uses
   Classes, SysUtils, fptimer, um3uloader, epg, Config, MPV_Engine, LoggerUnit,
-  GeneralFunc, BaseTypes, OpenGLContext
+  GeneralFunc, BaseTypes, Controls
   {$IFDEF USE_LIBCEC}, cec_intf {$ENDIF}
   {$IFDEF USE_MMKEYS}, MultimediaKeys{$ENDIF}
   {$IFDEF USE_MPRIS2}, mpris2{$ENDIF}
@@ -89,7 +89,7 @@ type
     procedure ShowEpg;
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure LoadList(AList: TM3UList);
-    function InitializeEngine(Renderer: TOpenGLControl): boolean;
+    function InitializeEngine(Renderer: TwinControl): boolean;
     procedure Play(index: integer);
     procedure SwapChannel;
   public
@@ -168,7 +168,7 @@ begin
 end;
 
 
-function TBackend.InitializeEngine(Renderer: TOpenGLControl): boolean;
+function TBackend.InitializeEngine(Renderer: TwinControl): boolean;
 begin
   mpvengine := TMPVEngine.Create;
   Result    := MpvEngine.Initialize(Renderer);

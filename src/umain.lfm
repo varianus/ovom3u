@@ -33,20 +33,6 @@ object fPlayer: TfPlayer
     TabOrder = 1
     OnMouseMove = pnlContainerMouseMove
     OnPaint = pnlContainerPaint
-    object GLRenderer: TOpenGLControl
-      Left = 0
-      Height = 511
-      Top = 0
-      Width = 656
-      Align = alClient
-      OpenGLMajorVersion = 2
-      OpenGLMinorVersion = 1
-      OnChangeBounds = GLRendererChangeBounds
-      OnDblClick = GLRendererDblClick
-      OnMouseMove = GLRendererMouseMove
-      PopupMenu = pmPlayer
-      Visible = False
-    end
     object pnlSubForm: TPanel
       Left = 0
       Height = 1
@@ -54,7 +40,7 @@ object fPlayer: TfPlayer
       Width = 868
       Align = alBottom
       ParentBackground = False
-      TabOrder = 1
+      TabOrder = 0
     end
     object pnlEpg: TPanel
       Left = 656
@@ -66,7 +52,7 @@ object fPlayer: TfPlayer
       ClientHeight = 511
       ClientWidth = 212
       ParentBackground = False
-      TabOrder = 2
+      TabOrder = 1
       Visible = False
       object EPGList: TDrawGrid
         Left = 1
@@ -118,6 +104,20 @@ object fPlayer: TfPlayer
           TabOrder = 0
         end
       end
+    end
+    object GLRenderer: TPanel
+      Left = 0
+      Height = 511
+      Top = 0
+      Width = 656
+      Align = alClient
+      ParentBackground = False
+      PopupMenu = pmPlayer
+      TabOrder = 2
+      Visible = False
+      OnChangeBounds = GLRendererChangeBounds
+      OnDblClick = GLRendererDblClick
+      OnMouseMove = GLRendererMouseMove
     end
   end
   object pnlChannel: TPanel

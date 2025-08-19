@@ -283,6 +283,11 @@
         <Filename Value="images_handler.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="paslibvlcunit.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="PasLibVlcUnit"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

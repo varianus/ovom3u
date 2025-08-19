@@ -87,6 +87,7 @@ type
     AppProperties: TApplicationProperties;
     ChannelList: TDrawGrid;
     EPGList: TDrawGrid;
+    GLRenderer: TPanel;
     lvLists: TListView;
     MainMenu1: TMainMenu;
     MemoEpg: TMemo;
@@ -99,7 +100,6 @@ type
     mnuSub: TMenuItem;
     mnuAudio: TMenuItem;
     mnuVideo: TMenuItem;
-    GLRenderer: TOpenGLControl;
     ChannelTimer: TTimer;
     Panel2: TPanel;
     pcLists: TPageControl;
@@ -1191,6 +1191,9 @@ end;
 
 procedure TfPlayer.pmPlayerPopup(Sender: TObject);
 begin
+  backend.mpvengine.LoadTracks;
+  LoadTracks;
+
   if mnuVideo.Count = 0 then
     mnuVideo.Enabled := False;
   if mnuAudio.Count = 0 then
@@ -1263,8 +1266,6 @@ begin
   begin
     GLRenderer.Visible := True;
     fLastMessage := '';
-    backend.mpvengine.LoadTracks;
-    LoadTracks;
   end;
 end;
 
