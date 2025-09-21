@@ -65,11 +65,9 @@ resourcestring
   RS_Missing_MPV =
     'LibMPV shared library is missing or could not be initialized.' + #10 +
     'OvoM3U uses this library to decode and play video.' + #10 +
-    'Click the following link to open a wiki page with information on' + #10 +
-    'how to install libMPV on your platform';
+    'Click the following link to open a wiki page with information on' + #10 + 'how to install libMPV on your platform';
   RS_Welcome = 'Welcome to OvoM3U';
-  RS_No_List = 'No list configured' + #10 +
-    'Message for configuration';
+  RS_No_List = 'No list configured' + #10 + 'Message for configuration';
 
   { TfPlayer }
 type
@@ -130,8 +128,7 @@ type
     procedure actViewCurrentProgramNeverExecute(Sender: TObject);
     procedure actViewLogoExecute(Sender: TObject);
     procedure AppPropertiesException(Sender: TObject; E: Exception);
-    procedure AppPropertiesShowHint(var HintStr: string; var CanShow: boolean;
-      var HintInfo: THintInfo);
+    procedure AppPropertiesShowHint(var HintStr: string; var CanShow: boolean; var HintInfo: THintInfo);
     procedure cbGroupsDblClick(Sender: TObject);
     procedure cbGroupsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure ChannelListDblClick(Sender: TObject);
@@ -462,6 +459,7 @@ var
   Pass: boolean;
   channel: integer;
   ExtendedKey: boolean;
+  CurrTitle: string;
 begin
   Pass := False;
   if (key and $300) = $300 then
@@ -533,7 +531,12 @@ begin
             ChannelSelected := ChannelSelected - $30;
 
         end;
-        Backend.OsdMessage(IntToStr(ChannelSelected), False);
+        channel:= BackEnd.MapChannel(ChannelSelected);
+        if channel <> -1 then
+          CurrTitle:= BackEnd.M3ULoader[channel].title
+        else
+          CurrTitle:='';;
+        Backend.OsdMessage(IntToStr(ChannelSelected) +' {\s}'+CurrTitle, False);
         ChannelTimer.Enabled := True;
       end;
       VK_B:
@@ -694,8 +697,7 @@ end;
 
 function TfPlayer.CanShowEpg: boolean;
 begin
-  Result := (GuiProperties.ViewCurrentProgram = vcpAlways) or
-    ((GuiProperties.ViewCurrentProgram = vcpAutomatic) and
+  Result := (GuiProperties.ViewCurrentProgram = vcpAlways) or ((GuiProperties.ViewCurrentProgram = vcpAutomatic) and
     (BackEnd.EpgData.ActiveList.EpgKind <> None));
 end;
 
@@ -806,14 +808,12 @@ procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
   begin
-    if BackEnd.M3ULoader.ActiveList.UseChno then
-      ChannelSelected := BackEnd.M3ULoader.ItemByChno(ChannelSelected)
-    else
-      ChannelSelected := ChannelSelected - 1;
+    ChannelSelected:=BackEnd.MapChannel(ChannelSelected);
 
     ChannelSelecting := False;
     Backend.OsdMessage('', False);
-    Play(ChannelSelected);
+    if ChannelSelected <> -1 then
+      Play(ChannelSelected);
 
   end;
   ChannelTimer.Enabled := False;
@@ -907,8 +907,7 @@ begin
   end;
 end;
 
-procedure TfPlayer.AppPropertiesShowHint(var HintStr: string;
-  var CanShow: boolean; var HintInfo: THintInfo);
+procedure TfPlayer.AppPropertiesShowHint(var HintStr: string; var CanShow: boolean; var HintInfo: THintInfo);
 var
   ACol, ARow: integer;
   Element: TM3UItem;
@@ -1151,10 +1150,14 @@ begin
 end;
 
 procedure TfPlayer.Play(Row: integer);
+var
+  chNo :integer;
 begin
   BackEnd.Play(Row);
   ChannelList.Invalidate;
-  Caption := format('%3.3d %s', [Row + 1, BackEnd.M3ULoader[Backend.CurrentIndex].title]);
+  Chno := BackEnd.MapIndex(Row);
+
+  Caption := format('%3.3d %s', [Chno, BackEnd.M3ULoader[Backend.CurrentIndex].title]);
   if pnlEpg.Visible then
   begin
     LoadDailyEpg;

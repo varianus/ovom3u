@@ -87,6 +87,8 @@ type
   public
     PluginsProperties: TPluginsProperties;
     procedure ShowEpg;
+    Function MapChannel(Index:integer):integer;
+    Function MapIndex(Index:integer):integer;
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure LoadList(AList: TM3UList);
     function InitializeEngine(Renderer: TOpenGLControl): boolean;
@@ -189,6 +191,7 @@ end;
 procedure TBackend.Play(index: integer);
 var
   fLastMessage: string;
+  ChNum:Integer;
 begin
 
   if (Index > M3ULoader.Count) or (Index < 0) then
@@ -211,8 +214,12 @@ begin
   PreviousIndex := CurrentIndex;
   CurrentIndex  := Index;
   mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
+  if BackEnd.M3ULoader.ActiveList.UseChno then
+     ChNum:= BackEnd.M3ULoader[CurrentIndex].tvg_chno
+  else
+     ChNum:= index +1;
   Loading      := True;
-  fLastMessage := format('Load: %3.3d %s', [CurrentIndex + 1, BackEnd.M3ULoader[CurrentIndex].title]);
+  fLastMessage := format('{\s}Load: {\n}%3.3d %s', [ChNum, BackEnd.M3ULoader[CurrentIndex].title]);
   OsdMessage(fLastMessage);
   if Assigned(FOnPlay) then
     FOnPlay(Self);
@@ -239,6 +246,23 @@ begin
   else
     OSDTimerTimer(self);
 
+end;
+
+function TBackend.MapChannel(Index: integer): integer;
+begin
+  if M3ULoader.ActiveList.UseChno then
+    Result := BackEnd.M3ULoader.ItemByChno(Index)
+  else
+    Result := Index - 1;
+
+end;
+
+function TBackend.MapIndex(Index: integer): integer;
+begin
+  if M3ULoader.ActiveList.UseChno then
+    Result := BackEnd.M3ULoader.Items[Index].tvg_chno
+  else
+    Result := Index + 1;
 end;
 
 procedure TBackend.OSDTimerTimer(Sender: TObject);

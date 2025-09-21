@@ -117,7 +117,7 @@ type
     Procedure UpdateLogLevel;
     procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
-    procedure OsdMessage(msg: string = '');
+    procedure OsdMessage(const msg: string='');
     procedure ShowStats;
     procedure OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
     procedure Play(mrl: string);
@@ -282,20 +282,19 @@ begin
     mpv_set_option_string(fHandle^, 'msg-level', PChar('all=' + GetLevelFromLogger));
     mpv_initialize(fHandle^);
 
-    mpv_stream_cb_add_ro(fHandle^, 'ovoimg', self, @openfn);
-    ClientVersion := mpv_client_api_version;
-
     fdecoupler    := TDecoupler.Create;
     fdecoupler.OnCommand := ReceivedCommand;
     ServerVersion := mpv_get_property_string(fHandle^, 'mpv-version');
+    mpv_stream_cb_add_ro(fHandle^, 'ovoimg', self, @openfn);
+    ClientVersion := mpv_client_api_version;
+
     OvoLogger.Log(llFORCED, StrPas(ServerVersion));
 
+    GLRenderControl := Renderer;
     mpv_observe_property(fHandle^, 0, 'aid', MPV_FORMAT_INT64);
     mpv_observe_property(fHandle^, 0, 'sid', MPV_FORMAT_INT64);
     mpv_observe_property(fHandle^, 0, 'core-idle', MPV_FORMAT_FLAG);
     mpv_set_wakeup_callback(fhandle^, @LibMPVEvent, self);
-
-    GLRenderControl := Renderer;
 
     Application.QueueAsyncCall(InitRenderer, 0);
 
@@ -330,8 +329,8 @@ begin
 
   if Assigned(fHandle) then
   begin
-    RenderObj.Free;
     mpv_set_wakeup_callback(fhandle^, nil, self);
+    RenderObj.Free;
     mpv_terminate_destroy(fhandle^);
   end;
   if Assigned(fdecoupler) then
@@ -676,7 +675,7 @@ begin
 
 end;
 
-procedure TMPVEngine.OsdMessage(msg: string = '');
+procedure TMPVEngine.OsdMessage(const msg: string = '');
 var
   num: int64;
   Node: mpv_node;
@@ -684,9 +683,12 @@ var
   Keys: array of pchar;
   values: mpv_node_array;
   res: mpv_node;
+  msgFix:string;
 begin
   if ClientVersion <= $00010065 then
   begin
+    msgFix:= StringReplace(msg,'{\s}','',[rfReplaceAll]);
+    msgFix:= StringReplace(msgFix,'{\n}','',[rfReplaceAll]);
     num := 1;
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
@@ -694,10 +696,13 @@ begin
     mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
     num := 0;
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
-    mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msg));
+    mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msgFix));
   end
   else
   begin
+    msgFix:= StringReplace(msg,'{\s}','{\fscx50\fscy50}',[rfReplaceAll]);
+    msgFix:= StringReplace(msgFix,'{\n}','{\fscx100\fscy100}',[rfReplaceAll]);
+
     SetLength(Keys, 4);
     Keys[0]      := 'name';
     values[0].format := MPV_FORMAT_STRING;
@@ -707,13 +712,10 @@ begin
     values[1].u.int64_ := 1;
     Keys[2]      := 'format';
     values[2].format := MPV_FORMAT_STRING;
-    //  if True then
     values[2].u.string_ := 'ass-events';
-    //   else
-    //     values[2].u.string_ := 'none';
     Keys[3]      := 'data';
     values[3].format := MPV_FORMAT_STRING;
-    values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msg]));
+    values[3].u.string_ := PChar(format('{\bord1\an7}%s', [msgFix]));
     List.num     := 4;
     List.keys    := @Keys[0];
     List.values  := @values[0];
@@ -767,7 +769,7 @@ begin
     values[3].format := MPV_FORMAT_STRING;
 
     // \3c&HFFFFFF&\3a&H80&
-    values[3].u.string_ := PChar(format('{\bord1\an7}%s', [ChannelDesc]) + #10 +
+    values[3].u.string_ := PChar(format('{\bord1\an7}\fscx100\fscy100}%s', [ChannelDesc]) + #10 +
       format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
       [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
 
