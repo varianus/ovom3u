@@ -232,7 +232,7 @@ const
     'PRAGMA count_changes = 0;',
     'PRAGMA encoding = "UTF-8";'
     );
-  CURRENTDBVERSION = 4;
+  CURRENTDBVERSION = 5;
 
   CREATECONFIGTABLE1 =
     'CREATE TABLE config ('
@@ -248,6 +248,7 @@ const
     + ',GetLogo INTEGER'
     + ',EPGFromM3U INTEGER'
     + ',EPG VARCHAR'
+    + ',SortOrder INTEGER'
     + ',PRIMARY KEY("ID" AUTOINCREMENT))';
   CREATECONFIGTABLE2 =
     ' INSERT INTO config (Version) VALUES(1);';
@@ -890,13 +891,23 @@ procedure TConfig.UpgradeDBStructure(LoadedDBVersion: integer);
 const
   ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
   ToV4_1 = 'ALTER TABLE "m3ulists" add COLUMN "EPGFromM3U" integer NULL;';
+  ToV5_1 = 'ALTER TABLE "m3ulists" add COLUMN "SortOrder" integer NULL;';
+  ToV5_2 = 'UPDATE "m3ulists" set SortOrder = ID;';
 
-  UPDATESTATUS = 'UPDATE confid SET Version = %d;';
+  UPDATESTATUS = 'UPDATE config SET Version = %d;';
 var
   MustUpdate: boolean;
 begin
   MustUpdate := False;
   OvoLogger.Log(llINFO, 'Upgrading db version from %d to %d:', [LoadedDBVersion, CURRENTDBVERSION]);
+
+  if LoadedDBVersion < 5 then
+  begin
+    fDB.ExecuteDirect(ToV5_1);
+    fDB.ExecuteDirect(ToV5_2);
+    MustUpdate := True;
+    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+  end;
   if LoadedDBVersion < 4 then
   begin
     fDB.ExecuteDirect(ToV4_1);
@@ -939,7 +950,7 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U FROM m3ulists order by ID;';
+    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U FROM m3ulists order by SortOrder;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
     begin
