@@ -70,6 +70,7 @@ type
     FEPGUrl: string;
     FListID: integer;
     FName: string;
+    FSortOrder: integer;
     FUseChno: boolean;
     procedure SetChannelsDownloadLogo(AValue: boolean);
     procedure SetChannelsFileName(AValue: string);
@@ -78,7 +79,11 @@ type
     procedure SetEPGUrl(AValue: string);
     procedure SetListID(AValue: integer);
     procedure SetName(AValue: string);
+    procedure SetSortOrder(AValue: integer);
     procedure SetUseChno(AValue: boolean);
+  public
+  const
+    ALL_FIELDS = 'ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U, SortOrder';
   public
     property ListID: integer read FListID write SetListID;
     property Name: string read FName write SetName;
@@ -87,8 +92,10 @@ type
     property ChannelsUrl: string read FChannelsUrl write SetChannelsUrl;
     property UseChno: boolean read FUseChno write SetUseChno;
     property EPGFromM3U: boolean read FEPGFromM3U write SetEPGFromM3U;
+    property SortOrder: integer read FSortOrder write SetSortOrder;
     function ChannelKind: TProviderKind;
     function EpgKind: TProviderKind;
+    procedure Load(Query: TSQLQuery); overload;
     procedure Load(List: integer); overload;
     procedure Load; overload;
     constructor Create(const NewName: string); overload;
@@ -908,6 +915,7 @@ begin
     MustUpdate := True;
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
   end;
+
   if LoadedDBVersion < 4 then
   begin
     fDB.ExecuteDirect(ToV4_1);
@@ -950,19 +958,12 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'SELECT ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U FROM m3ulists order by SortOrder;';
+    tmpQuery.SQL.Text := 'SELECT ' + TM3UList.ALL_FIELDS + ' FROM m3ulists order by SortOrder;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
     begin
       wItem := TM3UList.Create;
-      wItem.ListID := tmpQuery.FieldByName('ID').AsInteger;
-      wItem.Name := tmpQuery.FieldByName('Name').AsString;
-      wItem.ChannelsUrl := tmpQuery.FieldByName('Position').AsString;
-      wItem.UseChno := tmpQuery.FieldByName('UseNumber').AsBoolean;
-      wItem.ChannelsDownloadLogo := tmpQuery.FieldByName('GetLogo').AsBoolean;
-      wItem.EPGUrl := tmpQuery.FieldByName('EPG').AsString;
-      wItem.EPGFromM3U := tmpQuery.FieldByName('EPGFromM3U').AsBoolean;
-
+      wItem.Load(tmpQuery);
       Add(wItem);
       tmpQuery.Next;
     end;
@@ -983,8 +984,8 @@ begin
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U) ' +
-      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :EPGFromM3U);';
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (' + TM3UList.ALL_FIELDS + ') ' +
+      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :EPGFromM3U, :SortOrder);';
     for wItem in self do
     begin
       if wItem.ListID = 0 then
@@ -998,6 +999,7 @@ begin
       tmpQuery.ParamByName('GetLogo').AsBoolean := wItem.ChannelsDownloadLogo;
       tmpQuery.ParamByName('EPG').AsString := wItem.EPGUrl;
       tmpQuery.ParamByName('EPGFromM3U').AsBoolean := wItem.EPGFromM3U;
+      tmpQuery.ParamByName('SortOrder').AsInteger := wItem.SortOrder;
       tmpQuery.ExecSQL;
     end;
 
@@ -1093,14 +1095,14 @@ var
   tmpQuery: TSQLQuery;
   wItem: TM3UList;
   isNew: boolean;
-  i: Integer;
+  i: integer;
 begin
   tmpQuery := TSQLQuery.Create(fOwner.fDB);
   try
     tmpQuery.DataBase := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG) ' +
-      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG);';
+    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG, SortOrder) ' +
+      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :SortOrder);';
     if List.ListID = 0 then
       tmpQuery.ParamByName('ID').Value := Null
     else
@@ -1111,8 +1113,9 @@ begin
     tmpQuery.ParamByName('UseNumber').AsBoolean := List.UseChno;
     tmpQuery.ParamByName('GetLogo').AsBoolean := List.ChannelsDownloadLogo;
     tmpQuery.ParamByName('EPG').AsString := List.EPGUrl;
+    tmpQuery.ParamByName('sortOrder').AsInteger := List.SortOrder;
     tmpQuery.ExecSQL;
-    isNew := false;
+    isNew := False;
     if List.ListID = 0 then
     begin
       List.ListID := fOwner.fDB.GetInsertID;
@@ -1121,12 +1124,14 @@ begin
         'VALUES (:LIST, 0, 0, 0);';
       tmpQuery.ParamByName('LIST').AsInteger := List.ListID;
       tmpQuery.ExecSQL;
+      tmpQuery.SQL.Text := 'UPDATE m3ulists set SortOrder = ID where ID = :LIST;';
+      tmpQuery.ParamByName('LIST').AsInteger := List.ListID;
+      tmpQuery.ExecSQL;
+
     end;
 
     if isNew then
-    begin
-      Add(List);
-    end
+      Add(List)
     else
       for i := 0 to Count - 1 do
         if Items[i].ListID = List.ListID then
@@ -1142,7 +1147,7 @@ end;
 function TListsManager.ListDelete(List: TM3UList): boolean;
 var
   q: TSQLQuery;
-  i: Integer;
+  i: integer;
 begin
   Result := False;
   q := TSQLQuery.Create(fOwner.fDB);
@@ -1168,9 +1173,7 @@ begin
       Result := True;
       for i := 0 to Count - 1 do
         if Items[i].ListID = List.ListID then
-        begin
           Delete(I);
-        end;
 
     except
       fowner.fTR.RollbackRetaining;
@@ -1226,6 +1229,12 @@ begin
   FName := AValue;
 end;
 
+procedure TM3UList.SetSortOrder(AValue: integer);
+begin
+  if FSortOrder = AValue then Exit;
+  FSortOrder := AValue;
+end;
+
 procedure TM3UList.SetUseChno(AValue: boolean);
 begin
   if FUseChno = AValue then Exit;
@@ -1251,6 +1260,18 @@ begin
     Result := Local;
 end;
 
+procedure TM3UList.Load(Query: TSQLQuery);
+begin
+  FChannelsUrl := Query.FieldByName('Position').AsString;
+  FChannelsDownloadLogo := Query.FieldByName('GetLogo').AsBoolean;
+  FUseChno := Query.FieldByName('UseNumber').AsBoolean;
+  FName := Query.FieldByName('Name').AsString;
+  FEPGUrl := Query.FieldByName('EPG').AsString;
+  FEPGFromM3U := Query.FieldByName('EPGFromM3U').AsBoolean;
+  FSortOrder := Query.FieldByName('sortOrder').AsInteger;
+
+end;
+
 procedure TM3UList.Load(List: integer);
 var
   qList: TSQLQuery;
@@ -1259,17 +1280,11 @@ begin
   qList := TSQLQuery.Create(ConfigObj.DB);
   try
     qList.Transaction := ConfigObj.TR;
-    qList.SQL.Text := 'SELECT ID,Name,Position,UseNumber,GetLogo,EPG from m3ulists where ID = :list;';
+    qList.SQL.Text := 'SELECT ' + ALL_FIELDS + ' from m3ulists where ID = :list;';
     qList.ParamByName('list').AsInteger := List;
     qList.Open;
     if not qList.EOF then
-    begin
-      FChannelsUrl := qList.FieldByName('Position').AsString;
-      FChannelsDownloadLogo := qList.FieldByName('GetLogo').AsBoolean;
-      FUseChno := qList.FieldByName('UseNumber').AsBoolean;
-      FName := qList.FieldByName('Name').AsString;
-      FEPGUrl := qList.FieldByName('EPG').AsString;
-    end;
+      Load(qList);
   finally
     qList.Free;
   end;
