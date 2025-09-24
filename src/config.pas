@@ -478,7 +478,7 @@ end;
 
 constructor TConfig.Create;
 begin
-  fDirty := False;
+  fDirty      := False;
   fConfigList := TConfigList.Create(True);
 
   fExecutableDir := IncludeTrailingPathDelimiter(ProgramDirectory);
@@ -487,7 +487,7 @@ begin
     fPortableMode := True;
 
   fConfigDir := GetConfigDir;
-  fCacheDir := GetCacheDir;
+  fCacheDir  := GetCacheDir;
 
 
   if FPortableMode then
@@ -518,7 +518,7 @@ begin
   FListManager.Free;
   fTR.Commit;
   fDB.Transaction := nil;
-  fDB.Connected := False;
+  fDB.Connected   := False;
   fTR.Free;
   fDB.Free;
   inherited Destroy;
@@ -633,7 +633,7 @@ begin
   end
   else
   begin
-    Node := fConfigHolder.find(APath, True);  // fConfigHolder.Add(APath, nkArray);
+    Node      := fConfigHolder.find(APath, True);  // fConfigHolder.Add(APath, nkArray);
     node.Kind := nkArray;
     for i := 0 to Values.Count - 1 do
       node.Add('', Values[i]);
@@ -734,10 +734,10 @@ end;
 
 function TConfig.ReadRect(const APath: string; ADefault: TRect): TRect;
 begin
-  Result.Top := ReadInteger(APath + '/Top', ADefault.Top);
-  Result.Left := ReadInteger(APath + '/Left', ADefault.Left);
+  Result.Top    := ReadInteger(APath + '/Top', ADefault.Top);
+  Result.Left   := ReadInteger(APath + '/Left', ADefault.Left);
   Result.Height := ReadInteger(APath + '/Heigth', ADefault.Height);
-  Result.Width := ReadInteger(APath + '/Width', ADefault.Width);
+  Result.Width  := ReadInteger(APath + '/Width', ADefault.Width);
 end;
 
 procedure TConfig.Flush;
@@ -755,7 +755,7 @@ var
 begin
   {$ifdef UNIX}
   {$ifdef DARWIN}
-  pathRef := CFBundleCopyBundleURL(CFBundleGetMainBundle());
+  pathRef   := CFBundleCopyBundleURL(CFBundleGetMainBundle());
   pathCFStr := CFURLCopyFileSystemPath(pathRef, kCFURLPOSIXPathStyle);
   CFStringGetPascalString(pathCFStr, @pathStr, 255, CFStringGetSystemEncoding());
   CFRelease(pathRef);
@@ -896,7 +896,7 @@ end;
 
 procedure TConfig.UpgradeDBStructure(LoadedDBVersion: integer);
 const
-  ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
+  //  ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
   ToV4_1 = 'ALTER TABLE "m3ulists" add COLUMN "EPGFromM3U" integer NULL;';
   ToV5_1 = 'ALTER TABLE "m3ulists" add COLUMN "SortOrder" integer NULL;';
   ToV5_2 = 'UPDATE "m3ulists" set SortOrder = ID;';
@@ -908,12 +908,13 @@ begin
   MustUpdate := False;
   OvoLogger.Log(llINFO, 'Upgrading db version from %d to %d:', [LoadedDBVersion, CURRENTDBVERSION]);
 
-  if LoadedDBVersion < 5 then
+  if LoadedDBVersion < 3 then
   begin
-    fDB.ExecuteDirect(ToV5_1);
-    fDB.ExecuteDirect(ToV5_2);
-    MustUpdate := True;
+    fDB.ExecuteDirect('Drop table channels');
+    fDB.ExecuteDirect('Drop table programme');
+    fDB.ExecuteDirect('Drop table scans');
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+    MustUpdate := True;
   end;
 
   if LoadedDBVersion < 4 then
@@ -923,20 +924,12 @@ begin
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
   end;
 
-  if LoadedDBVersion < 3 then
+  if LoadedDBVersion < 5 then
   begin
-    fDB.ExecuteDirect('Drop table channels');
-    fDB.ExecuteDirect('Drop table programme');
-    fDB.ExecuteDirect('Drop table scans');
-    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+    fDB.ExecuteDirect(ToV5_1);
+    fDB.ExecuteDirect(ToV5_2);
     MustUpdate := True;
-  end
-  else
-  if LoadedDBVersion < 2 then
-  begin
-    fDB.ExecuteDirect(ToV2_1);
     FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
-    MustUpdate := True;
   end;
 
   CheckDBStructure;
@@ -956,9 +949,9 @@ begin
   Clear;
   tmpQuery := TSQLQuery.Create(fOwner.fDB);
   try
-    tmpQuery.DataBase := fOwner.fDB;
+    tmpQuery.DataBase    := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'SELECT ' + TM3UList.ALL_FIELDS + ' FROM m3ulists order by SortOrder;';
+    tmpQuery.SQL.Text    := 'SELECT ' + TM3UList.ALL_FIELDS + ' FROM m3ulists order by SortOrder;';
     tmpQuery.Open;
     while not tmpQuery.EOF do
     begin
@@ -982,22 +975,22 @@ var
 begin
   tmpQuery := TSQLQuery.Create(fOwner.fDB);
   try
-    tmpQuery.DataBase := fOwner.fDB;
+    tmpQuery.DataBase    := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (' + TM3UList.ALL_FIELDS + ') ' +
+    tmpQuery.SQL.Text    := 'INSERT OR REPLACE INTO m3ulists (' + TM3UList.ALL_FIELDS + ') ' +
       'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :EPGFromM3U, :SortOrder);';
     for wItem in self do
     begin
       if wItem.ListID = 0 then
-        tmpQuery.ParamByName('ID').Value := Null
+        tmpQuery.ParamByName('ID').Value     := Null
       else
         tmpQuery.ParamByName('ID').AsInteger := wItem.ListID;
 
-      tmpQuery.ParamByName('Name').AsString := wItem.Name;
+      tmpQuery.ParamByName('Name').AsString     := wItem.Name;
       tmpQuery.ParamByName('Position').AsString := wItem.ChannelsUrl;
       tmpQuery.ParamByName('UseNumber').AsBoolean := wItem.UseChno;
       tmpQuery.ParamByName('GetLogo').AsBoolean := wItem.ChannelsDownloadLogo;
-      tmpQuery.ParamByName('EPG').AsString := wItem.EPGUrl;
+      tmpQuery.ParamByName('EPG').AsString      := wItem.EPGUrl;
       tmpQuery.ParamByName('EPGFromM3U').AsBoolean := wItem.EPGFromM3U;
       tmpQuery.ParamByName('SortOrder').AsInteger := wItem.SortOrder;
       tmpQuery.ExecSQL;
@@ -1099,20 +1092,20 @@ var
 begin
   tmpQuery := TSQLQuery.Create(fOwner.fDB);
   try
-    tmpQuery.DataBase := fOwner.fDB;
+    tmpQuery.DataBase    := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
-    tmpQuery.SQL.Text := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG, SortOrder) ' +
+    tmpQuery.SQL.Text    := 'INSERT OR REPLACE INTO m3ulists (ID, Name, Position, UseNumber, GetLogo, EPG, SortOrder) ' +
       'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :SortOrder);';
     if List.ListID = 0 then
-      tmpQuery.ParamByName('ID').Value := Null
+      tmpQuery.ParamByName('ID').Value     := Null
     else
       tmpQuery.ParamByName('ID').AsInteger := List.ListID;
 
-    tmpQuery.ParamByName('Name').AsString := List.Name;
+    tmpQuery.ParamByName('Name').AsString     := List.Name;
     tmpQuery.ParamByName('Position').AsString := List.ChannelsUrl;
     tmpQuery.ParamByName('UseNumber').AsBoolean := List.UseChno;
     tmpQuery.ParamByName('GetLogo').AsBoolean := List.ChannelsDownloadLogo;
-    tmpQuery.ParamByName('EPG').AsString := List.EPGUrl;
+    tmpQuery.ParamByName('EPG').AsString      := List.EPGUrl;
     tmpQuery.ParamByName('sortOrder').AsInteger := List.SortOrder;
     tmpQuery.ExecSQL;
     isNew := False;
@@ -1150,9 +1143,9 @@ var
   i: integer;
 begin
   Result := False;
-  q := TSQLQuery.Create(fOwner.fDB);
+  q      := TSQLQuery.Create(fOwner.fDB);
   try
-    q.DataBase := fOwner.fDB;
+    q.DataBase    := fOwner.fDB;
     q.Transaction := fOwner.fTR;
     try
       q.SQL.Text := 'Delete from M3ULists where ID = :ID ';
@@ -1262,11 +1255,12 @@ end;
 
 procedure TM3UList.Load(Query: TSQLQuery);
 begin
+  FListID    := Query.FieldByName('ID').AsInteger;
   FChannelsUrl := Query.FieldByName('Position').AsString;
   FChannelsDownloadLogo := Query.FieldByName('GetLogo').AsBoolean;
-  FUseChno := Query.FieldByName('UseNumber').AsBoolean;
-  FName := Query.FieldByName('Name').AsString;
-  FEPGUrl := Query.FieldByName('EPG').AsString;
+  FUseChno   := Query.FieldByName('UseNumber').AsBoolean;
+  FName      := Query.FieldByName('Name').AsString;
+  FEPGUrl    := Query.FieldByName('EPG').AsString;
   FEPGFromM3U := Query.FieldByName('EPGFromM3U').AsBoolean;
   FSortOrder := Query.FieldByName('sortOrder').AsInteger;
 
@@ -1277,10 +1271,10 @@ var
   qList: TSQLQuery;
 begin
   FListId := List;
-  qList := TSQLQuery.Create(ConfigObj.DB);
+  qList   := TSQLQuery.Create(ConfigObj.DB);
   try
     qList.Transaction := ConfigObj.TR;
-    qList.SQL.Text := 'SELECT ' + ALL_FIELDS + ' from m3ulists where ID = :list;';
+    qList.SQL.Text    := 'SELECT ' + ALL_FIELDS + ' from m3ulists where ID = :list;';
     qList.ParamByName('list').AsInteger := List;
     qList.Open;
     if not qList.EOF then
@@ -1298,7 +1292,7 @@ end;
 constructor TM3UList.Create(const NewName: string);
 begin
   inherited Create;
-  FName := NewName;
+  FName   := NewName;
   FEPGUrl := '';
 end;
 
