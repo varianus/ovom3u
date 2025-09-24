@@ -114,14 +114,14 @@ type
     function Initialize(Renderer: TOpenGLControl): boolean;
     function IsIdle: boolean;
     procedure LoadTracks;
-    Procedure UpdateLogLevel;
+    procedure UpdateLogLevel;
     procedure SetTrack(TrackType: TTrackType; Id: integer); overload;
     procedure SetTrack(Index: integer); overload;
-    procedure OsdMessage(const msg: string='');
+    procedure OsdMessage(const msg: string = '');
     procedure ShowStats;
     procedure OsdEpg(const ChannelDesc: string; EpgInfo: REpgInfo; Show: boolean);
-    procedure Play(mrl: string);
-    procedure PlayIMG(mrl: string);
+    procedure Play(const mrl: string);
+    procedure PlayIMG(const mrl: string);
     procedure Stop;
     procedure Seek(Seconds: integer);
     function Pause: boolean;
@@ -261,7 +261,7 @@ end;
 procedure TMPVEngine.OnRenderInitialized(AValue: TObject);
 begin
   PlayIMG('ovoimg://empty.png');
-//  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
+  //  PlayIMG(ConfigObj.GetResourcesPath + 'empty.png');
 end;
 
 function TMPVEngine.Initialize(Renderer: TOpenGLControl): boolean;
@@ -376,20 +376,16 @@ begin
           OvoLogger.Log(llERROR, 'Event overflow');
         MPV_EVENT_END_FILE:
           if _mpv_event_end_file(Event^.Data^).reason = Ord(MPV_END_FILE_REASON_ERROR) then
-          begin
             if Assigned(FOnPlayError) then
               FOnPlayError(string(mpv_error_string(_mpv_event_end_file(Event^.Data^).error)));
-          end;
 
         MPV_EVENT_PLAYBACK_RESTART:
-        begin
           if not ImgMode then
           begin
             Loading := False;
             if Assigned(FOnLoadingState) then
               FOnLoadingState(self);
           end;
-        end;
         MPV_EVENT_PROPERTY_CHANGE:
         begin
           if Pmpv_event_property(Event^.Data)^.Name = 'core-idle' then
@@ -428,7 +424,7 @@ begin
 
 end;
 
-procedure TMPVEngine.Play(mrl: string);
+procedure TMPVEngine.Play(const mrl: string);
 var
   Args: array of pchar;
   ArgIdx: integer;
@@ -454,14 +450,15 @@ begin
 
 end;
 
-procedure TMPVEngine.PlayIMG(mrl: string);
+procedure TMPVEngine.PlayIMG(const mrl: string);
 var
   Args: array of pchar;
   Options: string;
   ArgIdx: integer;
-Const
+const
   BASE_OPTIONS = 'image-display-duration=inf,alpha=yes';
 begin
+  exit;
   ImgMode := True;
   args    := nil;
   setlength(args, 6);
@@ -472,7 +469,7 @@ begin
   Options := GetCustomOptions;
   if Options <> EmptyStr then
   begin
-    Args[ArgIdx] := PChar(BASE_OPTIONS +','+ Options);
+    Args[ArgIdx] := PChar(BASE_OPTIONS + ',' + Options);
     Inc(ArgIdx);
   end
   else
@@ -598,7 +595,7 @@ function TMPVEngine.IsIdle: boolean;
 begin
   Result := ImgMode;
   if not Result then
-    Result :=  GetBoolProperty('core-idle') ;
+    Result := GetBoolProperty('core-idle');
 
   if Result then
     EngineState := ENGINE_IDLE
@@ -683,13 +680,13 @@ var
   Keys: array of pchar;
   values: mpv_node_array;
   res: mpv_node;
-  msgFix:string;
+  msgFix: string;
 begin
   if ClientVersion <= $00010065 then
   begin
-    msgFix:= StringReplace(msg,'{\s}','',[rfReplaceAll]);
-    msgFix:= StringReplace(msgFix,'{\n}','',[rfReplaceAll]);
-    num := 1;
+    msgFix := StringReplace(msg, '{\s}', '', [rfReplaceAll]);
+    msgFix := StringReplace(msgFix, '{\n}', '', [rfReplaceAll]);
+    num    := 1;
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
     num := 55;
@@ -700,8 +697,8 @@ begin
   end
   else
   begin
-    msgFix:= StringReplace(msg,'{\s}','{\fscx50\fscy50}',[rfReplaceAll]);
-    msgFix:= StringReplace(msgFix,'{\n}','{\fscx100\fscy100}',[rfReplaceAll]);
+    msgFix := StringReplace(msg, '{\s}', '{\fscx50\fscy50}', [rfReplaceAll]);
+    msgFix := StringReplace(msgFix, '{\n}', '{\fscx100\fscy100}', [rfReplaceAll]);
 
     SetLength(Keys, 4);
     Keys[0]      := 'name';
