@@ -766,7 +766,7 @@ begin
     values[3].format := MPV_FORMAT_STRING;
 
     // \3c&HFFFFFF&\3a&H80&
-    values[3].u.string_ := PChar(format('{\bord1\an7}\fscx100\fscy100}%s', [ChannelDesc]) + #10 +
+    values[3].u.string_ := PChar(format('{\bord1\an7}{\fscx100\fscy100}%s', [ChannelDesc]) + #10 +
       format('{\bord1\an1}{\fscx50\fscy50}%s - {\fscx75\fscy75}{\b1}%s{\b0}\N{\fscx50\fscy50}%s',
       [FormatTimeRange(EpgInfo.StartTime, EpgInfo.EndTime, True), EpgInfo.Title, EpgInfo.Plot]));
 
