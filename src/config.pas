@@ -132,6 +132,7 @@ type
     procedure SetLastScan(ListID: int64; ScanType: string; Date: TdateTime);
     procedure ListAdd(var List: TM3UList);
     function ListDelete(List: TM3UList): boolean;
+    procedure SetOrder(ListID: int64; SortOrder: int64);
 
 
   end;
@@ -899,7 +900,9 @@ const
   //  ToV2_1 = 'ALTER TABLE "channels" add COLUMN "epgName" varchar NULL;';
   ToV4_1 = 'ALTER TABLE "m3ulists" add COLUMN "EPGFromM3U" integer NULL;';
   ToV5_1 = 'ALTER TABLE "m3ulists" add COLUMN "SortOrder" integer NULL;';
-  ToV5_2 = 'UPDATE "m3ulists" set SortOrder = ID;';
+  ToV5_2 = 'update m3ulists set sortorder = RN from '
+    + '(SELECT ID intid ,ROW_NUMBER() OVER (ORDER BY ID) AS RN FROM m3ulists)'
+    + ' where id = intid';
 
   UPDATESTATUS = 'UPDATE config SET Version = %d;';
 var
@@ -1176,6 +1179,27 @@ begin
     q.Free;
   end;
 
+end;
+
+procedure TListsManager.SetOrder(ListID: int64; SortOrder:int64);
+var
+  q: TSQLQuery;
+begin
+  q      := TSQLQuery.Create(fOwner.fDB);
+  try
+    q.DataBase    := fOwner.fDB;
+    q.Transaction := fOwner.fTR;
+    try
+      q.SQL.Text := 'update M3ULists set sortorder = :neworder where ID = :ID ';
+      q.ParamByName('ID').AsLargeInt := ListID;
+      q.ParamByName('neworder').AsLargeInt := SortOrder;
+      q.ExecSQL;
+    finally
+    end;
+
+  finally
+    q.Free;
+  end;
 end;
 
 { TM3UList }

@@ -147,12 +147,15 @@ type
     procedure FormShow(Sender: TObject);
     procedure GLRendererChangeBounds(Sender: TObject);
     procedure lvListsDblClick(Sender: TObject);
+    procedure lvListsDragDrop(Sender, Source: TObject; X, Y: integer);
+    procedure lvListsDragOver(Sender, Source: TObject; X, Y: integer; State: TDragState; var Accept: boolean);
     procedure lvListsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure LoadingTimerStartTimer(Sender: TObject);
     procedure LoadingTimerTimer(Sender: TObject);
     procedure GLRendererDblClick(Sender: TObject);
     procedure GLRendererMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
     procedure HideMouseTimer(Sender: TObject);
+    procedure lvListsStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure pmPlayerClose(Sender: TObject);
     procedure pmPlayerPopup(Sender: TObject);
     procedure pnlContainerMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
@@ -169,6 +172,7 @@ type
     SubForm: TForm;
     SubFormVisible: boolean;
     OldLogLevel: TOvoLogLevel;
+    FDragItem: TListItem;
     function CanShowEpg: boolean;
     function CheckConfigAndSystem: boolean;
     procedure CloseSubForm(Dummy: ptrint = 0);
@@ -186,6 +190,7 @@ type
     procedure OnPlayError(const msg: string);
     procedure OnTrackChange(Sender: TObject);
     procedure Play(Row: integer);
+    procedure SaveListViewOrderToDb;
     procedure SelectGroup;
     procedure SelectList;
     procedure SetLoading(AValue: boolean);
@@ -531,12 +536,13 @@ begin
             ChannelSelected := ChannelSelected - $30;
 
         end;
-        channel:= BackEnd.MapChannel(ChannelSelected);
+        channel := BackEnd.MapChannel(ChannelSelected);
         if channel <> -1 then
-          CurrTitle:= BackEnd.M3ULoader[channel].title
+          CurrTitle := BackEnd.M3ULoader[channel].title
         else
-          CurrTitle:='';;
-        Backend.OsdMessage(IntToStr(ChannelSelected) +' {\s}'+CurrTitle, False);
+          CurrTitle := '';
+        ;
+        Backend.OsdMessage(IntToStr(ChannelSelected) + ' {\s}' + CurrTitle, False);
         ChannelTimer.Enabled := True;
       end;
       VK_B:
@@ -661,14 +667,66 @@ begin
   ComputeGridCellSize;
 end;
 
+procedure TfPlayer.lvListsDragDrop(Sender, Source: TObject; X, Y: integer);
+var
+  DropItem: TListItem;
+  NewIndex: integer;
+begin
+  DropItem := lvLists.GetItemAt(X, Y);
+  if (FDragItem <> nil) and (DropItem <> nil) and (FDragItem <> DropItem) then
+  begin
+    NewIndex := DropItem.Index;
+    // Remove and insert the item at the new position
+    lvLists.Items.Move(FDragItem.Index, NewIndex);
+    lvLists.Selected := FDragItem;
+    lvLists.SetFocus;
+    //    SaveListViewOrderToDb; // implement this to update your DB
+  end;
+  FDragItem := nil;
+
+end;
+
+procedure Tfplayer.SaveListViewOrderToDb;
+var
+  i: integer;
+  SQL: string;
+  ItemID: int64;
+begin
+  for i := 0 to lvLists.Items.Count - 1 do
+  begin
+    ItemID := TM3UList(lvLists.Items[i].Data).ListID;
+    ConfigObj.ListManager.SetOrder(ItemID, i + 1);
+    TM3UList(lvLists.Items[i].Data).SortOrder := i + 1;
+  end;
+  ConfigObj.tr.CommitRetaining;
+end;
+
+procedure TfPlayer.lvListsDragOver(Sender, Source: TObject; X, Y: integer; State: TDragState; var Accept: boolean);
+begin
+  Accept := (Source = lvLists) and (FDragItem <> nil);
+end;
+
 procedure TfPlayer.lvListsKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
 begin
 
-  if (key) = VK_RETURN then
-    SelectList;
-
-  if key = VK_RIGHT then
-    pcLists.ActivePage := tsGroups;
+  case key of
+    VK_RETURN: SelectList;
+    VK_RIGHT: pcLists.ActivePage := tsGroups;
+    VK_UP: if ssCtrl in Shift then
+        if lvLists.Selected.Index - 1 >= 0 then
+        begin
+          lvLists.Items.Move(lvLists.Selected.Index, lvLists.Selected.Index - 1);
+          Key := 0;
+          SaveListViewOrderToDb;
+        end;
+    VK_Down: if ssCtrl in Shift then
+        if lvLists.Selected.Index + 1 < lvLists.Items.Count then
+        begin
+          lvLists.Items.Move(lvLists.Selected.Index, lvLists.Selected.Index + 1);
+          key := 0;
+          SaveListViewOrderToDb;
+        end;
+  end;
 
 end;
 
@@ -808,7 +866,7 @@ procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
 begin
   if ChannelSelecting then
   begin
-    ChannelSelected:=BackEnd.MapChannel(ChannelSelected);
+    ChannelSelected := BackEnd.MapChannel(ChannelSelected);
 
     ChannelSelecting := False;
     Backend.OsdMessage('', False);
@@ -937,9 +995,8 @@ begin
     HintInfo.HideTimeout := 7000;
   end
   else
-  begin
     // ChannelHintForm.Hide;
-  end;
+  ;
 end;
 
 
@@ -1151,7 +1208,7 @@ end;
 
 procedure TfPlayer.Play(Row: integer);
 var
-  chNo :integer;
+  chNo: integer;
 begin
   BackEnd.Play(Row);
   ChannelList.Invalidate;
@@ -1184,6 +1241,11 @@ end;
 procedure TfPlayer.HideMouseTimer(Sender: TObject);
 begin
   screen.cursor := crNone;
+end;
+
+procedure TfPlayer.lvListsStartDrag(Sender: TObject; var DragObject: TDragObject);
+begin
+  FDragItem := lvLists.Selected;
 end;
 
 procedure TfPlayer.pmPlayerClose(Sender: TObject);
