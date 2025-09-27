@@ -195,6 +195,7 @@ type
     procedure SelectList;
     procedure SetLoading(AValue: boolean);
     procedure OnPlay(Sender: TObject);
+    procedure SmartFocus;
 
   private
     ChannelSelected: integer;
@@ -456,6 +457,17 @@ begin
     ChannelList.Row := Idx
   else
     ChannelList.Selection := Rect(-1, -1, -1, -1);
+end;
+
+procedure TfPlayer.SmartFocus;
+begin
+  if flgFullScreen then exit;
+  if SubFormVisible then
+    SubForm.SetFocus
+  else
+    if pnlChannel.Visible then
+     TWinControl(pcLists.ActivePage.Controls[0]).SetFocus;
+
 end;
 
 
@@ -1047,6 +1059,7 @@ begin
   SubFormVisible := True;
   SubForm := AForm;
   AForm.Show;
+  SmartFocus;
 
 end;
 
@@ -1064,6 +1077,7 @@ begin
   SubForm.Close;
   SubFormVisible := False;
   SubForm := nil;
+  SmartFocus;
 
 end;
 
@@ -1486,7 +1500,7 @@ begin
     HideMouse.Enabled := False;
     backend.mpvengine.isRenderActive := True;
   end;
-
+ SmartFocus;
 end;
 
 end.
