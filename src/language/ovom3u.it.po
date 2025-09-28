@@ -57,7 +57,7 @@ msgstr "Avanti"
 
 #: tepgform.actnow.caption
 msgid "Now"
-msgstr "Ora"
+msgstr "Adesso"
 
 #: tepgform.bback.caption
 msgid "<- &Back"
@@ -74,7 +74,7 @@ msgstr "&Forza Ricarica"
 
 #: tepgform.bnow.caption
 msgid "&Now"
-msgstr "&Ora"
+msgstr "&Adesso"
 
 #: tepgform.bviewsearch.caption
 msgid "&Search..."
@@ -105,13 +105,11 @@ msgid "Plot"
 msgstr "Trama"
 
 #: tepgform.lbsearch.caption
-#, fuzzy
 msgctxt "tepgform.lbsearch.caption"
 msgid "Search term"
 msgstr "Termine di ricerca"
 
 #: tepgform.list.caption
-#, fuzzy
 msgctxt "tepgform.list.caption"
 msgid "<- Back"
 msgstr "<- Indietro"
@@ -155,11 +153,15 @@ msgid "Click a broadcast for details"
 msgstr "Clicca su una trasmissione per i dettagli"
 
 #: tepgform.tsdetail.caption
-msgid "Detail"
+#, fuzzy
+#| msgid "Detail"
+msgid "Details"
 msgstr "Dettagli"
 
 #: tepgform.tsfullguide.caption
-msgid "FullGuide"
+#, fuzzy
+#| msgid "FullGuide"
+msgid "Full Guide"
 msgstr "Guida Completa"
 
 #: tepgform.tssearch.caption
@@ -189,7 +191,7 @@ msgstr "Configurazione"
 
 #: tfconfig.cbembeddedform.caption
 msgid "Embed Config, EPG and channel list in main form"
-msgstr "Incorpora Config, EPG e lista canali nel modulo principale"
+msgstr "Incorpora Configurazione, EPG e lista canali nella finestra principale"
 
 #: tfconfig.cbhardwareacceleration.caption
 msgid "Enable hardware acceleration"
@@ -213,11 +215,11 @@ msgstr "Impostazioni"
 
 #: tfconfig.lbwarning.caption
 msgid "WARNING: The following grid allows you to set custom options for libMPV. Setting incorrect or unsupported values may make playback impossible. You need to restart ovoM3U to apply this options."
-msgstr "ATTENZIONE: La seguente griglia permette di impostare opzioni personalizzate per libMPV. Impostare valori errati o non supportati può rendere impossibile la riproduzione. È necessario riavviare ovoM3U per applicare queste opzioni."
+msgstr "ATTENZIONE: La seguente tabella consente di impostare opzioni personalizzate per libMPV. Impostare valori errati o non supportati può rendere impossibile la riproduzione. È necessario riavviare ovoM3U per applicare queste opzioni."
 
 #: tfconfig.rgkeycapturemode.caption
 msgid "Keys Capture Mode"
-msgstr "Modalità di acquisizione tasti"
+msgstr "Modalità acquisizione tasti"
 
 #: tfconfig.speedbutton1.caption
 msgctxt "tfconfig.speedbutton1.caption"
@@ -295,7 +297,7 @@ msgstr "Visualizzatore Log"
 
 #: tflogviewer.cbautoscroll.caption
 msgid "Auto scrolling"
-msgstr "Auto scorrimento"
+msgstr "Scorrimento automatico"
 
 #: tfplayer.actshowconfig.caption
 msgid "⚙"
@@ -315,15 +317,15 @@ msgstr "Mostra Log"
 
 #: tfplayer.actviewcurrentprogramalways.caption
 msgid "Always"
-msgstr ""
+msgstr "Sempre"
 
 #: tfplayer.actviewcurrentprogramautomatic.caption
 msgid "Automatic"
-msgstr ""
+msgstr "Automatico"
 
 #: tfplayer.actviewcurrentprogramnever.caption
 msgid "Never"
-msgstr ""
+msgstr "Mai"
 
 #: tfplayer.actviewlogo.caption
 msgctxt "tfplayer.actviewlogo.caption"
@@ -352,7 +354,7 @@ msgstr "Tracce Video"
 
 #: tfplayer.pnlepg.caption
 msgid "No EPG for current channel"
-msgstr "Nessun EPG disponibile per il canale corrente"
+msgstr "Nessun EPG per il canale corrente"
 
 #: tfplayer.toolbutton5.caption
 msgid "View ▼"
@@ -375,9 +377,22 @@ msgstr "Lista"
 msgid "Message"
 msgstr "Messaggio"
 
+#: ubackend.rs_loadmessage
+#, object-pascal-format
+msgid "{\\s}Load: {\\n}%3.3d %s"
+msgstr "{\\s}Carica: {\\n}%3.3d %s"
+
+#: ubackend.rs_missingaddress
+msgid "Missing Channel Address"
+msgstr "Indirizzo Canale Mancante"
+
+#: ubackend.rs_nochannel
+msgid "No channel"
+msgstr "Nessun canale"
+
 #: uconfig.rs_delete_list
 msgid "Delete list?"
-msgstr "Elimina lista?"
+msgstr "Eliminare la lista?"
 
 #: uconfig.rs_list_options
 msgid ""
@@ -389,11 +404,11 @@ msgid ""
 "EPG Source=\n"
 msgstr ""
 "Nome=\n"
-"Fonte canali=\n"
-"Utilizza numero canale da M3U=\n"
-"Scarica icona canale=\n"
-"Utilizza EPG da M3U=\n"
-"Fonte EPG=\n"
+"Sorgente canale=\n"
+"Usa numero canale da M3U=\n"
+"Scarica icone canali=\n"
+"Usa EPG da M3U=\n"
+"Sorgente EPG=\n"
 
 #: uconfig.rs_no
 msgid "No"
@@ -413,7 +428,7 @@ msgstr "EPG in caricamento"
 
 #: uepgform.rs_notavalilable
 msgid "EPG Data not available"
-msgstr "EPG non disponibile"
+msgstr "Dati EPG non disponibili"
 
 #: um3uloader.rsanygroup
 msgid "<all groups>"
@@ -449,7 +464,7 @@ msgid ""
 "Message for configuration"
 msgstr ""
 "Nessuna lista configurata\n"
-"Messaggio per configurazione"
+"Messaggio per la configurazione"
 
 #: umain.rs_welcome
 msgid "Welcome to OvoM3U"
