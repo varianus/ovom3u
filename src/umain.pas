@@ -552,8 +552,8 @@ begin
         if channel <> -1 then
           CurrTitle := BackEnd.M3ULoader[channel].title
         else
-          CurrTitle := '';
-        ;
+          CurrTitle := RS_NoChannel;
+
         Backend.OsdMessage(IntToStr(ChannelSelected) + ' {\s}' + CurrTitle, False);
         ChannelTimer.Enabled := True;
       end;
@@ -575,6 +575,14 @@ begin
         SetFullScreen;
       VK_I:
         Backend.ShowEpg;
+      VK_K:
+      begin
+        BackEnd.MpvEngine.Stop;
+        Application.ProcessMessages;
+        BackEnd.HardReset;
+        Application.ProcessMessages;
+        Play(BackEnd.CurrentIndex);
+      end;
       VK_L:
         actShowList.Execute;
       VK_M:
@@ -698,7 +706,7 @@ begin
 
 end;
 
-procedure Tfplayer.SaveListViewOrderToDb;
+procedure TfPlayer.SaveListViewOrderToDb;
 var
   i: integer;
   SQL: string;
@@ -875,15 +883,17 @@ begin
 end;
 
 procedure TfPlayer.ChannelTimerTimer(Sender: TObject);
+var
+  Channel:integer;
 begin
   if ChannelSelecting then
   begin
-    ChannelSelected := BackEnd.MapChannel(ChannelSelected);
+    Channel := BackEnd.MapChannel(ChannelSelected);
 
     ChannelSelecting := False;
     Backend.OsdMessage('', False);
-    if ChannelSelected <> -1 then
-      Play(ChannelSelected);
+    if Channel <> -1 then
+      Play(Channel);
 
   end;
   ChannelTimer.Enabled := False;

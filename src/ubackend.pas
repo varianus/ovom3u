@@ -30,6 +30,11 @@ uses
   {$IFDEF USE_MPRIS2}, mpris2{$ENDIF}
   ;
 
+resourcestring
+  RS_NoChannel = 'No channel';
+  RS_MissingAddress = 'Missing Channel Address';
+  RS_LoadMessage = '{\s}Load: {\n}%3.3d %s';
+
 type
   ExternalInput = procedure(Sender: TObject; var Key: word) of object;
 
@@ -87,13 +92,14 @@ type
   public
     PluginsProperties: TPluginsProperties;
     procedure ShowEpg;
-    Function MapChannel(Index:integer):integer;
-    Function MapIndex(Index:integer):integer;
+    function MapChannel(Index: integer): integer;
+    function MapIndex(Index: integer): integer;
     procedure OsdMessage(Message: string; TimeOut: boolean = True);
     procedure LoadList(AList: TM3UList);
     function InitializeEngine(Renderer: TOpenGLControl): boolean;
     procedure Play(index: integer);
     procedure SwapChannel;
+    procedure HardReset;
   public
     property OnExternalInput: ExternalInput read FOnExternalInput write SetOnExternalInput;
     property OnListChanged: TNotifyEvent read FOnListChanged write SetOnListChanged;
@@ -191,12 +197,12 @@ end;
 procedure TBackend.Play(index: integer);
 var
   fLastMessage: string;
-  ChNum:Integer;
+  ChNum: integer;
 begin
 
   if (Index > M3ULoader.Count) or (Index < 0) then
   begin
-    OsdMessage('No Channel', True);
+    OsdMessage(RS_NoChannel, True);
     exit;
   end;
 
@@ -205,7 +211,7 @@ begin
 
   if M3ULoader[Index].Mrl.IsEmpty then
   begin
-    OsdMessage('Missing Channel Address', True);
+    OsdMessage(RS_MissingAddress, True);
     exit;
   end;
 
@@ -215,11 +221,11 @@ begin
   CurrentIndex  := Index;
   mpvengine.Play(BackEnd.M3ULoader[CurrentIndex].Mrl);
   if BackEnd.M3ULoader.ActiveList.UseChno then
-     ChNum:= BackEnd.M3ULoader[CurrentIndex].tvg_chno
+    ChNum := BackEnd.M3ULoader[CurrentIndex].tvg_chno
   else
-     ChNum:= index +1;
-  Loading      := True;
-  fLastMessage := format('{\s}Load: {\n}%3.3d %s', [ChNum, BackEnd.M3ULoader[CurrentIndex].title]);
+    ChNum := index + 1;
+  Loading := True;
+  fLastMessage := format(RS_LoadMessage, [ChNum, BackEnd.M3ULoader[CurrentIndex].title]);
   OsdMessage(fLastMessage);
   if Assigned(FOnPlay) then
     FOnPlay(Self);
@@ -229,6 +235,21 @@ procedure TBackend.SwapChannel;
 begin
   if PreviousIndex <> -1 then
     Play(PreviousIndex);
+end;
+
+procedure TBackend.HardReset;
+var
+  Renderer: TOpenGLControl;
+begin
+
+  Renderer := MpvEngine.GLRenderControl;
+  mpvengine.Stop;
+  MpvEngine.isRenderActive := False;
+
+  sleep(100);
+  MpvEngine.Free;
+
+  InitializeEngine(Renderer);
 end;
 
 
@@ -251,7 +272,10 @@ end;
 function TBackend.MapChannel(Index: integer): integer;
 begin
   if M3ULoader.ActiveList.UseChno then
-    Result := BackEnd.M3ULoader.ItemByChno(Index)
+    Result := M3ULoader.ItemByChno(Index)
+  else
+  if index >= M3ULoader.Count then
+    Result := -1
   else
     Result := Index - 1;
 
@@ -259,8 +283,11 @@ end;
 
 function TBackend.MapIndex(Index: integer): integer;
 begin
+  if index >= M3ULoader.Count then
+    Result := -1
+  else
   if M3ULoader.ActiveList.UseChno then
-    Result := BackEnd.M3ULoader.Items[Index].tvg_chno
+    Result := M3ULoader.Items[Index].tvg_chno
   else
     Result := Index + 1;
 end;

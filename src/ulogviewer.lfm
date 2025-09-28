@@ -6,6 +6,7 @@ object fLogViewer: TfLogViewer
   Caption = 'Log Viewer'
   ClientHeight = 240
   ClientWidth = 1113
+  LCLVersion = '4.99.0.0'
   OnDestroy = FormDestroy
   object LogMemo: TMemo
     Left = 0

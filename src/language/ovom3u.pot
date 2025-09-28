@@ -142,11 +142,11 @@ msgid "Click a broadcast for details"
 msgstr ""
 
 #: tepgform.tsdetail.caption
-msgid "Detail"
+msgid "Details"
 msgstr ""
 
 #: tepgform.tsfullguide.caption
-msgid "FullGuide"
+msgid "Full Guide"
 msgstr ""
 
 #: tepgform.tssearch.caption
@@ -360,6 +360,19 @@ msgstr ""
 
 #: tmydialog.caption
 msgid "Message"
+msgstr ""
+
+#: ubackend.rs_loadmessage
+#, object-pascal-format
+msgid "{\\s}Load: {\\n}%3.3d %s"
+msgstr ""
+
+#: ubackend.rs_missingaddress
+msgid "Missing Channel Address"
+msgstr ""
+
+#: ubackend.rs_nochannel
+msgid "No channel"
 msgstr ""
 
 #: uconfig.rs_delete_list

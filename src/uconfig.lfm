@@ -22,8 +22,8 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'Channels'
-      ClientHeight = 458
-      ClientWidth = 709
+      ClientHeight = 431
+      ClientWidth = 711
       object lbLists: TListBox
         Left = 8
         Height = 251
@@ -73,7 +73,7 @@ object fConfig: TfConfig
         end
         object tbSpacer: TToolButton
           Left = 46
-          Height = 22
+          Height = 8
           Top = 0
           Style = tbsSeparator
         end
@@ -108,14 +108,14 @@ object fConfig: TfConfig
         )
         ColWidths = (
           200
-          475
+          492
         )
       end
     end
     object tsMpv: TTabSheet
       Caption = 'Mpv'
-      ClientHeight = 458
-      ClientWidth = 709
+      ClientHeight = 431
+      ClientWidth = 711
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
         AnchorSideTop.Control = lbWarning
@@ -167,8 +167,8 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'Plugins'
-      ClientHeight = 458
-      ClientWidth = 709
+      ClientHeight = 431
+      ClientWidth = 711
       object cbLibCEC: TCheckBox
         Left = 12
         Height = 19
@@ -211,7 +211,7 @@ object fConfig: TfConfig
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 62
+        ClientHeight = 63
         ClientWidth = 199
         Items.Strings = (
           'Gnome D-BUS mode'
@@ -223,8 +223,8 @@ object fConfig: TfConfig
     end
     object tsGeneral: TTabSheet
       Caption = 'General'
-      ClientHeight = 458
-      ClientWidth = 709
+      ClientHeight = 431
+      ClientWidth = 711
       object cbEmbeddedForm: TCheckBox
         Left = 24
         Height = 19
@@ -242,7 +242,7 @@ object fConfig: TfConfig
     Width = 185
     Align = alLeft
     Caption = 'Settings'
-    ClientHeight = 446
+    ClientHeight = 447
     ClientWidth = 181
     DoubleBuffered = True
     ParentDoubleBuffered = False

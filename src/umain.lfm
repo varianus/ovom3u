@@ -8,7 +8,6 @@ object fPlayer: TfPlayer
   ClientWidth = 1087
   KeyPreview = True
   Menu = MainMenu1
-  LCLVersion = '4.99.0.0'
   OnChangeBounds = FormChangeBounds
   OnClose = FormClose
   OnCreate = FormCreate
@@ -93,7 +92,7 @@ object fPlayer: TfPlayer
         OnDrawCell = EPGListDrawCell
         OnSelectCell = EPGListSelectCell
         ColWidths = (
-          210
+          193
         )
       end
       object Panel2: TPanel
@@ -133,17 +132,17 @@ object fPlayer: TfPlayer
     TabOrder = 0
     object Panel1: TPanel
       Left = 1
-      Height = 37
+      Height = 39
       Top = 1
       Width = 213
       Align = alTop
       AutoSize = True
-      ClientHeight = 37
+      ClientHeight = 39
       ClientWidth = 213
       TabOrder = 1
       object ToolButton1: TSpeedButton
         Left = 1
-        Height = 35
+        Height = 37
         Top = 1
         Width = 25
         Action = actShowConfig
@@ -153,9 +152,9 @@ object fPlayer: TfPlayer
       end
       object ToolButton2: TSpeedButton
         Left = 26
-        Height = 35
+        Height = 37
         Top = 1
-        Width = 42
+        Width = 45
         Action = actShowEpg
         Align = alLeft
         AutoSize = True
@@ -163,10 +162,10 @@ object fPlayer: TfPlayer
         ParentFont = False
       end
       object ToolButton5: TSpeedButton
-        Left = 140
-        Height = 35
+        Left = 141
+        Height = 37
         Top = 1
-        Width = 72
+        Width = 71
         Align = alRight
         AutoSize = True
         Caption = 'View ▼'
@@ -178,8 +177,8 @@ object fPlayer: TfPlayer
     end
     object pcLists: TPageControl
       Left = 1
-      Height = 473
-      Top = 38
+      Height = 471
+      Top = 40
       Width = 213
       ActivePage = tsList
       Align = alClient
@@ -187,13 +186,13 @@ object fPlayer: TfPlayer
       TabOrder = 0
       object tsList: TTabSheet
         Caption = 'List'
-        ClientHeight = 445
-        ClientWidth = 205
+        ClientHeight = 436
+        ClientWidth = 207
         object lvLists: TListView
           Left = 0
-          Height = 445
+          Height = 436
           Top = 0
-          Width = 205
+          Width = 207
           Align = alClient
           AutoWidthLastColumn = True
           BorderStyle = bsNone
@@ -213,31 +212,32 @@ object fPlayer: TfPlayer
       end
       object tsGroups: TTabSheet
         Caption = 'Groups'
-        ClientHeight = 445
-        ClientWidth = 205
+        ClientHeight = 436
+        ClientWidth = 207
         object cbGroups: TListBox
           Left = 0
-          Height = 445
+          Height = 436
           Top = 0
-          Width = 205
+          Width = 207
           Align = alClient
           Font.Height = -14
           ItemHeight = 0
           ParentFont = False
           TabOrder = 0
+          TopIndex = -1
           OnDblClick = cbGroupsDblClick
           OnKeyDown = cbGroupsKeyDown
         end
       end
       object tsChannels: TTabSheet
         Caption = 'Channels'
-        ClientHeight = 445
-        ClientWidth = 205
+        ClientHeight = 436
+        ClientWidth = 207
         object ChannelList: TDrawGrid
           Left = 0
-          Height = 445
+          Height = 436
           Top = 0
-          Width = 205
+          Width = 207
           Align = alClient
           AutoFillColumns = True
           ColCount = 1
@@ -259,7 +259,7 @@ object fPlayer: TfPlayer
           OnGetCellHint = ChannelListGetCellHint
           OnKeyDown = ChannelListKeyDown
           ColWidths = (
-            205
+            200
           )
         end
       end

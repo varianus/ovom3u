@@ -458,7 +458,6 @@ var
 const
   BASE_OPTIONS = 'image-display-duration=inf,alpha=yes';
 begin
-  exit;
   ImgMode := True;
   args    := nil;
   setlength(args, 6);

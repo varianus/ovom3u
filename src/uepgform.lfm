@@ -81,14 +81,14 @@ object EPGForm: TEPGForm
     Height = 287
     Top = 0
     Width = 867
-    ActivePage = tsSearch
+    ActivePage = tsFullGuide
     Align = alClient
     ShowTabs = False
-    TabIndex = 2
+    TabIndex = 0
     TabOrder = 1
     TabPosition = tpRight
     object tsFullGuide: TTabSheet
-      Caption = 'FullGuide'
+      Caption = 'Full Guide'
       ClientHeight = 281
       ClientWidth = 861
       object TimeGrid: TDrawGrid
@@ -221,7 +221,7 @@ object EPGForm: TEPGForm
       end
     end
     object tsDetail: TTabSheet
-      Caption = 'Detail'
+      Caption = 'Details'
       ClientHeight = 281
       ClientWidth = 861
       object DetailGrid: TDrawGrid
