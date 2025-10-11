@@ -23,8 +23,8 @@ unit MPV_Engine;
 interface
 
 uses
-  Classes, SysUtils, libmpv, decoupler, BaseTypes, render,
-  OpenGLContext, Forms, LoggerUnit, LCLType, Renderer, config, images_handler;
+  Classes, SysUtils, libmpv, decoupler, BaseTypes, render, OpenGLContext, Forms,
+  LoggerUnit, LCLType, Renderer, config, images_handler, JsonTools;
 
 type
   TTrackType = (trkAudio, trkVideo, trkSub, trkUnknown);
@@ -86,7 +86,12 @@ type
     ClientVersion: DWORD;
     RenderObj: TRender;
     ImgMode: boolean;
+    // Version dependant flags
+    NewLoadFile: boolean;
+    SupportNewOSD: boolean;
+    NeedVO: Boolean;
 
+    procedure CheckVersions;
     function GetBoolProperty(const PropertyName: string): boolean;
     function GetCustomOptions: string;
     function GetMainVolume: integer;
@@ -295,6 +300,7 @@ begin
     mpv_observe_property(fHandle^, 0, 'sid', MPV_FORMAT_INT64);
     mpv_observe_property(fHandle^, 0, 'core-idle', MPV_FORMAT_FLAG);
     mpv_set_wakeup_callback(fhandle^, @LibMPVEvent, self);
+    CheckVersions;
 
     Application.QueueAsyncCall(InitRenderer, 0);
 
@@ -432,12 +438,19 @@ var
 begin
   ImgMode := False;
   args    := nil;
-  setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0));
+  setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0)
+                    + IfThen(NeedVO, 1, 0));
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
+  if NeedVO then
+    begin
+      args[3] := '-1';
+      argIdx := 4
+    end
+  else
+    ArgIdx  := 3;
 
-  ArgIdx  := 3;
   Options := GetCustomOptions;
   if Options <> EmptyStr then
   begin
@@ -460,11 +473,18 @@ const
 begin
   ImgMode := True;
   args    := nil;
-  setlength(args, 6);
+  setlength(args, 5 + IfThen(NeedVO, 1, 0));
+
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
-  ArgIdx  := 3;
+  if NeedVO then
+    begin
+      args[3] := '-1';
+      argIdx := 4
+    end
+  else
+    ArgIdx  := 3;
   Options := GetCustomOptions;
   if Options <> EmptyStr then
   begin
@@ -495,6 +515,34 @@ begin
   args[1] := 'display-stats-toggle';
   args[2] := nil;
   res     := mpv_command(fhandle^, ppchar(@args[0]));
+
+end;
+
+procedure TMPVEngine.CheckVersions;
+var
+  Json, Command, Item, args: TJsonNode;
+  Value: pchar;
+begin
+  NewLoadFile := False;
+  SupportNewOSD:= ClientVersion > $00010065;
+  NeedVO:= ClientVersion > $00020002;
+
+
+  Value := mpv_get_property_string(fhandle^, 'command-list');
+  Json  := TJsonNode.Create;
+  Json.Parse(strpas(Value));
+  for Command in Json do
+  begin
+    Item := command.Child('name');
+    if Assigned(Item) and (Item.Value = 'loadfile') then
+    begin
+      Item := Command.Child('args');
+      for args in item do
+        if args.Child('name').Value = 'index' then
+          NewLoadFile := True;
+    end;
+  end;
+  Json.Free;
 
 end;
 
@@ -681,7 +729,7 @@ var
   res: mpv_node;
   msgFix: string;
 begin
-  if ClientVersion <= $00010065 then
+  if not SupportNewOSD then
   begin
     msgFix := StringReplace(msg, '{\s}', '', [rfReplaceAll]);
     msgFix := StringReplace(msgFix, '{\n}', '', [rfReplaceAll]);
@@ -734,7 +782,7 @@ var
 begin
   mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
-  if ClientVersion <= $00010065 then
+  if not SupportNewOSD then
   begin
     num := 3;
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
