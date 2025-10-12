@@ -335,23 +335,27 @@ begin
       if C^ = '\' then
       begin
         Inc(C);
-        if C^ = '"' then
-          Inc(C)
-        else if C^ = 'u' then
+        if C^ < ' ' then
+        begin
+          T.Tail := C;
+          T.Kind := tkError;
+          Exit(False);
+        end;
+        if C^ = 'u' then
           if not ((C[1] in Hex) and (C[2] in Hex) and (C[3] in Hex) and (C[4] in Hex)) then
           begin
             T.Tail := C;
             T.Kind := tkError;
             Exit(False);
-      end;
+          end;
       end
       else if C^ = '"' then
-    begin
-      Inc(C);
-      T.Tail := C;
-      T.Kind := tkString;
-      Exit(True);
-    end;
+      begin
+        Inc(C);
+        T.Tail := C;
+        T.Kind := tkString;
+        Exit(True);
+      end;
     until C^ in [#0, #10, #13];
     T.Tail := C;
     T.Kind := tkError;
@@ -1347,7 +1351,7 @@ end;
 function UnicodeToString(C: LongWord): string; inline;
 begin
   if C = 0 then
-    Result := ''
+    Result := #0
   else if C < $80 then
     Result := Chr(C)
   else if C < $800 then
