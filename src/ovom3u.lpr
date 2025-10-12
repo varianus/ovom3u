@@ -45,7 +45,7 @@ uses
   {$IFDEF USE_MPRIS2}mpris2,{$ENDIF}
   {$IFDEF USE_LIBCEC}cec, CEC_intf,{$ENDIF}
   {$IFDEF USE_MMKEYS}MultimediaKeys,{$ENDIF}
-  uLogViewer, uListAdd, uhint, images_handler;
+  uLogViewer, uListAdd, uhint, images_handler, uSplash;
 
   {$R *.res}
 var
@@ -55,6 +55,14 @@ begin
   //setHeapTraceOutput('trace.log');
   // needed to output exception to a file
   Application.Flags := Application.Flags + [appNoExceptionMessages];
+  RequireDerivedFormResource := True;
+  Application.Scaled:=True;
+  Application.Initialize;
+
+  fSplash:=TfSplash.create(Application);
+  fSplash.show;
+  fSplash.Update;
+  Application.ProcessMessages;
 
   OvoLogger.LogName := ConfigObj.ConfigDir + LogFileName;
   OvoLogger.SaveOldLog;
@@ -65,10 +73,8 @@ begin
   OvoLogger.Log(llFORCED, format(rVersionString, [AppVersion, RevisionStr, BuildDate]));
   OvoLogger.Log(llFORCED, format(rBuildEnv, [lazVersion, fpcVersion]));
   OvoLogger.Log(llFORCED, format(rTarget, [TargetCPU, TargetOS]));
-  RequireDerivedFormResource := True;
-  Application.Scaled:=True;
-  Application.Initialize;
   Application.CreateForm(TfPlayer, fPlayer);
   Application.CreateForm(TChannelHintForm, ChannelHintForm);
+  fSplash.Free;
   Application.Run;
 end.
