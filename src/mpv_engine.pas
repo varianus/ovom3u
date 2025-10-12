@@ -444,7 +444,7 @@ var
 begin
   ImgMode := False;
   args    := nil;
-  setlength(args, 5); // + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0) or NeedVO, 1, 0)
+  setlength(args, 6); // + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0) or NeedVO, 1, 0)
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
@@ -478,7 +478,7 @@ const
 begin
   ImgMode := True;
   args    := nil;
-  setlength(args, 5);
+  setlength(args, 6);
 
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
