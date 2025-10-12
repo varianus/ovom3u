@@ -282,7 +282,11 @@ begin
     mpv_set_option_string(fHandle^, 'cursor-autohide', 'no');
     mpv_set_option_string(fHandle^, 'idle', 'yes');
     mpv_set_option_string(fHandle^, 'keep-open', 'always');
+    mpv_set_option_string(fHandle^, 'osd-scale-by-window', 'no');
+    mpv_set_option_string(fHandle^, 'sub-scale-by-window', 'no');
+
     //    mpv_set_option_string(fHandle^, 'force-windows', 'yes');
+
     mpv_request_log_messages(fhandle^, PChar(GetLevelFromLogger));
     mpv_set_option_string(fHandle^, 'msg-level', PChar('all=' + GetLevelFromLogger));
     mpv_initialize(fHandle^);
@@ -422,6 +426,8 @@ begin
   Result := EmptyStr;
   if fMpvProperties.HardwareAcceleration then
     Result := 'hwdec=auto,';
+  if NeedVO then
+    Result := Result+'vo=libmpv,';
   for i := 0 to fMpvProperties.CustomOptions.Count - 1 do
     if fMpvProperties.CustomOptions[i] <> EmptyStr then
       Result := Result + fMpvProperties.CustomOptions[i] + ',';
@@ -438,8 +444,7 @@ var
 begin
   ImgMode := False;
   args    := nil;
-  setlength(args, 4 + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0), 1, 0)
-                    + IfThen(NeedVO, 1, 0));
+  setlength(args, 5); // + IfThen(fMpvProperties.HardwareAcceleration or (fMpvProperties.CustomOptions.Count > 0) or NeedVO, 1, 0)
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
   args[2] := 'replace';
@@ -473,7 +478,7 @@ const
 begin
   ImgMode := True;
   args    := nil;
-  setlength(args, 5 + IfThen(NeedVO, 1, 0));
+  setlength(args, 5);
 
   args[0] := 'loadfile';
   args[1] := PChar(mrl);
