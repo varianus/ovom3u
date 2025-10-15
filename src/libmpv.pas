@@ -19,37 +19,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 }
 {$packrecords C}
 unit libmpv;
+
 interface
+
 uses
   ctypes;
 
 
 const
   {$IFDEF LINUX}
-     External_libraryV1='libmpv.so.1';
-     External_libraryV2='libmpv.so.2';
+  External_libraryV1 = 'libmpv.so.1';
+  External_libraryV2 = 'libmpv.so.2';
   {$ENDIF LINUX}
   {$IFDEF WINDOWS}
-     External_libraryV1='mpv-1.dll';
-     External_libraryV2='libmpv-2.dll';
+  External_libraryV1 = 'mpv-1.dll';
+  External_libraryV2 = 'libmpv-2.dll';
   {$ENDIF WINDOWS}
   {$IFDEF DARWIN}
-     External_libraryV1 = 'libmpv.dylib';
-     External_libraryV2 = 'libmpv.dylib';
+  External_libraryV1 = 'libmpv.dylib';
+  External_libraryV2 = 'libmpv.dylib';
   {$ENDIF DARWIN}
 
 
   { Pointers to basic pascal types, inserted by h2pas conversion program.}
-  Type
-    PLongint  = ^Longint;
-    PSmallInt = ^SmallInt;
-    PByte     = ^Byte;
-    PWord     = ^Word;
-    PDWord    = ^DWord;
-    PDouble   = ^Double;
+type
+  PLongint = ^longint;
+  PSmallInt = ^smallint;
+  pbyte = ^byte;
+  PWord = ^word;
+  PDWord = ^DWord;
+  PDouble = ^double;
 
-    Pmpv_handle  = ^mpv_handle;
-    mpv_handle = Thandle;
+  Pmpv_handle = ^mpv_handle;
+  mpv_handle = Thandle;
 
   { Permission to use, copy, modify, and/or distribute this software for any
    * purpose with or without fee is hereby granted, provided that the above
@@ -182,21 +184,21 @@ const
    * options.
     }
 
-  const
-    _MPV_CLIENT_API_VERSION = $00010000;
+const
+  _MPV_CLIENT_API_VERSION = $00010000;
   {*
    * Return the MPV_CLIENT_API_VERSION the mpv source has been compiled with.
     }
 
-  var
-    mpv_client_api_version : function:dword;cdecl;
+var
+  mpv_client_api_version: function: dword; cdecl;
   {*
    * Client context used by the client API. Every client has its own private
    * handle.
     }
 
-  type
-   mpv_error =  clong;
+type
+  mpv_error = clong;
   {*
    * List of error codes than can be returned by API functions. 0 and positive
    * return values always mean success, negative values are always errors.
@@ -208,7 +210,7 @@ const
      * return positive values, which also indicate success. API users can
      * hardcode the fact that ">= 0" means success.
      }
-    MPV_ERROR_SUCCESS = 0;
+  MPV_ERROR_SUCCESS = 0;
     {*
      * The event ringbuffer is full. This means the client is choked, and can't
      * receive any events. This can happen when too many asynchronous requests
@@ -217,92 +219,92 @@ const
      * making asynchronous requests. (Bugs in the client API implementation
      * could also trigger this, e.g. if events become "lost".)
      }
-    MPV_ERROR_EVENT_QUEUE_FULL = -1;
+  MPV_ERROR_EVENT_QUEUE_FULL = -1;
     {*
      * Memory allocation failed.
      }
-    MPV_ERROR_NOMEM = -2;
+  MPV_ERROR_NOMEM = -2;
     {*
      * The mpv core wasn't configured and initialized yet. See the notes in
      * mpv_create().
      }
-    MPV_ERROR_UNINITIALIZED = -3;
+  MPV_ERROR_UNINITIALIZED = -3;
     {*
      * Generic catch-all error if a parameter is set to an invalid or
      * unsupported value. This is used if there is no better error code.
      }
-    MPV_ERROR_INVALID_PARAMETER = -4;
+  MPV_ERROR_INVALID_PARAMETER = -4;
     {*
      * Trying to set an option that doesn't exist.
      }
-    MPV_ERROR_OPTION_NOT_FOUND = -5;
+  MPV_ERROR_OPTION_NOT_FOUND = -5;
     {*
      * Trying to set an option using an unsupported MPV_FORMAT.
      }
-    MPV_ERROR_OPTION_FORMAT = -6;
+  MPV_ERROR_OPTION_FORMAT = -6;
     {*
      * Setting the option failed. Typically this happens if the provided option
      * value could not be parsed.
      }
-    MPV_ERROR_OPTION_ERROR = -7;
+  MPV_ERROR_OPTION_ERROR = -7;
     {*
      * The accessed property doesn't exist.
      }
-    MPV_ERROR_PROPERTY_NOT_FOUND = -8;
+  MPV_ERROR_PROPERTY_NOT_FOUND = -8;
     {*
      * Trying to set or get a property using an unsupported MPV_FORMAT.
      }
-    MPV_ERROR_PROPERTY_FORMAT = -9;
+  MPV_ERROR_PROPERTY_FORMAT = -9;
     {*
      * The property exists, but is not available. This usually happens when the
      * associated subsystem is not active, e.g. querying audio parameters while
      * audio is disabled.
      }
-    MPV_ERROR_PROPERTY_UNAVAILABLE = -10;
+  MPV_ERROR_PROPERTY_UNAVAILABLE = -10;
     {*
      * Error setting or getting a property.
      }
-    MPV_ERROR_PROPERTY_ERROR = -11;
+  MPV_ERROR_PROPERTY_ERROR = -11;
     {*
      * General error when running a command with mpv_command and similar.
         }
-   MPV_ERROR_COMMAND = -12;
+  MPV_ERROR_COMMAND = -12;
     {*
      * Generic error on loading (usually used with mpv_event_end_file.error).
      }
-    MPV_ERROR_LOADING_FAILED = -13;
+  MPV_ERROR_LOADING_FAILED = -13;
     {*
      * Initializing the audio output failed.
      }
-    MPV_ERROR_AO_INIT_FAILED = -14;
+  MPV_ERROR_AO_INIT_FAILED = -14;
     {*
      * Initializing the video output failed.
      }
-    MPV_ERROR_VO_INIT_FAILED = -15;
+  MPV_ERROR_VO_INIT_FAILED = -15;
     {*
      * There was no audio or video data to play. This also happens if the
      * file was recognized, but did not contain any audio or video streams,
      * or no streams were selected.
      }
-    MPV_ERROR_NOTHING_TO_PLAY = -16;
+  MPV_ERROR_NOTHING_TO_PLAY = -16;
     {*
      * When trying to load the file, the file format could not be determined,
      * or the file was too broken to open it.
      }
-    MPV_ERROR_UNKNOWN_FORMAT = -17;
+  MPV_ERROR_UNKNOWN_FORMAT = -17;
     {*
      * Generic error for signaling that certain system requirements are not
      * fulfilled.
      }
-    MPV_ERROR_UNSUPPORTED = -18;
+  MPV_ERROR_UNSUPPORTED = -18;
     {*
      * The API function which was called is a stub only.
      }
-    MPV_ERROR_NOT_IMPLEMENTED = -19;
+  MPV_ERROR_NOT_IMPLEMENTED = -19;
     {*
      * Unspecified error.
      }
-    MPV_ERROR_GENERIC = -20;
+  MPV_ERROR_GENERIC = -20;
 
 type
   Pmpv_error = ^mpv_error;
@@ -312,16 +314,17 @@ type
    * properties and options support multiple formats, and this enum describes
    * them.
    *)
-  type
-    Pmpv_format = ^mpv_format;
-    mpv_format =  clong;
+type
+  Pmpv_format = ^mpv_format;
+  mpv_format = clong;
+
 const
     {*
      * Invalid. Sometimes used for empty values. This is always defined to 0,
      * so a normal 0-init of mpv_format (or e.g. mpv_node) is guaranteed to set
      * this it to MPV_FORMAT_NONE (which makes some things saner as consequence).
      }
-    MPV_FORMAT_NONE = 0;
+  MPV_FORMAT_NONE = 0;
     {*
      * The basic type is char*. It returns the raw property string, like
      * using ${=property} in input.conf (see input.rst).
@@ -357,7 +360,7 @@ const
      * Or just use mpv_set_property_string().
      *
      }
-    MPV_FORMAT_STRING = 1;
+  MPV_FORMAT_STRING = 1;
     {*
      * The basic type is char*. It returns the OSD property string, like
      * using ${property} in input.conf (see input.rst). In many cases, this
@@ -367,7 +370,7 @@ const
      *
      * Only valid when doing read access. The rest works like MPV_FORMAT_STRING.
      }
-    MPV_FORMAT_OSD_STRING = 2;
+  MPV_FORMAT_OSD_STRING = 2;
     {*
      * The basic type is int. The only allowed values are 0 ("no")
      * and 1 ("yes").
@@ -384,15 +387,15 @@ const
      *     int flag = 1;
      *     mpv_set_property(ctx, "property", MPV_FORMAT_FLAG, &flag);
      }
-    MPV_FORMAT_FLAG = 3;
+  MPV_FORMAT_FLAG = 3;
     {*
      * The basic type is int64_t.
      }
-    MPV_FORMAT_INT64 = 4;
+  MPV_FORMAT_INT64 = 4;
     {*
      * The basic type is double.
      }
-    MPV_FORMAT_DOUBLE = 5;
+  MPV_FORMAT_DOUBLE = 5;
     {*
      * The type is mpv_node.
      *
@@ -425,24 +428,24 @@ const
      *     value.u.string = "hello";
      *     mpv_set_property(ctx, "property", MPV_FORMAT_NODE, &value);
      }
-    MPV_FORMAT_NODE = 6;
+  MPV_FORMAT_NODE = 6;
     {*
      * Used with mpv_node only. Can usually not be used directly.
      }
-    MPV_FORMAT_NODE_ARRAY = 7;
+  MPV_FORMAT_NODE_ARRAY = 7;
     {*
      * See MPV_FORMAT_NODE_ARRAY.
      }
-    MPV_FORMAT_NODE_MAP = 8;
+  MPV_FORMAT_NODE_MAP = 8;
     {*
      * A raw, untyped byte array. Only used only with mpv_node, and only in
      * some very specific situations. (Some commands use it.)
      }
-    MPV_FORMAT_BYTE_ARRAY = 9;
+  MPV_FORMAT_BYTE_ARRAY = 9;
 
 type
-    Pmpv_event_id = ^mpv_event_id;
-    mpv_event_id =  Longint;
+  Pmpv_event_id = ^mpv_event_id;
+  mpv_event_id = longint;
     {*
      * Generic data storage.
      *
@@ -450,28 +453,29 @@ type
      * the data. In some cases (mpv_get_property()), you have to free it with
      * mpv_free_node_contents(). If you fill this struct yourself, you're also
      * responsible for freeing it, and you must not call mpv_free_node_contents(). }
-    type
-      Pmpv_node_list = ^mpv_node_list;
-      mpv_byte_array = packed record
-          data: pointer;
-          size: csize_t;
-      end;
-      _u = packed record
-          case integer of
-           0:( string_ : Pchar);
-          {* valid if format==MPV_FORMAT_STRING  }
-           1:( flag_   : longint);
-          {* valid if format==MPV_FORMAT_FLAG    }
-           2:( double_ : double);
-          {* valid if format==MPV_FORMAT_DOUBLE  }
-           3:( list_   : Pmpv_node_list);
+type
+  Pmpv_node_list = ^mpv_node_list;
+
+  mpv_byte_array = packed record
+    Data: pointer;
+    size: csize_t;
+  end;
+  _u = packed record
+    case integer of
+      0: (string_: pchar);
+      {* valid if format==MPV_FORMAT_STRING  }
+      1: (flag_: longint);
+      {* valid if format==MPV_FORMAT_FLAG    }
+      2: (double_: double);
+      {* valid if format==MPV_FORMAT_DOUBLE  }
+      3: (list_: Pmpv_node_list);
          {* valid if format==MPV_FORMAT_NODE_ARRAY
            *    or if format==MPV_FORMAT_NODE_MAP }
-           4:( int64_  : int64);
-          {* valid if format==MPV_FORMAT_INT64   }
-           5:( byte_array:^mpv_byte_array);
-          {* valid if format==MPV_FORMAT_BYTE_ARRAY}
-         end;
+      4: (int64_: int64);
+      {* valid if format==MPV_FORMAT_INT64   }
+      5: (byte_array: ^mpv_byte_array);
+    {* valid if format==MPV_FORMAT_BYTE_ARRAY}
+  end;
     {*
        * Type of the data stored in this struct. This value rules what members in
        * the given union can be accessed. The following formats are currently
@@ -490,19 +494,19 @@ type
        * assumptions about the contents of union u.
           }
 
-      mpv_node = packed record
-          u: _u;
-      format: mpv_format;
-          {$IFDEF CPU32}
-      dummy: integer;
-          {$ENDIF}
-    end;
+  mpv_node = packed record
+    u: _u;
+    format: mpv_format;
+    {$IFDEF CPU32}
+    dummy: integer;
+    {$ENDIF}
+  end;
     {*
      * (see mpv_node)
       }
-      Pmpv_node = ^mpv_node;
-      mpv_node_array = packed array [0..100] of mpv_node;
-      pmpv_node_array = ^mpv_node_array;
+  Pmpv_node = ^mpv_node;
+  mpv_node_array = packed array [0..100] of mpv_node;
+  pmpv_node_array = ^mpv_node_array;
 
      {*
      * (see mpv_node)
@@ -511,7 +515,7 @@ type
       (**
        * Number of entries. Negative values are not allowed.
           *)
-          num : cLong;
+    num: cLong;
     {*
        * MPV_FORMAT_NODE_ARRAY:
        *  values[N] refers to value of the Nth item
@@ -522,7 +526,7 @@ type
        * If num > 0, values[0] to values[num-1] (inclusive) are valid.
        * Otherwise, this can be NULL.
           }
-          values : pmpv_node_array;
+    values: pmpv_node_array;
     {*
        * MPV_FORMAT_NODE_ARRAY:
        *  unused (typically NULL), access is not allowed
@@ -533,55 +537,55 @@ type
        *  The keys are in random order. The only guarantee is that keys[N] belongs
        *  to the value values[N]. NULL keys are not allowed.
           }
-          keys : PPChar;
-    end;
+    keys: PPChar;
+  end;
 
 const
     (**
      * Nothing happened. Happens on timeouts or sporadic wakeups.
      *)
-    MPV_EVENT_NONE = 0;
+  MPV_EVENT_NONE = 0;
     (**
      * Happens when the player quits. The player enters a state where it tries
      * to disconnect all clients. Most requests to the player will fail, and
      * the client should react to this and quit with mpv_destroy() as soon as
      * possible.
      *)
-    MPV_EVENT_SHUTDOWN = 1;
+  MPV_EVENT_SHUTDOWN = 1;
     (**
      * See mpv_request_log_messages().
      *)
-    MPV_EVENT_LOG_MESSAGE = 2;
+  MPV_EVENT_LOG_MESSAGE = 2;
     (**
      * Reply to a mpv_get_property_async() request.
      * See also mpv_event and mpv_event_property.
      *)
-    MPV_EVENT_GET_PROPERTY_REPLY = 3;
+  MPV_EVENT_GET_PROPERTY_REPLY = 3;
     (**
      * Reply to a mpv_set_property_async() request.
      * (Unlike MPV_EVENT_GET_PROPERTY, mpv_event_property is not used.)
      *)
-    MPV_EVENT_SET_PROPERTY_REPLY = 4;
+  MPV_EVENT_SET_PROPERTY_REPLY = 4;
     (**
      * Reply to a mpv_command_async() or mpv_command_node_async() request.
      * See also mpv_event and mpv_event_command.
      *)
-    MPV_EVENT_COMMAND_REPLY = 5;
+  MPV_EVENT_COMMAND_REPLY = 5;
     (**
      * Notification before playback start of a file (before the file is loaded).
      * See also mpv_event and mpv_event_start_file.
      *)
-    MPV_EVENT_START_FILE = 6;
+  MPV_EVENT_START_FILE = 6;
     (**
      * Notification after playback end (after the file was unloaded).
      * See also mpv_event and mpv_event_end_file.
      *)
-    MPV_EVENT_END_FILE = 7;
+  MPV_EVENT_END_FILE = 7;
     (**
      * Notification when the file has been loaded (headers were read etc.), and
      * decoding starts.
      *)
-    MPV_EVENT_FILE_LOADED = 8;
+  MPV_EVENT_FILE_LOADED = 8;
     (**
      * The list of video/audio/subtitle tracks was changed. (E.g. a new track
      * was found. This doesn't necessarily indicate a track switch; for this,
@@ -591,7 +595,7 @@ const
      *             "track-list" property. The event is redundant, and might
      *             be removed in the far future.
      *)
-    MPV_EVENT_TRACKS_CHANGED = 9;
+  MPV_EVENT_TRACKS_CHANGED = 9;
     (**
      * A video/audio/subtitle track was switched on or off.
      *
@@ -599,7 +603,7 @@ const
      *             "vid", "aid", and "sid" properties. The event is redundant,
      *             and might be removed in the far future.
      *)
-    MPV_EVENT_TRACK_SWITCHED = 10;
+  MPV_EVENT_TRACK_SWITCHED = 10;
     (**
      * Idle mode was entered. In this mode, no file is played, and the playback
      * core waits for new commands. (The command line player normally quits
@@ -612,7 +616,7 @@ const
      *             is not necessarily sent at the right point anymore (at the
      *             start of the program), while the property behaves correctly.
      *)
-    MPV_EVENT_IDLE = 11;
+  MPV_EVENT_IDLE = 11;
     (**
      * Playback was paused. This indicates the user pause state.
      *
@@ -633,7 +637,7 @@ const
      * @deprecated The event is redundant with mpv_observe_property() as
      *             mentioned above, and might be removed in the far future.
      *)
-    MPV_EVENT_PAUSE = 12;
+  MPV_EVENT_PAUSE = 12;
     (**
      * Playback was unpaused. See MPV_EVENT_PAUSE for not so obvious details.
      *
@@ -641,7 +645,7 @@ const
      *             explained in the MPV_EVENT_PAUSE comments, and might be
      *             removed in the far future.
      *)
-    MPV_EVENT_UNPAUSE = 13;
+  MPV_EVENT_UNPAUSE = 13;
     (**
      * Sent every time after a video frame is displayed. Note that currently,
      * this will be sent in lower frequency if there is no video, or playback
@@ -651,7 +655,7 @@ const
      * @deprecated Use mpv_observe_property() with relevant properties instead
      *             (such as "playback-time").
      *)
-    MPV_EVENT_TICK = 14;
+  MPV_EVENT_TICK = 14;
     (**
      * @deprecated This was used internally with the internal "script_dispatch"
      *             command to dispatch keyboard and mouse input for the OSC.
@@ -660,7 +664,7 @@ const
      *             This event never happens anymore, and is included in this
      *             header only for compatibility.
      *)
-    MPV_EVENT_SCRIPT_INPUT_DISPATCH = 15;
+  MPV_EVENT_SCRIPT_INPUT_DISPATCH = 15;
     (**
      * Triggered by the script-message input command. The command uses the
      * first argument of the command as client name (see mpv_client_name()) to
@@ -668,7 +672,7 @@ const
      * second argument as strings.
      * See also mpv_event and mpv_event_client_message.
      *)
-    MPV_EVENT_CLIENT_MESSAGE = 16;
+  MPV_EVENT_CLIENT_MESSAGE = 16;
     (**
      * Happens after video changed in some way. This can happen on resolution
      * changes, pixel format changes, or video filter changes. The event is
@@ -679,12 +683,12 @@ const
      * yourself whether the video parameters really changed before doing
      * something expensive.
      *)
-    MPV_EVENT_VIDEO_RECONFIG = 17;
+  MPV_EVENT_VIDEO_RECONFIG = 17;
     (**
      * Similar to MPV_EVENT_VIDEO_RECONFIG. This is relatively uninteresting,
      * because there is no such thing as audio output embedding.
      *)
-    MPV_EVENT_AUDIO_RECONFIG = 18;
+  MPV_EVENT_AUDIO_RECONFIG = 18;
     (**
      * Happens when metadata (like file tags) is possibly updated. (It's left
      * unspecified whether this happens on file start or only when it changes
@@ -694,24 +698,24 @@ const
      *             "metadata" property. The event is redundant, and might
      *             be removed in the far future.
      *)
-    MPV_EVENT_METADATA_UPDATE = 19;
+  MPV_EVENT_METADATA_UPDATE = 19;
     (**
      * Happens when a seek was initiated. Playback stops. Usually it will
      * resume with MPV_EVENT_PLAYBACK_RESTART as soon as the seek is finished.
      *)
-    MPV_EVENT_SEEK = 20;
+  MPV_EVENT_SEEK = 20;
     (**
      * There was a discontinuity of some sort (like a seek), and playback
      * was reinitialized. Usually happens on start of playback and after
      * seeking. The main purpose is allowing the client to detect when a seek
      * request is finished.
      *)
-    MPV_EVENT_PLAYBACK_RESTART = 21;
+  MPV_EVENT_PLAYBACK_RESTART = 21;
     (**
      * Event sent due to mpv_observe_property().
      * See also mpv_event and mpv_event_property.
      *)
-    MPV_EVENT_PROPERTY_CHANGE = 22;
+  MPV_EVENT_PROPERTY_CHANGE = 22;
     (**
      * Happens when the current chapter changes.
      *
@@ -719,7 +723,7 @@ const
      *             "chapter" property. The event is redundant, and might
      *             be removed in the far future.
      *)
-    MPV_EVENT_CHAPTER_CHANGE = 23;
+  MPV_EVENT_CHAPTER_CHANGE = 23;
     (**
      * Happens if the internal per-mpv_handle ringbuffer overflows, and at
      * least 1 event had to be dropped. This can happen if the client doesn't
@@ -729,29 +733,30 @@ const
      * Event delivery will continue normally once this event was returned
      * (this forces the client to empty the queue completely).
      *)
-    MPV_EVENT_QUEUE_OVERFLOW = 24;
+  MPV_EVENT_QUEUE_OVERFLOW = 24;
     (**
      * Triggered if a hook handler was registered with mpv_hook_add(), and the
      * hook is invoked. If you receive this, you must handle it, and continue
      * the hook with mpv_hook_continue().
      * See also mpv_event and mpv_event_hook.
      *)
-    MPV_EVENT_HOOK = 25;
+  MPV_EVENT_HOOK = 25;
 
 type
-      pmpv_event_property = ^mpv_event_property;
-      mpv_event_property = packed record
+  pmpv_event_property = ^mpv_event_property;
+
+  mpv_event_property = packed record
         (**
          * Name of the property.
          *)
-        name: PChar;
+    Name: pchar;
         (**
          * Format of the data field in the same struct. See enum mpv_format.
          * This is always the same format as the requested format, except when
          * the property could not be retrieved (unavailable, or an error happened),
          * in which case the format is MPV_FORMAT_NONE.
          *)
-        format: mpv_format;
+    format: mpv_format;
         (**
          * Received property value. Depends on the format. This is like the
          * pointer argument passed to mpv_get_property().
@@ -763,8 +768,8 @@ type
          * Note that this is set to NULL if retrieving the property failed (the
          * format will be MPV_FORMAT_NONE).
          *)
-        data: Pointer;
-      end;
+    Data: Pointer;
+  end;
 
       (**
        * Numeric log levels. The lower the number, the more important the message is.
@@ -773,68 +778,69 @@ type
        * mpv_request_log_messages() function.
        * Unused numeric values are unused, but reserved for future use.
        *)
-      mpv_log_level = (
-        MPV_LOG_LEVEL_NONE = 0,
-        /// "no"    - disable absolutely all messages
-        MPV_LOG_LEVEL_FATAL = 10,
-        /// "fatal" - critical/aborting errors
-        MPV_LOG_LEVEL_ERROR = 20,
-        /// "error" - simple errors
-        MPV_LOG_LEVEL_WARN = 30,
-        /// "warn"  - possible problems
-        MPV_LOG_LEVEL_INFO = 40,
-        /// "info"  - informational message
-        MPV_LOG_LEVEL_V = 50,
-        /// "v"     - noisy informational message
-        MPV_LOG_LEVEL_DEBUG = 60,
-        /// "debug" - very noisy technical information
-        MPV_LOG_LEVEL_TRACE = 70);
-      Pmpv_log_level = ^mpv_log_level;
+  mpv_log_level = (
+    MPV_LOG_LEVEL_NONE = 0,
+    /// "no"    - disable absolutely all messages
+    MPV_LOG_LEVEL_FATAL = 10,
+    /// "fatal" - critical/aborting errors
+    MPV_LOG_LEVEL_ERROR = 20,
+    /// "error" - simple errors
+    MPV_LOG_LEVEL_WARN = 30,
+    /// "warn"  - possible problems
+    MPV_LOG_LEVEL_INFO = 40,
+    /// "info"  - informational message
+    MPV_LOG_LEVEL_V = 50,
+    /// "v"     - noisy informational message
+    MPV_LOG_LEVEL_DEBUG = 60,
+    /// "debug" - very noisy technical information
+    MPV_LOG_LEVEL_TRACE = 70);
+  Pmpv_log_level = ^mpv_log_level;
 
-      pmpv_event_log_message=  ^_mpv_event_log_message;
-      _mpv_event_log_message = packed record
+  pmpv_event_log_message = ^_mpv_event_log_message;
+
+  _mpv_event_log_message = packed record
         (**
          * The module prefix, identifies the sender of the message. As a special
          * case, if the message buffer overflows, this will be set to the string
          * "overflow" (which doesn't appear as prefix otherwise), and the text
          * field will contain an informative message.
          *)
-        prefix: PChar;
+    prefix: pchar;
         (**
          * The log level as string. See mpv_request_log_messages() for possible
          * values. The level "no" is never used here.
          *)
-        level: PChar;
+    level: pchar;
         (**
          * The log message. It consists of 1 line of text, and is terminated with
          * a newline character. (Before API version 1.6, it could contain multiple
          * or partial lines.)
          *)
-        text: PChar;
+    Text: pchar;
         (**
          * The same contents as the level field, but as a numeric ID.
          * Since API version 1.6.
          *)
-        log_level: mpv_log_level;
-      end;
+    log_level: mpv_log_level;
+  end;
 
-      /// Since API version 1.9.
-      mpv_end_file_reason = (
+  /// Since API version 1.9.
+  mpv_end_file_reason = (
         (**
          * The end of file was reached. Sometimes this may also happen on
          * incomplete or corrupted files, or if the network connection was
          * interrupted when playing a remote file. It also happens if the
          * playback range was restricted with --end or --frames or similar.
          *)
-        MPV_END_FILE_REASON_EOF = 0,
+    MPV_END_FILE_REASON_EOF = 0,
         (**
          * Playback was stopped by an external action (e.g. playlist controls).
          *)
-        MPV_END_FILE_REASON_STOP = 2,
+    MPV_END_FILE_REASON_STOP = 2,
         (**
          * Playback was stopped by the quit command or player shutdown.
          *)
-        MPV_END_FILE_REASON_QUIT = 3,
+    MPV_END_FILE_REASON_QUIT = 3,
         (**
          * Some kind of error happened that lead to playback abort. Does not
          * necessarily happen on incomplete or broken files (in these cases, both
@@ -842,7 +848,7 @@ type
          *
          * mpv_event_end_file.error will be set.
          *)
-        MPV_END_FILE_REASON_ERROR = 4,
+    MPV_END_FILE_REASON_ERROR = 4,
         (**
          * The file was a playlist or similar. When the playlist is read, its
          * entries will be appended to the playlist after the entry of the current
@@ -851,39 +857,39 @@ type
          * playback continues with the playlist contents.
          * Since API version 1.18.
          *)
-        MPV_END_FILE_REASON_REDIRECT = 5);
-      Pmpv_end_file_reason = ^mpv_end_file_reason;
+    MPV_END_FILE_REASON_REDIRECT = 5);
+  Pmpv_end_file_reason = ^mpv_end_file_reason;
 
-      /// Since API version 1.108.
-      _mpv_event_start_file = packed record
+  /// Since API version 1.108.
+  _mpv_event_start_file = packed record
         (**
          * Playlist entry ID of the file being loaded now.
          *)
-        playlist_entry_id: Int64;
-      end;
+    playlist_entry_id: int64;
+  end;
 
-      _mpv_event_end_file = packed record
+  _mpv_event_end_file = packed record
         (**
          * Corresponds to the values in enum mpv_end_file_reason (the "int" type
          * will be replaced with mpv_end_file_reason on the next ABI bump).
          *
          * Unknown values should be treated as unknown.
          *)
-        reason: Integer;
+    reason: integer;
         (**
          * If reason==MPV_END_FILE_REASON_ERROR, this contains a mpv error code
          * (one of MPV_ERROR_...) giving an approximate reason why playback
          * failed. In other cases, this field is 0 (no error).
          * Since API version 1.9.
          *)
-        error: Integer;
+    error: integer;
         (**
          * Playlist entry ID of the file that was being played or attempted to be
          * played. This has the same value as the playlist_entry_id field in the
          * corresponding mpv_event_start_file event.
          * Since API version 1.108.
          *)
-        playlist_entry_id: Int64;
+    playlist_entry_id: int64;
         (**
          * If loading ended, because the playlist entry to be played was for example
          * a playlist, and the current playlist entry is replaced with a number of
@@ -898,61 +904,62 @@ type
          * getting a property change notification before receiving the event).
          * Since API version 1.108.
          *)
-        playlist_insert_id: Int64;
+    playlist_insert_id: int64;
         (**
          * See playlist_insert_id. Only non-0 if playlist_insert_id is valid. Never
          * negative.
          * Since API version 1.108.
          *)
-        playlist_insert_num_entries: Integer;
-      end;
+    playlist_insert_num_entries: integer;
+  end;
 
       (** @deprecated see MPV_EVENT_SCRIPT_INPUT_DISPATCH for remarks
        *)
-      _mpv_event_script_input_dispatch = packed record
-        arg0: Integer;
-        _type: PUTF8Char;
-      end;
+  _mpv_event_script_input_dispatch = packed record
+    arg0: integer;
+    _type: PUTF8Char;
+  end;
 
-      _mpv_event_client_message = packed record
+  _mpv_event_client_message = packed record
         (**
          * Arbitrary arguments chosen by the sender of the message. If num_args > 0,
          * you can access args[0] through args[num_args - 1] (inclusive). What
          * these arguments mean is up to the sender and receiver.
          * None of the valid items are NULL.
          *)
-        num_args: Integer;
-        args: PPChar;
-      end;
+    num_args: integer;
+    args: PPChar;
+  end;
 
-      _mpv_event_hook = packed record
+  _mpv_event_hook = packed record
         (**
          * The hook name as passed to mpv_hook_add().
          *)
-        name: PChar;
+    Name: pchar;
         (**
          * Internal ID that must be passed to mpv_hook_continue().
          *)
-        id: UInt64;
-      end;
+    id: uint64;
+  end;
 
-      mpv_event_command = packed record
+  mpv_event_command = packed record
         (**
          * Result data of the command. Note that success/failure is signaled
          * separately via mpv_event.error. This field is only for result data
          * in case of success. Most commands leave it at MPV_FORMAT_NONE. Set
          * to MPV_FORMAT_NONE on failure.
          *)
-        result: mpv_node;
-      end;
+    Result: mpv_node;
+  end;
 
-      pmpv_event= ^mpv_event;
-      mpv_event = packed record
+  pmpv_event = ^mpv_event;
+
+  mpv_event = packed record
         (**
          * One of mpv_event. Keep in mind that later ABI compatible releases might
          * add new event types. These should be ignored by the API user.
          *)
-        event_id: mpv_event_id;
+    event_id: mpv_event_id;
         (**
          * This is mainly used for events that are replies to (asynchronous)
          * requests. It contains a status code, which is >= 0 on success, or < 0
@@ -963,7 +970,7 @@ type
          *  MPV_EVENT_SET_PROPERTY_REPLY
          *  MPV_EVENT_COMMAND_REPLY
          *)
-        error: Integer;
+    error: integer;
         (**
          * If the event is in reply to a request (made with this API and this
          * API handle), this is set to the reply_userdata parameter of the request
@@ -975,7 +982,7 @@ type
          *  MPV_EVENT_PROPERTY_CHANGE
          *  MPV_EVENT_HOOK
          *)
-        reply_userdata: UInt64;
+    reply_userdata: uint64;
         (**
          * The meaning and contents of the data member depend on the event_id:
          *  MPV_EVENT_GET_PROPERTY_REPLY:     mpv_event_property*
@@ -991,13 +998,13 @@ type
          * Note: future enhancements might add new event structs for existing or new
          *       event types.
          *)
-        data: Pointer;
-      end;
+    Data: Pointer;
+  end;
 
       (**
        * @deprecated use render.h
        *)
-      mpv_sub_api = (
+  mpv_sub_api = (
         (**
          * For using mpv's OpenGL renderer on an external OpenGL context.
          * mpv_get_sub_api(MPV_SUB_API_OPENGL_CB) returns mpv_opengl_cb_context*.
@@ -1007,8 +1014,8 @@ type
          *
          * @deprecated use render.h
          *)
-        MPV_SUB_API_OPENGL_CB = 1);
-      Pmpv_sub_api = ^mpv_sub_api;
+    MPV_SUB_API_OPENGL_CB = 1);
+  Pmpv_sub_api = ^mpv_sub_api;
 
 
 var
@@ -1021,7 +1028,7 @@ var
  * @return A static string describing the error. The string is completely
  *         static, i.e. doesn't need to be deallocated, and is valid forever.
  *)
-  mpv_error_string : function(error:clong):Pchar;cdecl;
+  mpv_error_string: function(error: clong): pchar; cdecl;
 
 (**
  * General function to deallocate memory returned by some of the API functions.
@@ -1030,7 +1037,7 @@ var
  *
  * @param data A valid pointer returned by the API, or NULL.
  *)
-  mpv_free : procedure(var data:pointer);cdecl;
+  mpv_free: procedure(var Data: pointer); cdecl;
 
 (**
  * Return the name of this client handle. Every client has its own unique
@@ -1039,7 +1046,7 @@ var
  * @return The client name. The string is read-only and is valid until the
  *         mpv_handle is destroyed.
  *)
-  mpv_client_name : function(var ctx:mpv_handle):Pchar;cdecl;
+  mpv_client_name: function(var ctx: mpv_handle): pchar; cdecl;
 
 (**
  * Return the ID of this client handle. Every client has its own unique ID. This
@@ -1056,7 +1063,7 @@ var
  *
  * @return The client ID.
  *)
- mpv_client_id: function(var ctx:mpv_handle): Int64; cdecl;
+  mpv_client_id: function(var ctx: mpv_handle): int64; cdecl;
 
 
 (**
@@ -1113,7 +1120,7 @@ var
  *         - out of memory
  *         - LC_NUMERIC is not set to "C" (see general remarks)
  *)
-  mpv_create : function:Pmpv_handle;cdecl;
+  mpv_create: function: Pmpv_handle; cdecl;
 
 (**
  * Initialize an uninitialized mpv instance. If the mpv instance is already
@@ -1135,7 +1142,7 @@ var
  *
  * @return error code
  *)
-  mpv_initialize : function(var ctx:mpv_handle):longint;cdecl;
+  mpv_initialize: function(var ctx: mpv_handle): longint; cdecl;
 
 (**
  * Disconnect and destroy the mpv_handle. ctx will be deallocated with this
@@ -1147,7 +1154,7 @@ var
  * be sent MPV_EVENT_SHUTDOWN. This function may block until these clients
  * have responded to the shutdown event, and the core is finally destroyed.
  *)
-  mpv_destroy : procedure(var ctx:mpv_handle);cdecl;
+  mpv_destroy: procedure(var ctx: mpv_handle); cdecl;
 
 (**
  * @deprecated use mpv_destroy(), which has exactly the same semantics (the
@@ -1165,7 +1172,7 @@ var
  *  player is terminated, send a "quit" command, and wait until the
  *  MPV_EVENT_SHUTDOWN event is received, or use mpv_terminate_destroy().
  *)
-    mpv_detach_destroy : procedure(var ctx:mpv_handle);cdecl;
+  mpv_detach_destroy: procedure(var ctx: mpv_handle); cdecl;
 
 (**
  * Similar to mpv_destroy(), but brings the player and all clients down
@@ -1192,7 +1199,7 @@ var
  *  this function will merely send a quit command and then call
  *  mpv_destroy(), without waiting for the actual shutdown.
  *)
-mpv_terminate_destroy : procedure(var ctx:mpv_handle);cdecl;
+  mpv_terminate_destroy: procedure(var ctx: mpv_handle); cdecl;
 
 (**
  * Create a new client handle connected to the same player core as ctx. This
@@ -1218,7 +1225,7 @@ mpv_terminate_destroy : procedure(var ctx:mpv_handle);cdecl;
  *             If NULL, an arbitrary name is automatically chosen.
  * @return a new handle, or NULL on error
  *)
-   mpv_create_client: function(var ctx:mpv_handle; const name: PChar): Pmpv_handle; cdecl;
+  mpv_create_client: function(var ctx: mpv_handle; const Name: pchar): Pmpv_handle; cdecl;
 
 (**
  * This is the same as mpv_create_client(), but the created mpv_handle is
@@ -1232,7 +1239,7 @@ mpv_terminate_destroy : procedure(var ctx:mpv_handle);cdecl;
  * mpv_terminate_destroy() _and_ mpv_destroy() for the last non-weak
  * mpv_handle will block until all weak mpv_handles are destroyed.
  *)
-  mpv_create_weak_client: function(var ctx:mpv_handle; const name: PChar): Pmpv_handle; cdecl;
+  mpv_create_weak_client: function(var ctx: mpv_handle; const Name: pchar): Pmpv_handle; cdecl;
 
 (**
  * Load a config file. This loads and parses the file, and sets every entry in
@@ -1252,7 +1259,7 @@ mpv_terminate_destroy : procedure(var ctx:mpv_handle);cdecl;
  * @param filename absolute path to the config file on the local filesystem
  * @return error code
  *)
-mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdecl;
+  mpv_load_config_file: function(var ctx: mpv_handle; filename: pchar): longint; cdecl;
 
 (**
  * This does nothing since mpv 0.23.0 (API version 1.24). Below is the
@@ -1280,11 +1287,11 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  *             well-defined, and their usefulness is extremely limited. The
  *             calls will remain stubs in order to keep ABI compatibility.
  *)
-    mpv_suspend : procedure(var ctx:mpv_handle);cdecl;
+  mpv_suspend: procedure(var ctx: mpv_handle); cdecl;
 (**
  * See mpv_suspend().
  *)
-    mpv_resume : procedure(var ctx:mpv_handle);cdecl;
+  mpv_resume: procedure(var ctx: mpv_handle); cdecl;
 
 (**
  * Return the internal time in microseconds. This has an arbitrary start offset,
@@ -1300,7 +1307,7 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  *
  * Safe to be called from mpv render API threads.
  *)
-    mpv_get_time_us : function(var ctx:mpv_handle):int64;cdecl;
+  mpv_get_time_us: function(var ctx: mpv_handle): int64; cdecl;
 
 (**
  * Frees any data referenced by the node. It doesn't free the node itself.
@@ -1312,7 +1319,7 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  * be called. (This is just a clarification that there's no danger of anything
  * strange happening in these cases.)
  *)
- mpv_free_node_contents : procedure(var node:mpv_node);cdecl;
+  mpv_free_node_contents: procedure(var node: mpv_node); cdecl;
 
 (**
  * Set an option. Note that you can't normally set options during runtime. It
@@ -1355,7 +1362,7 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  * @param[in] data Option value (according to the format).
  * @return error code
     *)
-     mpv_set_option : function(var ctx:mpv_handle; name:Pchar; format:mpv_format; data:pointer):longint;cdecl;
+  mpv_set_option: function(var ctx: mpv_handle; Name: pchar; format: mpv_format; Data: pointer): longint; cdecl;
 
 (**
  * Convenience function to set an option to a string value. This is like
@@ -1363,7 +1370,7 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  *
  * @return error code
  *)
-    mpv_set_option_string : function(var ctx:mpv_handle; name:Pchar; data:Pchar):longint;cdecl;
+  mpv_set_option_string: function(var ctx: mpv_handle; Name: pchar; Data: pchar): longint; cdecl;
 
 (**
  * Send a command to the player. Commands are the same as those used in
@@ -1379,7 +1386,7 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  *                 is the command, and the following items are arguments.
  * @return error code
  *)
-  mpv_command : function(var ctx:mpv_handle; args:PPchar):longint;cdecl;
+  mpv_command: function(var ctx: mpv_handle; args: PPchar): longint; cdecl;
 
 (**
  * Same as mpv_command(), but allows passing structured data in any format.
@@ -1415,7 +1422,7 @@ mpv_load_config_file : function(var ctx:mpv_handle; filename:Pchar):longint;cdec
  *                    Not many commands actually use this at all.
  * @return error code (the result parameter is not set on error)
  *)
-mpv_command_node : function(var ctx:mpv_handle; var args:mpv_node; var result:mpv_node):cint;cdecl;
+  mpv_command_node: function(var ctx: mpv_handle; var args: mpv_node; var Result: mpv_node): cint; cdecl;
 
 (**
  * This is essentially identical to mpv_command() but it also returns a result.
@@ -1431,7 +1438,7 @@ mpv_command_node : function(var ctx:mpv_handle; var args:mpv_node; var result:mp
  *                    Not many commands actually use this at all.
  * @return error code (the result parameter is not set on error)
  *)
- mpv_command_ret: function(var ctx: mpv_handle; args: PPchar; var result: mpv_node): Integer; cdecl;
+  mpv_command_ret: function(var ctx: mpv_handle; args: PPchar; var Result: mpv_node): integer; cdecl;
 
 (**
  * Same as mpv_command, but use input.conf parsing for splitting arguments.
@@ -1440,7 +1447,7 @@ mpv_command_node : function(var ctx:mpv_handle; var args:mpv_node; var result:mp
  *
  * This also has OSD and string expansion enabled by default.
  *)
-mpv_command_string : function(var ctx:mpv_handle; args:Pchar):longint;cdecl;
+  mpv_command_string: function(var ctx: mpv_handle; args: pchar): longint; cdecl;
 
 (**
  * Same as mpv_command, but run the command asynchronously.
@@ -1462,7 +1469,7 @@ mpv_command_string : function(var ctx:mpv_handle; args:Pchar):longint;cdecl;
  * @param args NULL-terminated list of strings (see mpv_command())
  * @return error code (if parsing or queuing the command fails)
  *)
-mpv_command_async : function(var ctx:mpv_handle; reply_userdata:cuint64; args:PPchar):longint;cdecl;
+  mpv_command_async: function(var ctx: mpv_handle; reply_userdata: cuint64; args: PPchar): longint; cdecl;
 
 (**
  * Same as mpv_command_node(), but run it asynchronously. Basically, this
@@ -1478,7 +1485,7 @@ mpv_command_async : function(var ctx:mpv_handle; reply_userdata:cuint64; args:PP
  * @param args as in mpv_command_node()
  * @return error code (if parsing or queuing the command fails)
  *)
-mpv_command_node_async : function(var ctx:mpv_handle; reply_userdata: UInt64; var args:mpv_node):cint;cdecl;
+  mpv_command_node_async: function(var ctx: mpv_handle; reply_userdata: uint64; var args: mpv_node): cint; cdecl;
 
 (**
  * Signal to all async requests with the matching ID to abort. This affects
@@ -1511,7 +1518,7 @@ mpv_command_node_async : function(var ctx:mpv_handle; reply_userdata: UInt64; va
  * @param reply_userdata ID of the request to be aborted (see above)
  *)
 
- mpv_abort_async_command: procedure(var ctx: mpv_handle; reply_userdata: UInt64); cdecl;
+  mpv_abort_async_command: procedure(var ctx: mpv_handle; reply_userdata: uint64); cdecl;
 (**
  * Set a property to a given value. Properties are essentially variables which
  * can be queried or set at runtime. For example, writing to the pause property
@@ -1543,14 +1550,14 @@ mpv_command_node_async : function(var ctx:mpv_handle; reply_userdata: UInt64; va
  * @param[in] data Option value.
  * @return error code
  *)
- mpv_set_property : function(var ctx:mpv_handle; name:Pchar; format:mpv_format; data:pointer):longint;cdecl;
+  mpv_set_property: function(var ctx: mpv_handle; Name: pchar; format: mpv_format; Data: pointer): longint; cdecl;
 
 (**
  * Convenience function to set a property to a string value.
  *
  * This is like calling mpv_set_property() with MPV_FORMAT_STRING.
  *)
-    mpv_set_property_string : function(var ctx:mpv_handle; const name:Pchar; const data:Pchar):longint; cdecl;
+  mpv_set_property_string: function(var ctx: mpv_handle; const Name: pchar; const Data: pchar): longint; cdecl;
 
 (**
  * Set a property asynchronously. You will receive the result of the operation
@@ -1567,7 +1574,7 @@ mpv_command_node_async : function(var ctx:mpv_handle; reply_userdata: UInt64; va
  *                 will never be modified by the client API.
  * @return error code if sending the request failed
  *)
-    mpv_set_property_async : function(var ctx:mpv_handle; reply_userdata:cuint64; name:Pchar; format:mpv_format; var data:pointer):longint;cdecl;
+  mpv_set_property_async: function(var ctx: mpv_handle; reply_userdata: cuint64; Name: pchar; format: mpv_format; var Data: pointer): longint; cdecl;
 
 
 (**
@@ -1588,7 +1595,7 @@ mpv_command_node_async : function(var ctx:mpv_handle; reply_userdata: UInt64; va
  *                  mpv_free_node_contents() (MPV_FORMAT_NODE).
  * @return error code
  *)
-mpv_get_property : function(var ctx:mpv_handle; name:Pchar; format:mpv_format; data:pointer):longint;cdecl;
+  mpv_get_property: function(var ctx: mpv_handle; Name: pchar; format: mpv_format; Data: pointer): longint; cdecl;
 
 (**
  * Return the value of the property with the given name as string. This is
@@ -1603,7 +1610,7 @@ mpv_get_property : function(var ctx:mpv_handle; name:Pchar; format:mpv_format; d
  * @return Property value, or NULL if the property can't be retrieved. Free
  *         the string with mpv_free().
  *)
-    mpv_get_property_string : function(var ctx:mpv_handle; name:Pchar):Pchar;cdecl;
+  mpv_get_property_string: function(var ctx: mpv_handle; Name: pchar): pchar; cdecl;
 
 (**
  * Return the property as "OSD" formatted string. This is the same as
@@ -1612,7 +1619,7 @@ mpv_get_property : function(var ctx:mpv_handle; name:Pchar; format:mpv_format; d
  * @return Property value, or NULL if the property can't be retrieved. Free
  *         the string with mpv_free().
  *)
-    mpv_get_property_osd_string : function(var ctx:mpv_handle; name:Pchar):Pchar;cdecl;
+  mpv_get_property_osd_string: function(var ctx: mpv_handle; Name: pchar): pchar; cdecl;
 (**
  * Get a property asynchronously. You will receive the result of the operation
  * as well as the property data with the MPV_EVENT_GET_PROPERTY_REPLY event.
@@ -1625,7 +1632,7 @@ mpv_get_property : function(var ctx:mpv_handle; name:Pchar; format:mpv_format; d
  * @param format see enum mpv_format.
  * @return error code if sending the request failed
  *)
-mpv_get_property_async : function(var ctx:mpv_handle; reply_userdata:cuint64; name:Pchar; format:mpv_format):longint;cdecl;
+  mpv_get_property_async: function(var ctx: mpv_handle; reply_userdata: cuint64; Name: pchar; format: mpv_format): longint; cdecl;
 
 (**
  * Get a notification whenever the given property changes. You will receive
@@ -1682,7 +1689,7 @@ mpv_get_property_async : function(var ctx:mpv_handle; reply_userdata:cuint64; na
  *               from the change events.
  * @return error code (usually fails only on OOM or unsupported format)
  *)
-mpv_observe_property : function(var mpv:mpv_handle; reply_userdata:cuint64; name:Pchar; format:mpv_format):longint;cdecl;
+  mpv_observe_property: function(var mpv: mpv_handle; reply_userdata: cuint64; Name: pchar; format: mpv_format): longint; cdecl;
 
 (**
  * Undo mpv_observe_property(). This will remove all observed properties for
@@ -1694,7 +1701,7 @@ mpv_observe_property : function(var mpv:mpv_handle; reply_userdata:cuint64; name
  * @return negative value is an error code, >=0 is number of removed properties
  *         on success (includes the case when 0 were removed)
  *)
-mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:cuint64):longint;cdecl;
+  mpv_unobserve_property: function(var mpv: mpv_handle; registered_reply_userdata: cuint64): longint; cdecl;
 
 (**
  * Return a string describing the event. For unknown events, NULL is returned.
@@ -1710,7 +1717,7 @@ mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:
  *         The string is completely static, i.e. doesn't need to be deallocated,
  *         and is valid forever.
  *)
-    mpv_event_name : function(event:mpv_event_id):Pchar;cdecl;
+  mpv_event_name: function(event: mpv_event_id): pchar; cdecl;
 
 (**
  * Convert the given src event to a mpv_node, and set *dst to the result. *dst
@@ -1735,7 +1742,7 @@ mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:
  *            prejudice of the C version of const).
  * @return error code (MPV_ERROR_NOMEM only, if at all)
  *)
- mpv_event_to_node: function (dst: Pmpv_node; src: Pmpv_event): Integer; cdecl; //new
+  mpv_event_to_node: function(dst: Pmpv_node; src: Pmpv_event): integer; cdecl; //new
 
 (**
  * Enable or disable the given event.
@@ -1751,7 +1758,7 @@ mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:
  * @param enable 1 to enable receiving this event, 0 to disable it.
  * @return error code
  *)
-    mpv_request_event : function(var ctx:mpv_handle; event:mpv_event_id; enable:longint):longint;cdecl;
+  mpv_request_event: function(var ctx: mpv_handle; event: mpv_event_id; enable: longint): longint; cdecl;
 
 (**
  * Enable or disable receiving of log messages. These are the messages the
@@ -1767,7 +1774,7 @@ mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:
  *                  Also see mpv_log_level.
  * @return error code
  *)
-    mpv_request_log_messages : function(var ctx:mpv_handle; min_level:Pchar):longint;cdecl;
+  mpv_request_log_messages: function(var ctx: mpv_handle; min_level: pchar): longint; cdecl;
 
 (**
  * Wait for the next event, or until the timeout expires, or if another thread
@@ -1800,7 +1807,7 @@ mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:
  *         released by the API on the next mpv_wait_event() call, or when the
  *         context is destroyed. The return value is never NULL.
  *)
-    mpv_wait_event : function(var ctx:mpv_handle; timeout:double):Pmpv_event;cdecl;
+  mpv_wait_event: function(var ctx: mpv_handle; timeout: double): Pmpv_event; cdecl;
 
 (**
  * Interrupt the current mpv_wait_event() call. This will wake up the thread
@@ -1815,7 +1822,7 @@ mpv_unobserve_property : function(var mpv:mpv_handle; registered_reply_userdata:
  *
  * Safe to be called from mpv render API threads.
  *)
-    mpv_wakeup : procedure(var ctx:mpv_handle);cdecl;
+  mpv_wakeup: procedure(var ctx: mpv_handle); cdecl;
 
 type
   mpv_set_wakeup_callback_cb = procedure(d: Pointer); cdecl;
@@ -1858,7 +1865,7 @@ var
  * @param cb function that should be called if a wakeup is required
  * @param d arbitrary userdata passed to cb
  *)
-    mpv_set_wakeup_callback : procedure(var ctx:mpv_handle; cb:mpv_callback; d:pointer);cdecl;
+  mpv_set_wakeup_callback: procedure(var ctx: mpv_handle; cb: mpv_callback; d: pointer); cdecl;
 
 (**
  * Block until all asynchronous requests are done. This affects functions like
@@ -1872,7 +1879,7 @@ var
  * In case you called mpv_suspend() before, this will also forcibly reset the
  * suspend counter of the given handle.
  *)
- mpv_wait_async_requests: procedure(var ctx:mpv_handle); cdecl; //new
+  mpv_wait_async_requests: procedure(var ctx: mpv_handle); cdecl; //new
 
 
 (**
@@ -1910,7 +1917,7 @@ var
  * @param priority See remarks above. Use 0 as a neutral default.
  * @return error code (usually fails only on OOM)
  *)
- mpv_hook_add: function(var ctx:mpv_handle; reply_userdata: UInt64; const name: PChar; priority: Integer): Integer; cdecl; //new
+  mpv_hook_add: function(var ctx: mpv_handle; reply_userdata: uint64; const Name: pchar; priority: integer): integer; cdecl; //new
 
 (**
  * Respond to a MPV_EVENT_HOOK event. You must call this after you have handled
@@ -1928,7 +1935,7 @@ var
  *           corresponding MPV_EVENT_HOOK.
  * @return error code
  *)
- mpv_hook_continue: function(var ctx:mpv_handle; id: UInt64): Integer; cdecl; //new
+  mpv_hook_continue: function(var ctx: mpv_handle; id: uint64): integer; cdecl; //new
 
 (**
  * Return a UNIX file descriptor referring to the read end of a pipe. This
@@ -1988,7 +1995,7 @@ var
  * @return A UNIX FD of the read end of the wakeup pipe, or -1 on error.
  *         On MS Windows/MinGW, this will always return -1.
  *)
- mpv_get_wakeup_pipe: function(var ctx: mpv_handle): Integer; cdecl;
+  mpv_get_wakeup_pipe: function(var ctx: mpv_handle): integer; cdecl;
 
 (**
  * This is used for additional APIs that are not strictly part of the core API.
@@ -1996,160 +2003,166 @@ var
  *
  * @deprecated use render.h
  *)
- mpv_get_sub_api: function(var ctx: mpv_handle; sub_api: mpv_sub_api): Pointer; cdecl; //new
+  mpv_get_sub_api: function(var ctx: mpv_handle; sub_api: mpv_sub_api): Pointer; cdecl; //new
 
 type
- mpv_stream_cb_read_fn = function (cookie: Pointer; buf: PByte; nbytes: UInt64): Int64; cdecl;
- mpv_stream_cb_seek_fn = function (cookie: Pointer; offset: Int64): Int64; cdecl;
- mpv_stream_cb_size_fn = function (cookie: Pointer): Int64; cdecl;
- mpv_stream_cb_close_fn = procedure (cookie: Pointer); cdecl;
- mpv_stream_cb_cancel_fn = procedure (cookie: Pointer); cdecl;
+  mpv_stream_cb_read_fn = function(cookie: Pointer; buf: pbyte; nbytes: uint64): int64; cdecl;
+  mpv_stream_cb_seek_fn = function(cookie: Pointer; offset: int64): int64; cdecl;
+  mpv_stream_cb_size_fn = function(cookie: Pointer): int64; cdecl;
+  mpv_stream_cb_close_fn = procedure(cookie: Pointer); cdecl;
+  mpv_stream_cb_cancel_fn = procedure(cookie: Pointer); cdecl;
 
- mpv_stream_cb_info = packed record
-     cookie: Pointer;
-     read_fn: mpv_stream_cb_read_fn;
-     seek_fn: mpv_stream_cb_seek_fn;
-     size_fn: mpv_stream_cb_size_fn;
-     close_fn: mpv_stream_cb_close_fn;
-     cancel_fn: mpv_stream_cb_cancel_fn; // since API 1.106
-   end;
+  mpv_stream_cb_info = packed record
+    cookie: Pointer;
+    read_fn: mpv_stream_cb_read_fn;
+    seek_fn: mpv_stream_cb_seek_fn;
+    size_fn: mpv_stream_cb_size_fn;
+    close_fn: mpv_stream_cb_close_fn;
+    cancel_fn: mpv_stream_cb_cancel_fn; // since API 1.106
+  end;
 
-  mpv_stream_cb_open_ro_fn = function (user_data: Pointer; uri: PChar; var info: mpv_stream_cb_info): Integer; cdecl;
+  mpv_stream_cb_open_ro_fn = function(user_data: Pointer; uri: pchar; var info: mpv_stream_cb_info): integer; cdecl;
 
 var
-  mpv_stream_cb_add_ro : function(var ctx: mpv_handle; protocol: PChar; user_data: Pointer; open_fn: mpv_stream_cb_open_ro_fn): Integer; cdecl;
+  mpv_stream_cb_add_ro: function(var ctx: mpv_handle; protocol: pchar; user_data: Pointer; open_fn: mpv_stream_cb_open_ro_fn): integer; cdecl;
 
- Function Check_libmpv:boolean;
- function Load_libmpv(lib : pchar):boolean;
- procedure Free_libmpv;
+function MPV_Make_Version(major, minor: integer): cardinal;
+
+function Check_libmpv: boolean;
+function Load_libmpv(lib: pchar): boolean;
+procedure Free_libmpv;
 
 implementation
 
 
-  uses
-    SysUtils, dynlibs;
+uses
+  SysUtils, dynlibs;
 
-  var
-    hlib : tlibhandle;
+var
+  hlib: tlibhandle;
+
+function MPV_Make_Version(major, minor: integer): cardinal;
+begin
+  Result := (major shl 16) or minor or 0;
+end;
+
+procedure Free_libmpv;
+begin
+  FreeLibrary(hlib);
+  mpv_client_api_version := nil;
+  mpv_error_string := nil;
+  mpv_free    := nil;
+  mpv_client_name := nil;
+  mpv_create  := nil;
+  mpv_initialize := nil;
+  mpv_detach_destroy := nil;
+  mpv_terminate_destroy := nil;
+  mpv_load_config_file := nil;
+  mpv_suspend := nil;
+  mpv_resume  := nil;
+  mpv_get_time_us := nil;
+  mpv_free_node_contents := nil;
+  mpv_set_option := nil;
+  mpv_set_option_string := nil;
+  mpv_command := nil;
+  mpv_command_string := nil;
+  mpv_command_async := nil;
+  mpv_set_property := nil;
+  mpv_set_property_string := nil;
+  mpv_set_property_async := nil;
+  mpv_get_property := nil;
+  mpv_get_property_string := nil;
+  mpv_get_property_osd_string := nil;
+  mpv_get_property_async := nil;
+  mpv_observe_property := nil;
+  mpv_unobserve_property := nil;
+  mpv_event_name := nil;
+  mpv_request_event := nil;
+  mpv_request_log_messages := nil;
+  mpv_wait_event := nil;
+  mpv_wakeup  := nil;
+  mpv_set_wakeup_callback := nil;
+  mpv_get_wakeup_pipe := nil;
+  mpv_stream_cb_add_ro := nil;
+
+end;
 
 
-  procedure Free_libmpv;
-    begin
-      FreeLibrary(hlib);
-      mpv_client_api_version:=nil;
-      mpv_error_string:=nil;
-      mpv_free:=nil;
-      mpv_client_name:=nil;
-      mpv_create:=nil;
-      mpv_initialize:=nil;
-      mpv_detach_destroy:=nil;
-      mpv_terminate_destroy:=nil;
-      mpv_load_config_file:=nil;
-      mpv_suspend:=nil;
-      mpv_resume:=nil;
-      mpv_get_time_us:=nil;
-      mpv_free_node_contents:=nil;
-      mpv_set_option:=nil;
-      mpv_set_option_string:=nil;
-      mpv_command:=nil;
-      mpv_command_string:=nil;
-      mpv_command_async:=nil;
-      mpv_set_property:=nil;
-      mpv_set_property_string:=nil;
-      mpv_set_property_async:=nil;
-      mpv_get_property:=nil;
-      mpv_get_property_string:=nil;
-      mpv_get_property_osd_string:=nil;
-      mpv_get_property_async:=nil;
-      mpv_observe_property:=nil;
-      mpv_unobserve_property:=nil;
-      mpv_event_name:=nil;
-      mpv_request_event:=nil;
-      mpv_request_log_messages:=nil;
-      mpv_wait_event:=nil;
-      mpv_wakeup:=nil;
-      mpv_set_wakeup_callback:=nil;
-      mpv_get_wakeup_pipe:=nil;
-      mpv_stream_cb_add_ro := nil;
+function Load_libmpv(lib: pchar): boolean;
+begin
 
-    end;
+  hlib   := LoadLibrary(lib);
+  Result := hlib <> 0;
+  if not Result then
+    Exit;
 
-
-    function Load_libmpv(lib: pchar): boolean;
-    begin
-
-      hlib:=LoadLibrary(lib);
-      Result:=  hlib<>0 ;
-      if not Result then
-        Exit;
-
-      pointer(mpv_client_api_version):=GetProcAddress(hlib,'mpv_client_api_version');
-      pointer(mpv_error_string):=GetProcAddress(hlib,'mpv_error_string');
-      pointer(mpv_free):=GetProcAddress(hlib,'mpv_free');
-      pointer(mpv_client_name):=GetProcAddress(hlib,'mpv_client_name');
-      pointer(mpv_create):=GetProcAddress(hlib,'mpv_create');
-      pointer(mpv_initialize):=GetProcAddress(hlib,'mpv_initialize');
-      pointer(mpv_detach_destroy):=GetProcAddress(hlib,'mpv_detach_destroy');
-      pointer(mpv_terminate_destroy):=GetProcAddress(hlib,'mpv_terminate_destroy');
-      pointer(mpv_load_config_file):=GetProcAddress(hlib,'mpv_load_config_file');
-      pointer(mpv_suspend):=GetProcAddress(hlib,'mpv_suspend');
-      pointer(mpv_resume):=GetProcAddress(hlib,'mpv_resume');
-      pointer(mpv_get_time_us):=GetProcAddress(hlib,'mpv_get_time_us');
-      pointer(mpv_free_node_contents):=GetProcAddress(hlib,'mpv_free_node_contents');
-      pointer(mpv_set_option):=GetProcAddress(hlib,'mpv_set_option');
-      pointer(mpv_set_option_string):=GetProcAddress(hlib,'mpv_set_option_string');
-      pointer(mpv_command):=GetProcAddress(hlib,'mpv_command');
-      pointer(mpv_command_string):=GetProcAddress(hlib,'mpv_command_string');
-      pointer(mpv_command_async):=GetProcAddress(hlib,'mpv_command_async');
-      pointer(mpv_command_node):=GetProcAddress(hlib,'mpv_command_node');
-      pointer(mpv_set_property):=GetProcAddress(hlib,'mpv_set_property');
-      pointer(mpv_set_property_string):=GetProcAddress(hlib,'mpv_set_property_string');
-      pointer(mpv_set_property_async):=GetProcAddress(hlib,'mpv_set_property_async');
-      pointer(mpv_get_property):=GetProcAddress(hlib,'mpv_get_property');
-      pointer(mpv_get_property_string):=GetProcAddress(hlib,'mpv_get_property_string');
-      pointer(mpv_get_property_osd_string):=GetProcAddress(hlib,'mpv_get_property_osd_string');
-      pointer(mpv_get_property_async):=GetProcAddress(hlib,'mpv_get_property_async');
-      pointer(mpv_observe_property):=GetProcAddress(hlib,'mpv_observe_property');
-      pointer(mpv_unobserve_property):=GetProcAddress(hlib,'mpv_unobserve_property');
-      pointer(mpv_event_name):=GetProcAddress(hlib,'mpv_event_name');
-      pointer(mpv_request_event):=GetProcAddress(hlib,'mpv_request_event');
-      pointer(mpv_request_log_messages):=GetProcAddress(hlib,'mpv_request_log_messages');
-      pointer(mpv_wait_event):=GetProcAddress(hlib,'mpv_wait_event');
-      pointer(mpv_wakeup):=GetProcAddress(hlib,'mpv_wakeup');
-      pointer(mpv_set_wakeup_callback):=GetProcAddress(hlib,'mpv_set_wakeup_callback');
-      pointer(mpv_get_wakeup_pipe):=GetProcAddress(hlib,'mpv_get_wakeup_pipe');
-      pointer(mpv_stream_cb_add_ro):=GetProcAddress(hlib,'mpv_stream_cb_add_ro');
-    end;
+  pointer(mpv_client_api_version) := GetProcAddress(hlib, 'mpv_client_api_version');
+  pointer(mpv_error_string) := GetProcAddress(hlib, 'mpv_error_string');
+  pointer(mpv_free)    := GetProcAddress(hlib, 'mpv_free');
+  pointer(mpv_client_name) := GetProcAddress(hlib, 'mpv_client_name');
+  pointer(mpv_create)  := GetProcAddress(hlib, 'mpv_create');
+  pointer(mpv_initialize) := GetProcAddress(hlib, 'mpv_initialize');
+  pointer(mpv_detach_destroy) := GetProcAddress(hlib, 'mpv_detach_destroy');
+  pointer(mpv_terminate_destroy) := GetProcAddress(hlib, 'mpv_terminate_destroy');
+  pointer(mpv_load_config_file) := GetProcAddress(hlib, 'mpv_load_config_file');
+  pointer(mpv_suspend) := GetProcAddress(hlib, 'mpv_suspend');
+  pointer(mpv_resume)  := GetProcAddress(hlib, 'mpv_resume');
+  pointer(mpv_get_time_us) := GetProcAddress(hlib, 'mpv_get_time_us');
+  pointer(mpv_free_node_contents) := GetProcAddress(hlib, 'mpv_free_node_contents');
+  pointer(mpv_set_option) := GetProcAddress(hlib, 'mpv_set_option');
+  pointer(mpv_set_option_string) := GetProcAddress(hlib, 'mpv_set_option_string');
+  pointer(mpv_command) := GetProcAddress(hlib, 'mpv_command');
+  pointer(mpv_command_string) := GetProcAddress(hlib, 'mpv_command_string');
+  pointer(mpv_command_async) := GetProcAddress(hlib, 'mpv_command_async');
+  pointer(mpv_command_node) := GetProcAddress(hlib, 'mpv_command_node');
+  pointer(mpv_set_property) := GetProcAddress(hlib, 'mpv_set_property');
+  pointer(mpv_set_property_string) := GetProcAddress(hlib, 'mpv_set_property_string');
+  pointer(mpv_set_property_async) := GetProcAddress(hlib, 'mpv_set_property_async');
+  pointer(mpv_get_property) := GetProcAddress(hlib, 'mpv_get_property');
+  pointer(mpv_get_property_string) := GetProcAddress(hlib, 'mpv_get_property_string');
+  pointer(mpv_get_property_osd_string) := GetProcAddress(hlib, 'mpv_get_property_osd_string');
+  pointer(mpv_get_property_async) := GetProcAddress(hlib, 'mpv_get_property_async');
+  pointer(mpv_observe_property) := GetProcAddress(hlib, 'mpv_observe_property');
+  pointer(mpv_unobserve_property) := GetProcAddress(hlib, 'mpv_unobserve_property');
+  pointer(mpv_event_name) := GetProcAddress(hlib, 'mpv_event_name');
+  pointer(mpv_request_event) := GetProcAddress(hlib, 'mpv_request_event');
+  pointer(mpv_request_log_messages) := GetProcAddress(hlib, 'mpv_request_log_messages');
+  pointer(mpv_wait_event) := GetProcAddress(hlib, 'mpv_wait_event');
+  pointer(mpv_wakeup)  := GetProcAddress(hlib, 'mpv_wakeup');
+  pointer(mpv_set_wakeup_callback) := GetProcAddress(hlib, 'mpv_set_wakeup_callback');
+  pointer(mpv_get_wakeup_pipe) := GetProcAddress(hlib, 'mpv_get_wakeup_pipe');
+  pointer(mpv_stream_cb_add_ro) := GetProcAddress(hlib, 'mpv_stream_cb_add_ro');
+end;
 
 function Check_libmpv: boolean;
-  var
-    MustFree :boolean ;
+var
+  MustFree: boolean;
 begin
-    // no error
-    MustFree := hlib = 0;
+  // no error
+  MustFree := hlib = 0;
 
-    if not Load_libmpv(External_libraryV2) then
-      Load_libmpv(External_libraryV1);
+  if not Load_libmpv(External_libraryV2) then
+    Load_libmpv(External_libraryV1);
 
   Result := False;
-    // exit, report error
-    if (hlib = 0) then
-      begin
-      end
-    else
+  // exit, report error
+  if (hlib = 0) then
+
+  else
   begin
     Result := True;
-        if MustFree then
-           begin
-             UnloadLibrary(hlib);
-             hlib := 0;
-           end;
-           end;
-
+    if MustFree then
+    begin
+      UnloadLibrary(hlib);
+      hlib := 0;
+    end;
   end;
 
+end;
+
 initialization
-    hlib := 0;
+  hlib := 0;
+
 finalization
 
 end.
