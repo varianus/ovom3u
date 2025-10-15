@@ -90,6 +90,7 @@ type
     NewLoadFile: boolean;
     SupportNewOSD: boolean;
     NeedVO: Boolean;
+    Need_No_Vd_lavc_dr: Boolean;
 
     procedure CheckVersions;
     function GetBoolProperty(const PropertyName: string): boolean;
@@ -142,7 +143,7 @@ type
 implementation
 
 uses
-  GeneralFunc, Math, LCLIntf
+  GeneralFunc, LCLIntf
   {$ifdef LINUX}
   , ctypes
   {$endif};
@@ -353,6 +354,9 @@ end;
 // initialize OpenGL rendering
 procedure TMPVEngine.InitRenderer(Data: PtrInt);
 begin
+  if Need_No_Vd_lavc_dr then
+    mpv_set_option_string(fHandle^,'vd-lavc-dr','no');
+
   isRenderActive := True;
   GLRenderControl.Visible := False;
   GLRenderControl.ReleaseContext;
@@ -528,9 +532,13 @@ var
   Json, Command, Item, args: TJsonNode;
   Value: pchar;
 begin
+
+  // https://github.com/mpv-player/mpv/blob/master/DOCS/client-api-changes.rst
+
   NewLoadFile := False;
-  SupportNewOSD:= ClientVersion > $00010065;
-  NeedVO:= ClientVersion > $00020002;
+  SupportNewOSD:= ClientVersion > MPV_Make_Version(1,  101); //mpv 0.29
+  NeedVO:= ClientVersion >  MPV_Make_Version(2, 3); //mpv 0.38
+  Need_No_Vd_lavc_dr:= ClientVersion <  MPV_Make_Version(1,  105); //mpv 0.30
 
 
   Value := mpv_get_property_string(fhandle^, 'command-list');
@@ -734,6 +742,9 @@ var
   res: mpv_node;
   msgFix: string;
 begin
+  num := 55;
+  mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
+
   if not SupportNewOSD then
   begin
     msgFix := StringReplace(msg, '{\s}', '', [rfReplaceAll]);
@@ -741,8 +752,6 @@ begin
     num    := 1;
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-align-y', 'top');
-    num := 55;
-    mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
     num := 0;
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-msg1', PChar(msgFix));
@@ -787,13 +796,14 @@ var
 begin
   mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
+  num := 36;
+  mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
+
   if not SupportNewOSD then
   begin
     num := 3;
     mpv_set_property(fHandle^, 'osd-level', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-align-y', 'bottom');
-    num := 36;
-    mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
     num := 2;
     mpv_set_property(fHandle^, 'osd-border-size', MPV_FORMAT_INT64, @num);
     mpv_set_property_string(fHandle^, 'osd-msg3', PChar(format('%s' + #10 + '%s    %s ' + #10 + ' %s',

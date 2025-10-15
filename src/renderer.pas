@@ -115,7 +115,6 @@ procedure TRenderThread.InitRendering;
 var
   i: integer;
 begin
-  mpv_set_option_string(fHandle^,'vd-lavc-dr','no');
   Params := nil;
   SetLength(Params, 4);
   Params[0]._type := MPV_RENDER_PARAM_API_TYPE;
