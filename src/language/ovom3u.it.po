@@ -299,6 +299,10 @@ msgstr "Visualizzatore Log"
 msgid "Auto scrolling"
 msgstr "Scorrimento automatico"
 
+#: tfplayer.actclearcache.caption
+msgid "Clear cached list"
+msgstr ""
+
 #: tfplayer.actshowconfig.caption
 msgid "⚙"
 msgstr "⚙"
@@ -333,6 +337,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #: tfplayer.caption
+msgctxt "tfplayer.caption"
 msgid "OvoM3U"
 msgstr "OvoM3U"
 
@@ -373,6 +378,18 @@ msgstr "Gruppi"
 msgid "List"
 msgstr "Lista"
 
+#: tfsplash.caption
+#, fuzzy
+msgctxt "tfsplash.caption"
+msgid "OvoM3U"
+msgstr "OvoM3U"
+
+#: tfsplash.stname.caption
+#, fuzzy
+msgctxt "tfsplash.stname.caption"
+msgid "OvoM3U"
+msgstr "OvoM3U"
+
 #: tmydialog.caption
 msgid "Message"
 msgstr "Messaggio"
@@ -394,7 +411,20 @@ msgstr "Nessun canale"
 msgid "Delete list?"
 msgstr "Eliminare la lista?"
 
+#: uconfig.rs_invalidvalue
+msgid "Invalid value"
+msgstr ""
+
 #: uconfig.rs_list_options
+#, fuzzy
+#| msgid ""
+#| "Name=\n"
+#| "Channel source=\n"
+#| "Use channel number from M3U=\n"
+#| "Dowload channels icon=\n"
+#| "Use EPG from M3U=\n"
+#| "EPG Source=\n"
+#|"Cache duration in hours=\n"
 msgid ""
 "Name=\n"
 "Channel source=\n"
@@ -402,6 +432,7 @@ msgid ""
 "Dowload channels icon=\n"
 "Use EPG from M3U=\n"
 "EPG Source=\n"
+"Cache duration in hours=\n"
 msgstr ""
 "Nome=\n"
 "Sorgente canale=\n"
@@ -409,6 +440,7 @@ msgstr ""
 "Scarica icone canali=\n"
 "Usa EPG da M3U=\n"
 "Sorgente EPG=\n"
+"Durata Cache in ore=\n"
 
 #: uconfig.rs_no
 msgid "No"

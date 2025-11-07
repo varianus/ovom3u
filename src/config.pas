@@ -63,6 +63,7 @@ type
 
   TM3UList = class
   private
+    fCacheDuration: integer;
     FChannelsDownloadLogo: boolean;
     FChannelsFileName: string;
     FChannelsUrl: string;
@@ -72,6 +73,7 @@ type
     FName: string;
     FSortOrder: integer;
     FUseChno: boolean;
+    procedure SetCacheDuration(AValue: integer);
     procedure SetChannelsDownloadLogo(AValue: boolean);
     procedure SetChannelsFileName(AValue: string);
     procedure SetChannelsUrl(AValue: string);
@@ -83,7 +85,7 @@ type
     procedure SetUseChno(AValue: boolean);
   public
   const
-    ALL_FIELDS = 'ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U, SortOrder';
+    ALL_FIELDS = 'ID, Name, Position, UseNumber, GetLogo, EPG, EPGFromM3U, SortOrder, CacheDuration';
   public
     property ListID: integer read FListID write SetListID;
     property Name: string read FName write SetName;
@@ -93,6 +95,7 @@ type
     property UseChno: boolean read FUseChno write SetUseChno;
     property EPGFromM3U: boolean read FEPGFromM3U write SetEPGFromM3U;
     property SortOrder: integer read FSortOrder write SetSortOrder;
+    property CacheDuration: integer read fCacheDuration write SetCacheDuration;
     function ChannelKind: TProviderKind;
     function EpgKind: TProviderKind;
     procedure Load(Query: TSQLQuery); overload;
@@ -232,6 +235,7 @@ var
   FConfigObj: TConfig;
 
 const
+{$REGION SQL_COMMANDS}
   PRAGMAS_COUNT = 3;
   PRAGMAS: array [1..PRAGMAS_COUNT] of string =
     (
@@ -240,7 +244,7 @@ const
     'PRAGMA count_changes = 0;',
     'PRAGMA encoding = "UTF-8";'
     );
-  CURRENTDBVERSION = 5;
+  CURRENTDBVERSION = 6;
 
   CREATECONFIGTABLE1 =
     'CREATE TABLE config ('
@@ -257,6 +261,7 @@ const
     + ',EPGFromM3U INTEGER'
     + ',EPG VARCHAR'
     + ',SortOrder INTEGER'
+    + ',CacheDuration INTEGER'
     + ',PRIMARY KEY("ID" AUTOINCREMENT))';
   CREATECONFIGTABLE2 =
     ' INSERT INTO config (Version) VALUES(1);';
@@ -308,6 +313,7 @@ const
   CREATEPROGRAMMEINDEX3 =
     '  CREATE UNIQUE INDEX idx_programme_List ON programme (List, idProgram);';
 
+{$ENDREGION }
 const
   SectionUnix = 'UNIX';
   IdentResourcesPath = 'ResourcesPath';
@@ -903,6 +909,8 @@ const
   ToV5_2 = 'update m3ulists set sortorder = RN from '
     + '(SELECT ID intid ,ROW_NUMBER() OVER (ORDER BY ID) AS RN FROM m3ulists)'
     + ' where id = intid';
+  ToV6_1 = 'ALTER TABLE "m3ulists" add COLUMN "CacheDuration" integer NULL;';
+  ToV6_2 = 'UPDATE "m3ulists" set CacheDuration = 12;';
 
   UPDATESTATUS = 'UPDATE config SET Version = %d;';
 var
@@ -924,7 +932,7 @@ begin
   begin
     fDB.ExecuteDirect(ToV4_1);
     MustUpdate := True;
-    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+    FDB.ExecuteDirect(format(UPDATECONFIG, [4]));
   end;
 
   if LoadedDBVersion < 5 then
@@ -932,7 +940,15 @@ begin
     fDB.ExecuteDirect(ToV5_1);
     fDB.ExecuteDirect(ToV5_2);
     MustUpdate := True;
-    FDB.ExecuteDirect(format(UPDATECONFIG, [CURRENTDBVERSION]));
+    FDB.ExecuteDirect(format(UPDATECONFIG, [5]));
+  end;
+
+  if LoadedDBVersion < 6 then
+  begin
+    fDB.ExecuteDirect(ToV6_1);
+    fDB.ExecuteDirect(ToV6_2);
+    MustUpdate := True;
+    FDB.ExecuteDirect(format(UPDATECONFIG, [6]));
   end;
 
   CheckDBStructure;
@@ -981,7 +997,7 @@ begin
     tmpQuery.DataBase    := fOwner.fDB;
     tmpQuery.Transaction := fOwner.fTR;
     tmpQuery.SQL.Text    := 'INSERT OR REPLACE INTO m3ulists (' + TM3UList.ALL_FIELDS + ') ' +
-      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :EPGFromM3U, :SortOrder);';
+      'VALUES (:ID, :Name, :Position, :UseNumber, :GetLogo, :EPG, :EPGFromM3U, :SortOrder, :CacheDuration);';
     for wItem in self do
     begin
       if wItem.ListID = 0 then
@@ -996,6 +1012,7 @@ begin
       tmpQuery.ParamByName('EPG').AsString      := wItem.EPGUrl;
       tmpQuery.ParamByName('EPGFromM3U').AsBoolean := wItem.EPGFromM3U;
       tmpQuery.ParamByName('SortOrder').AsInteger := wItem.SortOrder;
+      tmpQuery.ParamByName('CacheDuration').AsInteger := wItem.CacheDuration;
       tmpQuery.ExecSQL;
     end;
 
@@ -1210,6 +1227,12 @@ begin
   FChannelsDownloadLogo := AValue;
 end;
 
+procedure TM3UList.SetCacheDuration(AValue: integer);
+begin
+  if fCacheDuration=AValue then Exit;
+  fCacheDuration:=AValue;
+end;
+
 procedure TM3UList.SetChannelsFileName(AValue: string);
 begin
   if FChannelsFileName = AValue then Exit;
@@ -1287,6 +1310,7 @@ begin
   FEPGUrl    := Query.FieldByName('EPG').AsString;
   FEPGFromM3U := Query.FieldByName('EPGFromM3U').AsBoolean;
   FSortOrder := Query.FieldByName('sortOrder').AsInteger;
+  fCacheDuration:=Query.FieldByName('CacheDuration').AsInteger;
 
 end;
 

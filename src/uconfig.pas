@@ -72,6 +72,8 @@ type
     procedure tbAddClick(Sender: TObject);
     procedure tbRemoveClick(Sender: TObject);
     procedure ValueListEditor1ButtonClick(Sender: TObject; aCol, aRow: integer);
+    procedure ValueListEditor1ValidateEntry(Sender: TObject; aCol,
+      aRow: Integer; const OldValue: string; var NewValue: String);
   private
     PreviousIndex: integer;
     FOnWorkDone: TNotifyEvent;
@@ -97,7 +99,9 @@ resourcestring
     'Use channel number from M3U=' + sLineBreak +
     'Dowload channels icon=' + sLineBreak +
     'Use EPG from M3U=' + sLineBreak +
-    'EPG Source=' + sLineBreak;
+    'EPG Source=' + sLineBreak +
+    'Cache duration in hours=' + sLineBreak;
+  RS_InvalidValue = 'Invalid value';
   RS_Yes = 'Yes';
   RS_No = 'No';
 
@@ -153,6 +157,7 @@ begin
   ValueListEditor1.Values[ValueListEditor1.Keys[3]] := BoolToStr(CurrItem.ChannelsDownloadLogo, RS_Yes, RS_No);
   ValueListEditor1.Values[ValueListEditor1.Keys[4]] := BoolToStr(CurrItem.EPGFromM3U, RS_Yes, RS_No);
   ValueListEditor1.Values[ValueListEditor1.Keys[5]] := CurrItem.EPGUrl;
+  ValueListEditor1.Values[ValueListEditor1.Keys[6]] := IntToStr(CurrItem.CacheDuration);
   ValueListEditor1.Modified := False;
   ValueListEditor1.Invalidate;
   ;
@@ -166,6 +171,7 @@ begin
   CurrItem.ChannelsDownloadLogo := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[3]]);
   CurrItem.EPGFromM3U := StrToBool(ValueListEditor1.Values[ValueListEditor1.Keys[4]]);
   CurrItem.EPGUrl  := ValueListEditor1.Values[ValueListEditor1.Keys[5]];
+  CurrItem.CacheDuration:= StrToInt(ValueListEditor1.Values[ValueListEditor1.Keys[6]]) ;
   lbLists.Items[PreviousIndex] := CurrItem.Name;
   if ValueListEditor1.Modified then
     ConfigObj.ListManager.ListAdd(CurrItem);
@@ -241,6 +247,7 @@ var
   NewList: TM3UList;
 begin
   NewList := TM3UList.Create(RS_Untitled);
+  NewList.CacheDuration := 12;
   ConfigObj.ListManager.ListAdd(NewList);
   lbLists.AddItem(RS_Untitled, NewList);
   lbLists.Selected[lbLists.Count - 1] := True;
@@ -287,6 +294,19 @@ begin
       AEditor.Free;
     end;
   end;
+end;
+
+procedure TfConfig.ValueListEditor1ValidateEntry(Sender: TObject; aCol,
+  aRow: Integer; const OldValue: string; var NewValue: String);
+var
+  TmpValue:integer;
+begin
+  if aRow = 6 then
+    begin
+      TmpValue := StrToInt64Def(NewValue, -1);
+      if TmpValue < 0 then
+        Raise Exception.Create('Invalid value');
+    end;
 end;
 
 procedure TfConfig.SetOnWorkDone(AValue: TNotifyEvent);
@@ -350,7 +370,6 @@ begin
     EditStyle     := esPickList;
     PickList.Text := RS_Yes + sLineBreak + RS_No;
   end;
-
 end;
 
 

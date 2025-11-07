@@ -410,7 +410,7 @@ begin
     IPTVList := FActiveList.ChannelsUrl;
     try
       ListName := CacheDir + format('list-%d-iptv.m3u', [FActiveList.ListID]);
-      if (ConfigObj.ListManager.LastScan(FActiveList.ListID, 'channels') + 12 / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
+      if (ConfigObj.ListManager.LastScan(FActiveList.ListID, 'channels') + FActiveList.CacheDuration / 24 < now) {mcmcmcmcmcmc or List.ListProperties.Dirty } then
       try
         OvoLogger.Log(llINFO, 'Downloding channels list from ' + IPTVList);
         DownloadFromUrl(IPTVList, ListName);

@@ -7,12 +7,11 @@ object fConfig: TfConfig
   ClientHeight = 512
   ClientWidth = 902
   KeyPreview = True
-  LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   OnShow = FormShow
   object pcSettings: TPageControl
     Left = 185
-    Height = 466
+    Height = 465
     Top = 0
     Width = 717
     ActivePage = tsChannels
@@ -22,13 +21,13 @@ object fConfig: TfConfig
     TabOrder = 0
     object tsChannels: TTabSheet
       Caption = 'Channels'
-      ClientHeight = 431
+      ClientHeight = 459
       ClientWidth = 711
       object lbLists: TListBox
         Left = 8
-        Height = 251
+        Height = 230
         Top = 8
-        Width = 693
+        Width = 695
         Align = alClient
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Around = 8
@@ -36,6 +35,7 @@ object fConfig: TfConfig
         ItemHeight = 0
         ParentDoubleBuffered = False
         TabOrder = 0
+        TopIndex = -1
         OnSelectionChange = lbListsSelectionChange
       end
       object ToolBar1: TToolBar
@@ -43,8 +43,8 @@ object fConfig: TfConfig
         AnchorSideTop.Side = asrBottom
         Left = 8
         Height = 26
-        Top = 267
-        Width = 693
+        Top = 246
+        Width = 695
         Align = alBottom
         Anchors = []
         BorderSpacing.Around = 8
@@ -73,7 +73,7 @@ object fConfig: TfConfig
         end
         object tbSpacer: TToolButton
           Left = 46
-          Height = 8
+          Height = 22
           Top = 0
           Style = tbsSeparator
         end
@@ -82,20 +82,21 @@ object fConfig: TfConfig
         AnchorSideTop.Control = ToolBar1
         AnchorSideTop.Side = asrBottom
         Left = 8
-        Height = 149
-        Top = 301
-        Width = 693
+        Height = 171
+        Top = 280
+        Width = 695
         Align = alBottom
         Anchors = []
         BorderSpacing.Around = 8
         DefaultColWidth = 200
         Flat = True
         ParentShowHint = False
-        RowCount = 6
+        RowCount = 7
         ScrollBars = ssVertical
         ShowHint = True
         TabOrder = 2
         OnButtonClick = ValueListEditor1ButtonClick
+        OnValidateEntry = ValueListEditor1ValidateEntry
         DisplayOptions = [doAutoColResize, doKeyColFixed]
         DoubleBuffered = True
         Strings.Strings = (
@@ -105,16 +106,17 @@ object fConfig: TfConfig
           ''
           ''
           ''
+          ''
         )
         ColWidths = (
           200
-          492
+          479
         )
       end
     end
     object tsMpv: TTabSheet
       Caption = 'Mpv'
-      ClientHeight = 431
+      ClientHeight = 459
       ClientWidth = 711
       object vleCustomOptions: TValueListEditor
         AnchorSideLeft.Control = tsMpv
@@ -125,9 +127,9 @@ object fConfig: TfConfig
         AnchorSideBottom.Control = tsMpv
         AnchorSideBottom.Side = asrBottom
         Left = 9
-        Height = 351
-        Top = 98
-        Width = 691
+        Height = 350
+        Top = 100
+        Width = 693
         AlternateColor = clBtnFace
         Anchors = [akTop, akLeft, akRight, akBottom]
         BorderSpacing.Around = 9
@@ -139,14 +141,14 @@ object fConfig: TfConfig
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goAutoAddRows, goAlwaysShowEditor, goThumbTracking]
         ColWidths = (
           150
-          540
+          542
         )
       end
       object cbHardwareAcceleration: TCheckBox
         Left = 12
-        Height = 19
+        Height = 21
         Top = 8
-        Width = 172
+        Width = 190
         BorderSpacing.Around = 9
         Caption = 'Enable hardware acceleration'
         TabOrder = 0
@@ -156,7 +158,7 @@ object fConfig: TfConfig
         AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 48
-        Top = 41
+        Top = 43
         Width = 534
         AutoSize = False
         BorderSpacing.Top = 14
@@ -167,31 +169,31 @@ object fConfig: TfConfig
     end
     object tsPlugins: TTabSheet
       Caption = 'Plugins'
-      ClientHeight = 431
+      ClientHeight = 459
       ClientWidth = 711
       object cbLibCEC: TCheckBox
         Left = 12
-        Height = 19
+        Height = 21
         Top = 8
-        Width = 196
+        Width = 210
         BorderSpacing.Around = 9
         Caption = 'Enable HDMI-CEC remote control'
         TabOrder = 0
       end
       object cbMpris2: TCheckBox
         Left = 12
-        Height = 19
+        Height = 21
         Top = 40
-        Width = 153
+        Width = 167
         BorderSpacing.Around = 9
         Caption = 'Enable Mpris2 integration'
         TabOrder = 1
       end
       object cbMMkeys: TCheckBox
         Left = 12
-        Height = 19
+        Height = 21
         Top = 72
-        Width = 143
+        Width = 155
         BorderSpacing.Around = 9
         Caption = 'Enable Multimedia keys'
         TabOrder = 2
@@ -223,13 +225,13 @@ object fConfig: TfConfig
     end
     object tsGeneral: TTabSheet
       Caption = 'General'
-      ClientHeight = 431
+      ClientHeight = 459
       ClientWidth = 711
       object cbEmbeddedForm: TCheckBox
         Left = 24
-        Height = 19
+        Height = 21
         Top = 40
-        Width = 279
+        Width = 294
         Caption = 'Embed Config, EPG and channel list in main form'
         TabOrder = 0
       end
@@ -237,12 +239,12 @@ object fConfig: TfConfig
   end
   object GroupBox1: TGroupBox
     Left = 0
-    Height = 466
+    Height = 465
     Top = 0
     Width = 185
     Align = alLeft
     Caption = 'Settings'
-    ClientHeight = 447
+    ClientHeight = 446
     ClientWidth = 181
     DoubleBuffered = True
     ParentDoubleBuffered = False
@@ -294,8 +296,8 @@ object fConfig: TfConfig
   end
   object bpConfig: TButtonPanel
     Left = 6
-    Height = 34
-    Top = 472
+    Height = 35
+    Top = 471
     Width = 890
     OKButton.Name = 'OKButton'
     OKButton.DefaultCaption = True

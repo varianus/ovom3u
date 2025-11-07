@@ -284,6 +284,10 @@ msgstr ""
 msgid "Auto scrolling"
 msgstr ""
 
+#: tfplayer.actclearcache.caption
+msgid "Clear cached list"
+msgstr ""
+
 #: tfplayer.actshowconfig.caption
 msgid "⚙"
 msgstr ""
@@ -318,6 +322,7 @@ msgid "Logo"
 msgstr ""
 
 #: tfplayer.caption
+msgctxt "tfplayer.caption"
 msgid "OvoM3U"
 msgstr ""
 
@@ -358,6 +363,16 @@ msgstr ""
 msgid "List"
 msgstr ""
 
+#: tfsplash.caption
+msgctxt "tfsplash.caption"
+msgid "OvoM3U"
+msgstr ""
+
+#: tfsplash.stname.caption
+msgctxt "tfsplash.stname.caption"
+msgid "OvoM3U"
+msgstr ""
+
 #: tmydialog.caption
 msgid "Message"
 msgstr ""
@@ -379,6 +394,10 @@ msgstr ""
 msgid "Delete list?"
 msgstr ""
 
+#: uconfig.rs_invalidvalue
+msgid "Invalid value"
+msgstr ""
+
 #: uconfig.rs_list_options
 msgid ""
 "Name=\n"
@@ -387,6 +406,7 @@ msgid ""
 "Dowload channels icon=\n"
 "Use EPG from M3U=\n"
 "EPG Source=\n"
+"Cache duration in hours=\n"
 msgstr ""
 
 #: uconfig.rs_no
