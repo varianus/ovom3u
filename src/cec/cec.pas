@@ -820,6 +820,8 @@ type
      * @param bActivated          1 if activated, 0 when deactivated.
      *)
     sourceActivated: procedure(cbParam: Pointer; const logicalAddress: cec_logical_address; const bActivated: uint8); cdecl;
+    commandHandler: function(cbparam: Pointer; const command: Pcec_command): integer; cdecl;
+
   end;
 
   libcec_configuration = record
@@ -896,6 +898,7 @@ var
   libcec_find_adapters: function(connection: libcec_connection_t; deviceList: Pcec_adapter; iBufSize: uint8;
   const strDevicePath: PUTF8Char): int8; cdecl;
   libcec_init_video_standalone: procedure(connection: libcec_connection_t); cdecl;
+  libcec_set_active_source: function(connection: libcec_connection_t; &type: cec_device_type): integer; cdecl;
 
   {
 
@@ -1165,6 +1168,7 @@ begin
   pointer(libcec_clear_configuration) := GetProcAddress(hlib, 'libcec_clear_configuration');
   pointer(libcec_find_adapters) := GetProcAddress(hlib, 'libcec_find_adapters');
   pointer(libcec_init_video_standalone) := GetProcAddress(hlib, 'libcec_init_video_standalone');
+  pointer(libcec_set_active_source) := GetProcAddress(hlib, 'libcec_set_active_source');
 
 end;
 

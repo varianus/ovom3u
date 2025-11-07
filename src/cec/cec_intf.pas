@@ -149,6 +149,7 @@ begin
      Raise Exception.CreateFmt('Cannot open connection to %s',[ca.comm]);
    end;
 
+  libcec_set_active_source(Connection, CEC_DEVICE_TYPE_RESERVED);
 end;
 
 destructor THDMI_CEC.Destroy;
