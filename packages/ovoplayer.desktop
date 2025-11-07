@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=OvoM3U
+GenericName=IPTV player
+Comment=Play audio files
+Categories=Application;Video;Player
+Exec=/usr/bin/ovom3u %F
+Hidden=false
+Icon=/usr/share/pixmaps/ovom3u.png
+Terminal=false
+Type=Application
+SingleMainWindow=true
+X-DBUS-ServiceName=org.mpris.MediaPlayer2.ovom3u
+X-GNOME-UsesNotifications=true
