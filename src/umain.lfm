@@ -200,6 +200,7 @@ object fPlayer: TfPlayer
           DragMode = dmAutomatic
           Font.Height = -14
           ParentFont = False
+          PopupMenu = pmuList
           ReadOnly = True
           RowSelect = True
           TabOrder = 0
@@ -363,6 +364,11 @@ object fPlayer: TfPlayer
       GroupIndex = 1
       OnExecute = actViewCurrentProgramAutomaticExecute
     end
+    object actClearCache: TAction
+      Category = 'List'
+      Caption = 'Clear cached list'
+      OnExecute = actClearCacheExecute
+    end
   end
   object pmuView: TPopupMenu
     Left = 200
@@ -389,5 +395,12 @@ object fPlayer: TfPlayer
   object MainMenu1: TMainMenu
     Left = 64
     Top = 79
+  end
+  object pmuList: TPopupMenu
+    Left = 8
+    Top = 104
+    object MenuItem6: TMenuItem
+      Action = actClearCache
+    end
   end
 end

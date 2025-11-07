@@ -73,6 +73,7 @@ resourcestring
 type
 
   TfPlayer = class(TForm)
+    actClearCache: TAction;
     actViewCurrentProgramNever: TAction;
     actViewCurrentProgramAutomatic: TAction;
     actShowLog: TAction;
@@ -93,6 +94,7 @@ type
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
     MenuItem5: TMenuItem;
+    MenuItem6: TMenuItem;
     N1: TMenuItem;
     mnuSub: TMenuItem;
     mnuAudio: TMenuItem;
@@ -111,6 +113,7 @@ type
     LoadingTimer: TTimer;
     pmuView: TPopupMenu;
     ChannelSplitter: TSplitter;
+    pmuList: TPopupMenu;
     tsList: TTabSheet;
     cbGroups: TListBox;
     tsGroups: TTabSheet;
@@ -118,6 +121,7 @@ type
     ToolButton1: TSpeedButton;
     ToolButton2: TSpeedButton;
     ToolButton5: TSpeedButton;
+    procedure actClearCacheExecute(Sender: TObject);
     procedure actListUpdate(AAction: TBasicAction; var Handled: boolean);
     procedure actShowEpgExecute(Sender: TObject);
     procedure actShowConfigExecute(Sender: TObject);
@@ -1117,6 +1121,11 @@ begin
 
   ComputeGridCellSize;
 
+end;
+
+procedure TfPlayer.actClearCacheExecute(Sender: TObject);
+begin
+  ConfigObj.ListManager.SetLastScan(TM3UList(lvLists.Selected.Data).ListID, 'channels', 0);
 end;
 
 procedure TfPlayer.ConfigDone(Sender: TObject);

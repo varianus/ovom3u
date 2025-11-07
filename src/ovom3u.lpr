@@ -59,7 +59,7 @@ begin
   Application.Scaled:=True;
   Application.Initialize;
 
-  fSplash:=TfSplash.create(Application);
+  fSplash:=TfSplash.create(nil);
   fSplash.show;
   fSplash.Update;
   Application.ProcessMessages;
