@@ -796,6 +796,7 @@ var
 begin
   mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
+  num := 55;
   num := 36;
   mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
 
