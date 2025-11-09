@@ -427,11 +427,13 @@ function TMPVEngine.GetCustomOptions: string;
 var
   i: integer;
 begin
-  Result := EmptyStr;
+  Result:='';
   if fMpvProperties.HardwareAcceleration then
-    Result := 'hwdec=auto,';
+    Result := Result + 'hwdec=auto,';
+
   if NeedVO then
-    Result := Result+'vo=libmpv,';
+    Result := Result+'vo=libmpv,gpu-hwdec-interop=all,';
+
   for i := 0 to fMpvProperties.CustomOptions.Count - 1 do
     if fMpvProperties.CustomOptions[i] <> EmptyStr then
       Result := Result + fMpvProperties.CustomOptions[i] + ',';
@@ -797,7 +799,6 @@ begin
   mpv_set_property_string(fHandle^, 'osd-back-color', '#80000000');
 
   num := 55;
-  num := 36;
   mpv_set_property(fHandle^, 'osd-font-size', MPV_FORMAT_INT64, @num);
 
   if not SupportNewOSD then
