@@ -1363,8 +1363,8 @@ begin
   begin
     GLRenderer.Visible := True;
     fLastMessage := '';
-    backend.mpvengine.LoadTracks;
-    LoadTracks;
+ //   backend.mpvengine.LoadTracks;
+ //   LoadTracks;
   end;
 end;
 
