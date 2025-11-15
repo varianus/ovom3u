@@ -319,6 +319,7 @@ begin
   {$ifdef LINUX}
   setlocale(1, 'C');
   {$endif}
+  RenderObj := nil;
   fMpvProperties := TMPVProperties.Create(ConfigObj);
   fdecoupler     := nil;
 
@@ -340,9 +341,13 @@ begin
 
   if Assigned(fHandle) then
   begin
+    try
     mpv_set_wakeup_callback(fhandle^, nil, self);
     RenderObj.Free;
     mpv_terminate_destroy(fhandle^);
+    except
+      // avoid some abort exception from libmpv
+    end;
   end;
   if Assigned(fdecoupler) then
     fdecoupler.Free;
@@ -358,7 +363,7 @@ begin
     mpv_set_option_string(fHandle^,'vd-lavc-dr','no');
 
   isRenderActive := True;
-  GLRenderControl.Visible := False;
+//  GLRenderControl.Visible := False;
   GLRenderControl.ReleaseContext;
   Application.ProcessMessages;
   RenderObj := TRender.Create(FGLRenderControl, fHandle);
