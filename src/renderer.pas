@@ -68,9 +68,11 @@ type
     constructor Create(AControl:TOpenGlControl; AHandle: pmpv_handle);
     destructor Destroy; override;
     procedure Render;
+    procedure ThreadTerminated(Aobject: TObject);
   end;
 
 implementation
+
 const
   Flip: longint = 1;
   Skip: longint = 0;
@@ -233,8 +235,9 @@ end;
 constructor TRender.Create(AControl: TOpenGlControl; AHandle: pmpv_handle);
 begin
   RenderThread := TRenderThread.Create;
-  RenderThread.FreeOnTerminate := true;
-  RenderThread.Init(Self,AControl, AHandle);
+  RenderThread.OnTerminate := @ThreadTerminated;
+  RenderThread.FreeOnTerminate := True;
+  RenderThread.Init(Self, AControl, AHandle);
   RenderThread.Start;
 
 end;
@@ -251,6 +254,11 @@ procedure TRender.Render;
 begin
   if IsRenderActive then
     RTLeventSetEvent(RenderThread.WaitEvent);
+end;
+
+procedure TRender.ThreadTerminated(Aobject: TObject);
+begin
+  RenderThread := nil;
 end;
 
 end.
