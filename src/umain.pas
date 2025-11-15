@@ -224,7 +224,7 @@ var
 
 implementation
 
-uses uconfig, AppConsts, uChannels, uLogViewer, LazUTF8, LazLogger;
+uses uconfig, AppConsts, uChannels, uLogViewer, LazUTF8, LazLoggerBase;
 
 var
   f: Text;
