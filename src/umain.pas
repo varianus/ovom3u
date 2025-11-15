@@ -603,9 +603,9 @@ begin
           pnlEpg.Visible := False;
       VK_Q:
       begin
-        hide;
+     //   hide;
         application.ProcessMessages;
-        Application.Terminate;
+        close;
       end;
       VK_R:
       begin
@@ -967,7 +967,9 @@ begin
   hide;
   if Assigned(backend.mpvengine) then
   begin
-    backend.mpvengine.isRenderActive := False;
+    backend.MpvEngine.isRenderActive := False;
+    Hide;
+    Application.ProcessMessages;
     BackEnd.MpvEngine.Stop;
   end;
 
