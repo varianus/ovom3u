@@ -188,6 +188,7 @@ end;
 
 initialization
   FOvoLogger := TOvoLogger.Create;
+  DebugLn('');
   DebugLogger.CloseLogFileBetweenWrites := True;
 
 finalization
