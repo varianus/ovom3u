@@ -437,7 +437,8 @@ begin
     Result := Result + 'hwdec=auto,';
 
   if NeedVO then
-    Result := Result+'vo=libmpv,gpu-hwdec-interop=all,';
+ //   Result := Result+'vo=libmpv,gpu-hwdec-interop=all,';
+  Result := Result+'vo=libmpv,';
 
   for i := 0 to fMpvProperties.CustomOptions.Count - 1 do
     if fMpvProperties.CustomOptions[i] <> EmptyStr then
