@@ -672,7 +672,8 @@ end;
 
 procedure TfPlayer.GLRendererChangeBounds(Sender: TObject);
 begin
-  BackEnd.MpvEngine.Refresh;
+ exit;
+ BackEnd.MpvEngine.Refresh;
 end;
 
 procedure TfPlayer.SelectList;
