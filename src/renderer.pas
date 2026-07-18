@@ -32,20 +32,20 @@ type
 
   TRenderThread = class(TThread)
   private
-    fControl:TOpenGlControl;
+    fControl: TOpenGlControl;
     Context: pmpv_render_context;
     fHandle: Pmpv_handle;
-    FOnEngineActive: TnotifyEvent;
+    FOnEngineActive: TNotifyEvent;
     Params: array of mpv_render_param;
     glParams: mpv_opengl_init_params;
     RenderParams: array of mpv_render_param;
     procedure InitRendering;
-    procedure SetOnEngineActive(AValue: TnotifyEvent);
- Protected
-    Procedure TerminatedSet; override;
+    procedure SetOnEngineActive(AValue: TNotifyEvent);
+  protected
+    procedure TerminatedSet; override;
   public
-    fOwner:     TRender;
-    IsRenderActive:boolean;
+    fOwner: TRender;
+    IsRenderActive: boolean;
     WaitEvent: PRtlEvent;
     constructor Create;
     procedure Init(Owner: TRender; AControl: TOpenGlControl; AHandle: Pmpv_handle);
@@ -56,16 +56,16 @@ type
 
   TRender = class
   private
-    FOnRenderInitalized: TnotifyEvent;
+    FOnRenderInitalized: TNotifyEvent;
     RenderThread: TRenderThread;
     function GetIsRenderActive: boolean;
     procedure SetIsRenderActive(AValue: boolean);
-    procedure SetOnRenderInitalized(AValue: TnotifyEvent);
+    procedure SetOnRenderInitalized(AValue: TNotifyEvent);
   public
     procedure DoRenderInitialized; virtual;
-    Property IsRenderActive: boolean read GetIsRenderActive write SetIsRenderActive;
-    Property OnRenderInitalized: TnotifyEvent read FOnRenderInitalized write SetOnRenderInitalized;
-    constructor Create(AControl:TOpenGlControl; AHandle: pmpv_handle);
+    property IsRenderActive: boolean read GetIsRenderActive write SetIsRenderActive;
+    property OnRenderInitalized: TNotifyEvent read FOnRenderInitalized write SetOnRenderInitalized;
+    constructor Create(AControl: TOpenGlControl; AHandle: pmpv_handle);
     destructor Destroy; override;
     procedure Render;
     procedure ThreadTerminated(Aobject: TObject);
@@ -73,18 +73,21 @@ type
 
 implementation
 
+uses PlatformCode;
+
 const
   Flip: longint = 1;
   Skip: longint = 0;
 
-  function get_proc_address(ctx: pointer; Name: PChar): pointer; cdecl;
-  begin
-    Result := GetProcAddress(LibGL, Name);
 
-    if Result = nil then
-      Result := wglGetProcAddress(Name);
+function get_proc_address(ctx: pointer; Name: pchar): pointer; cdecl;
+begin
+  Result := GetProcAddress(LibGL, Name);
 
-  end;
+  if Result = nil then
+    Result := wglGetProcAddress(Name);
+
+end;
 
 { TRenderThread }
 
@@ -96,29 +99,29 @@ begin
 end;
 
 constructor TRenderThread.Create;
-
 begin
   inherited Create(True);
   WaitEvent := RTLEventCreate;
-  Priority:= tpHigher;
+  Priority  := tpHigher;
 end;
 
 procedure TRenderThread.Init(Owner: TRender; AControl: TOpenGlControl; AHandle: Pmpv_handle);
 begin
-  fOwner := owner;
-  fControl:= AControl;
-  fHandle := AHandle;
-  fControl.Visible := true;
-  IsRenderActive:= true;
+  fOwner   := owner;
+  fControl := AControl;
+  fHandle  := AHandle;
+  fControl.Visible := True;
+  IsRenderActive := True;
 
 end;
 
 procedure TRenderThread.InitRendering;
 var
   i: integer;
+  WSPlatform: TGraphicsPlatform;
 begin
   Params := nil;
-  SetLength(Params, 4);
+  SetLength(Params, 5);
   Params[0]._type := MPV_RENDER_PARAM_API_TYPE;
   Params[0].Data := PChar(MPV_RENDER_API_TYPE_OPENGL);
   Params[1]._type := MPV_RENDER_PARAM_OPENGL_INIT_PARAMS;
@@ -127,69 +130,84 @@ begin
   Params[1].Data := @glParams;
   Params[2]._type := MPV_RENDER_PARAM_ADVANCED_CONTROL;
   Params[2].Data := @flip;
-  Params[3]._type := MPV_RENDER_PARAM_INVALID;
-  Params[3].Data := nil;
+  WSPlatform := GetCurrentGraphicsPlatform;
+  case WSPlatform of
+    gpX11, gpXWayland: begin
+      Params[3]._type := MPV_RENDER_PARAM_X11_DISPLAY;
+      Params[3].Data  := GetDisplay(WSPlatform);
+    end;
+    else
+    begin
+      Params[3]._type := MPV_RENDER_PARAM_INVALID;
+      Params[3].Data  := nil;
+    end;
+  end;
+
+  Params[4]._type := MPV_RENDER_PARAM_INVALID;
+  Params[4].Data  := nil;
+
   fControl.MakeCurrent();
   i := mpv_render_context_create(Context, fHandle^, Pmpv_render_param(@Params[0]));
   if (i < 0) then
     raise Exception.Create('failed to initialize mpv GL context');
   SetLength(RenderParams, 3);
   RenderParams[0]._type := MPV_RENDER_PARAM_OPENGL_FBO;
-  RenderParams[0].Data := nil;
+  RenderParams[0].Data  := nil;
   RenderParams[1]._type := MPV_RENDER_PARAM_FLIP_Y;
-  RenderParams[1].Data := @Flip;
+  RenderParams[1].Data  := @Flip;
   RenderParams[2]._type := MPV_RENDER_PARAM_INVALID;
-  RenderParams[2].Data := nil;
+  RenderParams[2].Data  := nil;
   fControl.MakeCurrent();
   mpv_render_context_set_update_callback(Context^, @update_gl, fOwner);
   mpv_render_context_update(Context^);
 end;
 
-procedure TRenderThread.SetOnEngineActive(AValue: TnotifyEvent);
+procedure TRenderThread.SetOnEngineActive(AValue: TNotifyEvent);
 begin
-  if FOnEngineActive=AValue then Exit;
-  FOnEngineActive:=AValue;
+  if FOnEngineActive = AValue then Exit;
+  FOnEngineActive := AValue;
 end;
 
 procedure TRenderThread.TerminatedSet;
 begin
-  IsRenderActive:=false;
+  IsRenderActive := False;
   if Assigned(WaitEvent) then
     RTLeventSetEvent(WaitEvent);
-  Inherited TerminatedSet;
+  inherited TerminatedSet;
 end;
 
 procedure TRenderThread.Execute;
 var
   mpfbo: mpv_opengl_fbo;
-  res : UInt64;
+  res: uint64;
 begin
   InitRendering();
   Synchronize(@(fOwner.DoRenderInitialized));
   while not Terminated do
-    begin
+  begin
     mpfbo.fbo := 0;
     mpfbo.internal_format := 0;
     RenderParams[0].Data := @mpfbo;
     RtlEventWaitFor(WaitEvent);
     begin
-      while ((mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0) and not terminated do
+      //    while ((mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0) and not terminated do
+      if ((mpv_render_context_update(Context^) and MPV_RENDER_UPDATE_FRAME) <> 0) and not terminated then
+      begin
+        if IsRenderActive then
         begin
+          fControl.MakeCurrent();
+          mpfbo.h := FControl.Height;
+          mpfbo.w := FControl.Width;
+          mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
           if IsRenderActive then
-            begin
-              fControl.MakeCurrent();
-              mpfbo.h := FControl.Height;
-              mpfbo.w := FControl.Width;
-              mpv_render_context_render(Context^, Pmpv_render_param(@RenderParams[0]));
-              if IsRenderActive then
-                fControl.SwapBuffers();
-              mpv_render_context_report_swap(Context^);
-            end;
+            fControl.SwapBuffers();
+          mpv_render_context_report_swap(Context^);
+        end;
       end;
 
     end;
     RTLeventResetEvent(WaitEvent);
-    end;
+  end;
 end;
 
 destructor TRenderThread.Destroy;
@@ -205,9 +223,8 @@ end;
 
 procedure TRender.SetIsRenderActive(AValue: boolean);
 begin
-  if not Assigned(RenderThread) or
-     (RenderThread.IsRenderActive = AValue) then Exit;
-  RenderThread.IsRenderActive:=AValue;
+  if not Assigned(RenderThread) or (RenderThread.IsRenderActive = AValue) then Exit;
+  RenderThread.IsRenderActive := AValue;
 
 end;
 
@@ -217,10 +234,10 @@ begin
     FOnRenderInitalized(self);
 end;
 
-procedure TRender.SetOnRenderInitalized(AValue: TnotifyEvent);
+procedure TRender.SetOnRenderInitalized(AValue: TNotifyEvent);
 begin
-  if FOnRenderInitalized=AValue then Exit;
-  FOnRenderInitalized:=AValue;
+  if FOnRenderInitalized = AValue then Exit;
+  FOnRenderInitalized := AValue;
 end;
 
 function TRender.GetIsRenderActive: boolean;
@@ -228,7 +245,7 @@ begin
   if Assigned(RenderThread) then
     Result := RenderThread.IsRenderActive
   else
-    Result := false;
+    Result := False;
 
 end;
 
@@ -245,7 +262,7 @@ end;
 destructor TRender.Destroy;
 begin
   RenderThread.Terminate;
-  RenderThread:= nil;
+  RenderThread := nil;
   inherited Destroy;
 end;
 
