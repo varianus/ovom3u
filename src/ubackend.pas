@@ -391,7 +391,7 @@ begin
     on e: Exception do
     begin
       OvoLogger.Log(llERROR, 'MPRIS2 ->' + e.Message);
-      mmkey := nil;
+      Mpris := nil;
     end;
   end
   else
